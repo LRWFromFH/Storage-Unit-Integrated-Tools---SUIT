@@ -45,7 +45,7 @@ SUIT is a comprehensive user management and Point-of-Sale (POS) system engineere
 ### Installation
 1. **Clone the repository**
    ```bash
-   git clone [https://github.com/your-username/Storage-Unit-Integrated-Tools---SUIT.git](https://github.com/your-username/Storage-Unit-Integrated-Tools---SUIT.git)
+   git clone https://github.com/LRWFromFH/Storage-Unit-Integrated-Tools---SUIT.git
    cd Storage-Unit-Integrated-Tools---SUIT
 
 ## Project Members:
