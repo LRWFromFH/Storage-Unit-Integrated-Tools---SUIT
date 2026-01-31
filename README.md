@@ -50,7 +50,7 @@ SUIT is a comprehensive user management and Point-of-Sale (POS) system engineere
 
 ## Project Members:
 
-*  Sumanthra Yerrabelly |
-*  Manasa Kallam |
-*  Satvik LNU |
-*  Alexander Martin
+*  Sumanthra Yerrabelly | Backend
+*  Manasa Kallam | Frontend
+*  Satvik LNU | Frontend
+*  Alexander Martin | Backend
