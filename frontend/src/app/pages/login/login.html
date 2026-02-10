@@ -1,2 +1,6 @@
-<h1>Login to SUIT!</h1>
-<p>Storage Unit Integrated Tools</p>
+<div class="login-container">
+  <h2>Login</h2>
+  <input [(ngModel)]="username" placeholder="Username">
+  <input [(ngModel)]="password" type="password" placeholder="Password">
+  <button (click)="onLogin()">Connect to Go Server</button>
+</div>
