@@ -15,4 +15,7 @@ func SetupRoutes(r *gin.Engine) {
 	}
 
 	r.Static("/", "./static/browser")
+	r.NoRoute(func(c *gin.Context) {
+		c.File("./static/browser/index.html")
+	})
 }
