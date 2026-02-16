@@ -19,6 +19,7 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+
 func JwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
