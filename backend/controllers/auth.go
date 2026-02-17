@@ -118,3 +118,10 @@ func Login(c *gin.Context) {
 
   c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
+func Logout(c *gin.Context) {
+	// MaxAge = -1 tells the browser to delete the cookie immediately
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
+	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+}
+

@@ -15,10 +15,12 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		api.POST("/register", controllers.Register)
 		api.POST("/login", controllers.Login)
+		api.POST("/logout", controllers.Logout) //Added logout route to clear the session and CSRF cookies on the client side
 	}
 
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthRequired())
+	protected.Use(middleware.CSRFRequired())
 	{
 		protected.GET("/protected", func(c *gin.Context) {
 			employeeID, _ := c.Get("employee_id")
