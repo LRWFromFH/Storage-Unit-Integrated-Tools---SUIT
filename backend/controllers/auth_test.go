@@ -26,10 +26,12 @@ func setupTestRouter() *gin.Engine {
 	{
 		api.POST("/register", controllers.Register)
 		api.POST("/login", controllers.Login)
+		api.POST("/logout", controllers.Logout)
 	}
 
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthRequired())
+	protected.Use(middleware.CSRFRequired())
 	{
 		protected.GET("/protected", func(c *gin.Context) {
 			employeeID, _ := c.Get("employee_id")
@@ -39,6 +41,9 @@ func setupTestRouter() *gin.Engine {
 				"employee_id": employeeID,
 				"role":        role,
 			})
+		})
+		protected.POST("/protected-post", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"message": "POST succeeded"})
 		})
 	}
 
@@ -61,6 +66,32 @@ func loginUser(r *gin.Engine, body map[string]string) *httptest.ResponseRecorder
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 	return w
+}
+
+// Helper: extract a named cookie from a response
+func getCookie(w *httptest.ResponseRecorder, name string) *http.Cookie {
+	for _, c := range w.Result().Cookies() {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
+}
+
+// Helper: attach login cookies to a request
+func attachCookies(req *http.Request, w *httptest.ResponseRecorder) {
+	for _, c := range w.Result().Cookies() {
+		req.AddCookie(c)
+	}
+}
+
+// Helper: get CSRF token from login response
+func getCSRFToken(w *httptest.ResponseRecorder) string {
+	c := getCookie(w, "csrf_token")
+	if c == nil {
+		return ""
+	}
+	return c.Value
 }
 
 // Vuln 1: Password must be bcrypt hashed in DB
@@ -86,7 +117,7 @@ func TestRegister_PasswordIsHashed(t *testing.T) {
 	}
 }
 
-// Vuln 2: Login must return a JWT token
+// Vuln 2: Login must return a JWT token in session_token cookie
 func TestLogin_ReturnsJWTToken(t *testing.T) {
 	r := setupTestRouter()
 
@@ -105,21 +136,18 @@ func TestLogin_ReturnsJWTToken(t *testing.T) {
 		t.Fatalf("Expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 
-	var response map[string]string
-	json.Unmarshal(w.Body.Bytes(), &response)
-
-	tokenString, exists := response["token"]
-	if !exists || tokenString == "" {
-		t.Fatal("Response does not contain a token")
+	sessionCookie := getCookie(w, "session_token")
+	if sessionCookie == nil || sessionCookie.Value == "" {
+		t.Fatal("Response does not contain a session_token cookie")
 	}
 
 	// Verify token is parseable
 	claims := &controllers.Claims{}
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.ParseWithClaims(sessionCookie.Value, claims, func(token *jwt.Token) (interface{}, error) {
 		return controllers.JwtSecret(), nil
 	})
 	if err != nil || !token.Valid {
-		t.Fatal("Token is not a valid JWT")
+		t.Fatal("session_token cookie is not a valid JWT")
 	}
 }
 
@@ -156,7 +184,7 @@ func TestProtectedRoute_RejectsWithoutToken(t *testing.T) {
 	}
 }
 
-// Vuln 3: Protected route must accept valid token
+// Vuln 3: Protected route must accept valid session cookie
 func TestProtectedRoute_AcceptsValidToken(t *testing.T) {
 	r := setupTestRouter()
 
@@ -166,22 +194,18 @@ func TestProtectedRoute_AcceptsValidToken(t *testing.T) {
 		"password": "securepassword123",
 	})
 
-	w := loginUser(r, map[string]string{
+	loginResp := loginUser(r, map[string]string{
 		"email":    "protected@test.com",
 		"password": "securepassword123",
 	})
 
-	var loginResp map[string]string
-	json.Unmarshal(w.Body.Bytes(), &loginResp)
-	token := loginResp["token"]
-
 	req, _ := http.NewRequest("GET", "/api/protected", nil)
-	req.Header.Set("Authorization", "Bearer "+token)
-	w2 := httptest.NewRecorder()
-	r.ServeHTTP(w2, req)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
 
-	if w2.Code != http.StatusOK {
-		t.Fatalf("Expected 200, got %d: %s", w2.Code, w2.Body.String())
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
@@ -310,5 +334,215 @@ func TestRegister_MassAssignment_RoleIgnored(t *testing.T) {
 
 	if employee.Role != "employee" {
 		t.Fatalf("Expected role 'employee', got '%s' — mass assignment vulnerability", employee.Role)
+	}
+}
+
+// --- Session Cookie Tests ---
+
+// Login must set session_token as HttpOnly cookie
+func TestLogin_SetsSessionCookie(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "session_test",
+		"email":    "session@test.com",
+		"password": "securepassword123",
+	})
+
+	w := loginUser(r, map[string]string{
+		"email":    "session@test.com",
+		"password": "securepassword123",
+	})
+
+	cookie := getCookie(w, "session_token")
+	if cookie == nil {
+		t.Fatal("session_token cookie not set")
+	}
+	if !cookie.HttpOnly {
+		t.Fatal("session_token cookie must be HttpOnly")
+	}
+	if cookie.MaxAge != 86400 {
+		t.Fatalf("Expected MaxAge 86400, got %d", cookie.MaxAge)
+	}
+}
+
+// Login must set csrf_token as a non-HttpOnly cookie (JS readable)
+func TestLogin_SetsCSRFCookie(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "csrf_cookie_test",
+		"email":    "csrfcookie@test.com",
+		"password": "securepassword123",
+	})
+
+	w := loginUser(r, map[string]string{
+		"email":    "csrfcookie@test.com",
+		"password": "securepassword123",
+	})
+
+	cookie := getCookie(w, "csrf_token")
+	if cookie == nil {
+		t.Fatal("csrf_token cookie not set")
+	}
+	if cookie.HttpOnly {
+		t.Fatal("csrf_token cookie must NOT be HttpOnly (JS needs to read it)")
+	}
+	if len(cookie.Value) < 32 {
+		t.Fatalf("csrf_token seems too short (%d chars), expected at least 32", len(cookie.Value))
+	}
+}
+
+// --- CSRF Middleware Tests ---
+
+// POST to protected route without X-CSRF-Token header must return 403
+func TestCSRF_BlocksPostWithoutToken(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "csrf_block_test",
+		"email":    "csrfblock@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "csrfblock@test.com",
+		"password": "securepassword123",
+	})
+
+	req, _ := http.NewRequest("POST", "/api/protected-post", nil)
+	attachCookies(req, loginResp)
+	// Deliberately NOT setting X-CSRF-Token header
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Fatalf("Expected 403, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// GET to protected route should work without CSRF header (safe method)
+func TestCSRF_AllowsGetWithoutToken(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "csrf_get_test",
+		"email":    "csrfget@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "csrfget@test.com",
+		"password": "securepassword123",
+	})
+
+	req, _ := http.NewRequest("GET", "/api/protected", nil)
+	attachCookies(req, loginResp)
+	// No X-CSRF-Token header — should still work for GET
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// POST with valid X-CSRF-Token header must succeed
+func TestCSRF_AllowsPostWithValidToken(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "csrf_valid_test",
+		"email":    "csrfvalid@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "csrfvalid@test.com",
+		"password": "securepassword123",
+	})
+
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+
+	req, _ := http.NewRequest("POST", "/api/protected-post", nil)
+	attachCookies(req, loginResp)
+	req.Header.Set("X-CSRF-Token", csrfToken)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// --- Logout Tests ---
+
+// Logout must clear session and CSRF cookies
+func TestLogout_ClearsCookies(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "logout_test",
+		"email":    "logout@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "logout@test.com",
+		"password": "securepassword123",
+	})
+
+	req, _ := http.NewRequest("POST", "/api/logout", nil)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("Expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+
+	sessionCookie := getCookie(w, "session_token")
+	csrfCookie := getCookie(w, "csrf_token")
+
+	if sessionCookie == nil || sessionCookie.MaxAge != -1 {
+		t.Fatal("session_token cookie not cleared (MaxAge should be -1)")
+	}
+	if csrfCookie == nil || csrfCookie.MaxAge != -1 {
+		t.Fatal("csrf_token cookie not cleared (MaxAge should be -1)")
+	}
+}
+
+// After logout, protected route must reject the request
+func TestLogout_ProtectedRouteFailsAfterLogout(t *testing.T) {
+	r := setupTestRouter()
+
+	registerUser(r, map[string]string{
+		"username": "logout_protect_test",
+		"email":    "logoutprotect@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "logoutprotect@test.com",
+		"password": "securepassword123",
+	})
+
+	// Logout
+	logoutReq, _ := http.NewRequest("POST", "/api/logout", nil)
+	attachCookies(logoutReq, loginResp)
+	logoutW := httptest.NewRecorder()
+	r.ServeHTTP(logoutW, logoutReq)
+
+	// Try to access protected route using the expired cookies from logout response
+	req, _ := http.NewRequest("GET", "/api/protected", nil)
+	attachCookies(req, logoutW)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("Expected 401 after logout, got %d: %s", w.Code, w.Body.String())
 	}
 }
