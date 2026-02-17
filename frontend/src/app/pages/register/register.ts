@@ -10,7 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
-  selector: 'app-login',
+  selector: 'app-register',
   standalone: true,
   imports: [
     ReactiveFormsModule,
@@ -20,10 +20,10 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatButtonModule,
     MatProgressSpinnerModule
   ],
-  templateUrl: './login.html',
-  styleUrl: './login.scss'
+  templateUrl: './register.html',
+  styleUrl: './register.scss'
 })
-export class Login {
+export class Register {
 
   private auth = inject(Auth);
   private router = inject(Router);
@@ -33,12 +33,13 @@ export class Login {
   errorMessage = '';
 
   form = this.fb.group({
+    username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]]
+    password: ['', [Validators.required, Validators.minLength(6)]]
   });
 
   constructor() {
-    // Auto redirect if already logged in
+    // If already logged in → go to dashboard
     if (this.auth.isAuthenticated()) {
       this.router.navigate(['/dashboard']);
     }
@@ -50,19 +51,19 @@ export class Login {
     this.errorMessage = '';
     this.isLoading = true;
 
-    const { email, password } = this.form.value;
+    const { username, email, password } = this.form.value;
 
     try {
-      await this.auth.login(email!, password!);
+      await this.auth.register(username!, email!, password!);
       this.router.navigate(['/dashboard']);
     } catch (err: any) {
-      this.errorMessage = 'Invalid email or password';
+      this.errorMessage = 'Registration failed. Try again.';
     } finally {
       this.isLoading = false;
     }
   }
 
-  goToRegister() {
-    this.router.navigate(['/register']);
+  goToLogin() {
+    this.router.navigate(['/login']);
   }
 }
