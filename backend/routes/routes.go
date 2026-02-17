@@ -17,10 +17,19 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/login", controllers.Login)
 	}
 
-	protected := r.Group("/api")
-	protected.Use(middleware.AuthRequired())
+	protected := r.Group("/")
+	protected.Use(middleware.AuthRequired(), middleware.CSRF())
 	{
 		protected.GET("/protected", func(c *gin.Context) {
+			employeeID, _ := c.Get("employee_id")
+			role, _ := c.Get("role")
+			c.JSON(http.StatusOK, gin.H{
+				"message":     "You have access",
+				"employee_id": employeeID,
+				"role":        role,
+			})
+		})
+		protected.GET("/dashboard", func(c *gin.Context) {
 			employeeID, _ := c.Get("employee_id")
 			role, _ := c.Get("role")
 			c.JSON(http.StatusOK, gin.H{

@@ -7,6 +7,7 @@ import (
 
 	"backend/database"
 	"backend/models"
+	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -18,7 +19,6 @@ type Claims struct {
 	Role       string `json:"role"`
 	jwt.RegisteredClaims
 }
-
 
 func JwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
@@ -94,5 +94,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	//We still need a csrf token.
+	csrfTokenString := utilities.GenerateToken()
+	c.SetCookie("CSRF-TOKEN", csrfTokenString, 3600, "/", "localhost", false, false)
+
 	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+
+	//TODO: Store the CSRF token in the database with an association to the user session for later validation
 }
