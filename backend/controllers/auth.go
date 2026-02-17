@@ -7,7 +7,8 @@ import (
 
 	"backend/database"
 	"backend/models"
-
+	"crypto/rand"
+	"encoding/hex"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -17,6 +18,14 @@ type Claims struct {
 	EmployeeID uint   `json:"employee_id"`
 	Role       string `json:"role"`
 	jwt.RegisteredClaims
+}
+
+func generateCSRFToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "Error generating CSRF token", err
+	}
+	return hex.EncodeToString(bytes), nil
 }
 
 
@@ -87,6 +96,7 @@ func Login(c *gin.Context) {
 		},
 	}
 
+	csrfToken, _ := generateCSRFToken()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtSecret())
 	if err != nil {

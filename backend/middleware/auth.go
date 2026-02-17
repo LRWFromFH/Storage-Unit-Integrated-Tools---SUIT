@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"net/http"
-	"strings"
 
 	"backend/controllers"
 
@@ -10,19 +9,26 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+//Added CSRF protection and switched to cookie-based JWT storage, the csrf token is generated on login and stored in a cookie.
+func CSRFRequired() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if c.Request.Method == "GET" || c.Request.Method == "HEAD" || c.Request.Method == "OPTIONS" {
+			c.Next()  // safe methods don't need CSRF
+			return
+		}
+		cookieToken, err := c.Cookie("csrf_token")
+		headerToken := c.GetHeader("X-CSRF-Token")
+
+		if err != nil || cookieToken == "" || headerToken != cookieToken {
+			c.AbortWithStatusJSON(403, gin.H{"error": "CSRF validation failed"})
+			return
+		}
+		c.Next()
+	}
+}
+
 func AuthRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
-			return
-		}
-
-		parts := strings.SplitN(authHeader, " ", 2)
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization format"})
-			return
-		}
 
 		tokenString, err := c.Cookie("session_token")
 		if err != nil {
