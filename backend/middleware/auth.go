@@ -24,7 +24,11 @@ func AuthRequired() gin.HandlerFunc {
 			return
 		}
 
-		tokenString := parts[1]
+		tokenString, err := c.Cookie("session_token")
+		if err != nil {
+			c.AbortWithStatusJSON(401, gin.H{"error": "Session cookie required"})
+			return
+		}
 		claims := &controllers.Claims{}
 
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

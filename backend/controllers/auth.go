@@ -94,5 +94,17 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
+
+	c.SetCookie(
+      "session_token",  // cookie name
+      tokenString,      // the JWT value
+      86400,            // maxAge in seconds (24h to match your JWT expiry)
+      "/",              // path — available on all routes
+      "",               // domain — empty means current domain
+      false,            // secure — set to true in production (HTTPS only)
+      true,             // httpOnly — JS cannot read this cookie
+  	)
+	c.SetCookie("csrf_token", csrfToken, 86400, "/", "", false, false)
+
+  c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
