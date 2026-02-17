@@ -1,0 +1,17 @@
+.spacer {
+    flex: 1 1 auto;
+}
+
+.dashboard-container {
+    padding: 2rem;
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.dashboard-card {
+    width: 300px;
+    padding: 1.5rem;
+    text-align: center;
+}

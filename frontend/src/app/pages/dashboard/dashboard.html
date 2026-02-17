@@ -1,12 +1,30 @@
-<h1>Dashboard</h1>
-<p>Welcome to SUIT</p>
+<mat-toolbar color="primary">
+  <span>SUIT Dashboard</span>
 
-<div class="dashboard-actions">
-    <button routerLink="/units">
-        Manage Units
-    </button>
+  <span class="spacer"></span>
 
-    <button routerLink="/tenants">
-        Manage Tenants
+  <button mat-button (click)="logout()">
+    <mat-icon>logout</mat-icon>
+    Logout
+  </button>
+</mat-toolbar>
+
+<div class="dashboard-container">
+
+  <mat-card class="dashboard-card">
+    <h2>Manage Units</h2>
+    <p>View and manage storage units.</p>
+    <button mat-raised-button color="primary" routerLink="/units">
+      Go to Units
     </button>
+  </mat-card>
+
+  <mat-card class="dashboard-card">
+    <h2>Manage Tenants</h2>
+    <p>View and manage tenants.</p>
+    <button mat-raised-button color="accent" routerLink="/tenants">
+      Go to Tenants
+    </button>
+  </mat-card>
+
 </div>
