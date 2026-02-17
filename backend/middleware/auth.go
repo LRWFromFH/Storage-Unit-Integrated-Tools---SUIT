@@ -41,3 +41,28 @@ func AuthRequired() gin.HandlerFunc {
 		c.Next()
 	}
 }
+
+func CSRF() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		authHeader := c.GetHeader("XSRF-TOKEN")
+		if authHeader == "" {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
+			return
+		}
+		// Get token from cookie
+		cookieToken, err := c.Cookie("CSRF-TOKEN")
+		if cookieToken == "" || err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "CSRF token missing"})
+			c.Abort()
+			return
+		}
+		// Get token from header
+		headerToken := c.GetHeader("XSRF-TOKEN")
+
+		if headerToken == "" || cookieToken != headerToken {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "CSRF token mismatch"})
+			return
+		}
+		c.Next()
+	}
+}

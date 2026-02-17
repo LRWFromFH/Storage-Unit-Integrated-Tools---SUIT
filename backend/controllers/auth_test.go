@@ -312,3 +312,40 @@ func TestRegister_MassAssignment_RoleIgnored(t *testing.T) {
 		t.Fatalf("Expected role 'employee', got '%s' — mass assignment vulnerability", employee.Role)
 	}
 }
+
+func TestLogin_CookiesSetOnLogin(t *testing.T) {
+	r := setupTestRouter()
+	body := map[string]string{
+		"username": "admin_attempt",
+		"email":    "admin@test.com",
+		"password": "securepassword123",
+		"role":     "admin",
+	}
+
+	w := registerUser(r, body)
+	if w.Code != http.StatusCreated {
+		t.Fatalf("Expected 201, got %d: %s", w.Code, w.Body.String())
+	}
+
+	w = loginUser(r, map[string]string{
+		"email":    "admin@test.com",
+		"password": "securepassword123",
+	})
+	// Get all cookies
+	cookies := w.Result().Cookies()
+
+	// Find a specific cookie by name
+	var csrfCookie *http.Cookie
+	for _, c := range cookies {
+		if c.Name == "CSRF-TOKEN" {
+			csrfCookie = c
+			break
+		}
+	}
+
+	if csrfCookie == nil {
+		t.Error("CSRF-TOKEN cookie not found in response")
+	} else {
+		t.Logf("Found cookie: %s = %s", csrfCookie.Name, csrfCookie.Value)
+	}
+}

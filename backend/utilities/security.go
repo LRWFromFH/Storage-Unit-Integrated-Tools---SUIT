@@ -3,6 +3,8 @@ package utilities
 import (
 	"backend/database"
 	"backend/models"
+	"crypto/rand"
+	"encoding/hex"
 	"log"
 	"time"
 
@@ -28,16 +30,18 @@ func CheckPasswordHash(password, hash string) bool {
 }
 
 func GenerateToken() string {
-	var csrfToken string
-	var err error
-	var timeNow = time.Now().String()
+	// 32 bytes provides 256 bits of entropy, which is standard for CSRF
+	b := make([]byte, 32)
 
-	csrfToken, err = HashPassword(timeNow)
+	// Read fills the slice with secure random bytes
+	_, err := rand.Read(b)
 	if err != nil {
-		log.Fatal("Error generating token: ", err)
+		// In the rare event the OS fails to provide randomness,
+		// we shouldn't proceed with an insecure token.
+		log.Fatalf("Critical error: Failed to generate secure random bytes: %v", err)
 	}
 
-	return csrfToken
+	return hex.EncodeToString(b)
 }
 
 func GenerateCookie() Cookie {
@@ -49,7 +53,7 @@ func GenerateCookie() Cookie {
 	var cookie Cookie
 	cookie.value = cookieValue
 	cookie.createdAt = time.Now()
-	cookie.expiration = time.Now().Add(24 * time.Hour) // Cookie expires in 24 hours
+	cookie.expiration = cookie.createdAt.Add(24 * time.Hour) // Cookie expires in 24 hours
 	return cookie
 }
 
