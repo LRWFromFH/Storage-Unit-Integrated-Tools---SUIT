@@ -31,8 +31,9 @@ func SetupRoutes(r *gin.Engine) {
 		})
 	}
 
-	r.Static("/", "./static/browser")
+	r.Static("/assets", "../frontend/dist/frontend/browser/")
+	r.StaticFile("/", "../frontend/dist/frontend/browser/index.html")
 	r.NoRoute(func(c *gin.Context) {
-		c.File("./static/browser/index.html")
+		c.File("../frontend/dist/frontend/browser/index.html")
 	})
 }
