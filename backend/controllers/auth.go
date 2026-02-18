@@ -7,6 +7,8 @@ import (
 
 	"backend/database"
 	"backend/models"
+	"crypto/rand"
+	"encoding/hex"	
 	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
@@ -19,6 +21,15 @@ type Claims struct {
 	Role       string `json:"role"`
 	jwt.RegisteredClaims
 }
+
+func generateCSRFToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "Error generating CSRF token", err
+	}
+	return hex.EncodeToString(bytes), nil
+}
+
 
 func JwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
@@ -87,6 +98,7 @@ func Login(c *gin.Context) {
 		},
 	}
 
+	csrfToken, _ := generateCSRFToken()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtSecret())
 	if err != nil {
@@ -98,7 +110,24 @@ func Login(c *gin.Context) {
 	csrfTokenString := utilities.GenerateToken()
 	c.SetCookie("CSRF-TOKEN", csrfTokenString, 3600, "/", "localhost", false, false)
 
-	c.JSON(http.StatusOK, gin.H{"token": tokenString})
 
-	//TODO: Store the CSRF token in the database with an association to the user session for later validation
+	c.SetCookie(
+      "session_token",  // cookie name
+      tokenString,      // the JWT value
+      86400,            // maxAge in seconds (24h to match your JWT expiry)
+      "/",              // path — available on all routes
+      "",               // domain — empty means current domain
+      false,            // secure — set to true in production (HTTPS only)
+      true,             // httpOnly — JS cannot read this cookie
+  	)
+	c.SetCookie("csrf_token", csrfToken, 86400, "/", "", false, false)
+
+  c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
+func Logout(c *gin.Context) {
+	// MaxAge = -1 tells the browser to delete the cookie immediately
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
+	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
+}
+

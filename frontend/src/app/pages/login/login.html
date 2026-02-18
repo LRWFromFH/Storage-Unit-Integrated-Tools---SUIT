@@ -1,2 +1,38 @@
-<h1>Login to SUIT!</h1>
-<p>Storage Unit Integrated Tools</p>
+<div class="login-container">
+    <mat-card class="login-card">
+        <h1>Login to SUIT</h1>
+        <p class="subtitle">Storage Unit Integrated Tools</p>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Email</mat-label>
+                <input matInput formControlName="email" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" formControlName="password" />
+            </mat-form-field>
+
+            @if (errorMessage) {
+            <p class="error">{{ errorMessage }}</p>
+            }
+
+            <button mat-raised-button color="primary" class="full-width" type="submit"
+                [disabled]="isLoading || form.invalid">
+
+                @if (!isLoading) {
+                Login
+                } @else {
+                <mat-spinner diameter="20"></mat-spinner>
+                }
+            </button>
+
+            <button mat-button type="button" (click)="goToRegister()">
+                Don't have an account? Register
+            </button>
+
+        </form>
+    </mat-card>
+</div>
