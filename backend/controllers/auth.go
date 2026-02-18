@@ -9,7 +9,6 @@ import (
 	"backend/models"
 	"crypto/rand"
 	"encoding/hex"	
-	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
