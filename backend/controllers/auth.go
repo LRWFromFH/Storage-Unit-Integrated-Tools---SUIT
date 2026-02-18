@@ -7,12 +7,10 @@ import (
 
 	"backend/database"
 	"backend/models"
-	"crypto/rand"
-	"encoding/hex"	
+	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type Claims struct {
@@ -21,13 +19,6 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-func generateCSRFToken() (string, error) {
-	bytes := make([]byte, 32)
-	if _, err := rand.Read(bytes); err != nil {
-		return "Error generating CSRF token", err
-	}
-	return hex.EncodeToString(bytes), nil
-}
 
 
 func JwtSecret() []byte {
@@ -46,7 +37,7 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), 14)
+	hashedPassword, err := utilities.HashPassword(req.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
 		return
@@ -55,7 +46,7 @@ func Register(c *gin.Context) {
 	employee := models.Employee{
 		SMID:     req.SMID,
 		Email:    req.Email,
-		Password: string(hashedPassword),
+		Password: hashedPassword,
 		Role:     "employee",
 	}
 
@@ -83,7 +74,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(employee.Password), []byte(req.Password)); err != nil {
+	if err := utilities.CheckPasswordHash(req.Password, employee.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
@@ -97,7 +88,7 @@ func Login(c *gin.Context) {
 		},
 	}
 
-	csrfToken, _ := generateCSRFToken()
+	csrfToken, _ := utilities.GenerateToken()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(JwtSecret())
 	if err != nil {
