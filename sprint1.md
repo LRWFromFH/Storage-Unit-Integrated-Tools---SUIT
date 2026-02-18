@@ -186,6 +186,8 @@ Sprint 1 focused on establishing the core technical foundation of the project. T
 Issues #13, #14, #15, #16, #17, #18, #19, #20, #21, #22 — plus beginning work on US-01 (automated reports) and US-02 (full reservation flow).
 
 ---
+## Frontend Team Video[
+https://discord.com/channels/1464387885468876905/1464387886203015408/1473806629970383124](https://uflorida-my.sharepoint.com/personal/manasa_kallam_ufl_edu/_layouts/15/stream.aspx?id=%2Fpersonal%2Fmanasa%5Fkallam%5Fufl%5Fedu%2FDocuments%2FCEN5035%2FSprint%5F1%5Ffrontend%2Emp4&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&ga=1&referrer=StreamWebApp%2EWeb&referrerScenario=AddressBarCopied%2Eview%2E45da6dd3%2Dc6a7%2D43d1%2Dbdd7%2D0bc95f040bb8)
 
 ## Backend Team Video
 https://1drv.ms/v/c/a796cc3e63e12a01/IQCdKBb1i8f3RIKEWDrENMUvAaTVGH_9WmIbUIeLGktfwEw?e=iKVpsg
