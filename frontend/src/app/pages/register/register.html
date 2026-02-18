@@ -1,45 +1,72 @@
-<div class="register-container">
-  <mat-card class="register-card">
-    <h1>Create Account</h1>
-    <p class="subtitle">Join SUIT</p>
+<div class = "auth-page">
+    <mat-card appearance="outlined" class="auth-card">
+  <mat-card-header>
+    <mat-icon mat-card-avatar>person_add</mat-icon>
+    <mat-card-title>Create Account</mat-card-title>
+    <mat-card-subtitle>Join SUIT Platform</mat-card-subtitle>
+  </mat-card-header>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()">
-
-      <mat-form-field appearance="outline" class="full-width">
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+      <mat-form-field appearance="outline">
         <mat-label>Username</mat-label>
-        <input matInput formControlName="username" />
+        <mat-icon matPrefix>badge</mat-icon>
+        <input matInput formControlName="username" required autocomplete="username">
+
+        @if (form.get('username')?.hasError('required') && form.get('username')?.touched) {
+          <mat-error>Username is required</mat-error>
+        }
+        @if (form.get('username')?.hasError('minlength') && form.get('username')?.touched) {
+          <mat-error>Minimum 3 characters</mat-error>
+        }
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline">
         <mat-label>Email</mat-label>
-        <input matInput formControlName="email" />
+        <mat-icon matPrefix>email</mat-icon>
+        <input matInput formControlName="email" type="email" required autocomplete="email">
+
+        @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+          <mat-error>Email is required</mat-error>
+        }
+        @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+          <mat-error>Invalid email format</mat-error>
+        }
       </mat-form-field>
 
-      <mat-form-field appearance="outline" class="full-width">
+      <mat-form-field appearance="outline">
         <mat-label>Password</mat-label>
-        <input matInput type="password" formControlName="password" />
+        <mat-icon matPrefix>key</mat-icon>
+        <input matInput type="password" formControlName="password" required autocomplete="new-password">
+
+        @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+          <mat-error>Password is required</mat-error>
+        }
+        @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+          <mat-error>Minimum 6 characters</mat-error>
+        }
       </mat-form-field>
 
       @if (errorMessage) {
-        <p class="error">{{ errorMessage }}</p>
+        <div class="error-message">
+          <mat-icon>error_outline</mat-icon>
+          {{ errorMessage }}
+        </div>
       }
 
-      <button mat-raised-button color="primary"
-              class="full-width"
-              type="submit"
-              [disabled]="isLoading || form.invalid">
+      <mat-card-actions>
+        <button mat-raised-button color="primary" type="submit"
+                [disabled]="isLoading || form.invalid" class="submit-btn">
+          @if (!isLoading) { Register }
+          @else { <mat-spinner diameter="24"></mat-spinner> }
+        </button>
 
-        @if (!isLoading) {
-          Register
-        } @else {
-          <mat-spinner diameter="20"></mat-spinner>
-        }
-      </button>
-
-      <button mat-button type="button" (click)="goToLogin()">
-        Already have an account? Login
-      </button>
-
+        <div class="auth-link">
+          Already registered?
+          <button type="button" (click)="goToLogin()" color="accent">Sign in</button>
+        </div>
+      </mat-card-actions>
     </form>
-  </mat-card>
+  </mat-card-content>
+</mat-card>
 </div>
