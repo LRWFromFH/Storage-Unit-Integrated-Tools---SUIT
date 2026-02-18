@@ -106,11 +106,6 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	//We still need a csrf token.
-	csrfTokenString := utilities.GenerateToken()
-	c.SetCookie("CSRF-TOKEN", csrfTokenString, 3600, "/", "localhost", false, false)
-
-
 	c.SetCookie(
       "session_token",  // cookie name
       tokenString,      // the JWT value
