@@ -1,6 +1,6 @@
 # Sprint 1 — Storage Unit Integrated Tools (SUIT)
 
-**Sprint Duration:**   
+   
 **Repository:** [LRWFromFH/Storage-Unit-Integrated-Tools---SUIT](https://github.com/LRWFromFH/Storage-Unit-Integrated-Tools---SUIT/issues)  
 **Team Members:** 
 - Sumanthra Yerrabelly | Backend
