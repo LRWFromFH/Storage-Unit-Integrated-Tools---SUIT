@@ -3,6 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/services/auth';
 
+import { ChangeDetectorRef } from '@angular/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -34,6 +35,7 @@ export class Login {
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private snackBar = inject(MatSnackBar);
+  private cdr = inject(ChangeDetectorRef);
 
   isLoading = false;
   errorMessage = '';
@@ -50,39 +52,37 @@ export class Login {
   }
 
   async onSubmit() {
-  if (this.form.invalid || this.isLoading) return;
+    if (this.form.invalid || this.isLoading) return;
 
-  this.errorMessage = '';
-  this.isLoading = true;
+    this.errorMessage = '';
+    this.isLoading = true;
 
-  const { email, password } = this.form.getRawValue();
+    const { email, password } = this.form.getRawValue();
 
-  try {
+    try {
       await this.auth.login(email!, password!);
       this.router.navigate(['/dashboard'], { replaceUrl: true });
     } catch (err: any) {
-      const msg = err?.status === 401 || err?.status === 403
-        ? 'Invalid email or password'
-        : 'Something went wrong. Please try again.';
-      this.showErrorToast(msg);
+      this.errorMessage = err.message || 'Something went wrong';
+      // this.showErrorToast(this.errorMessage);
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
 
-  this.isLoading = false;
-}
+  }
 
 
   goToRegister() {
     this.router.navigate(['/register']);
   }
   private showErrorToast(message: string) {
-  this.snackBar.open(message, 'Close', {
-    duration: 3000,
-    horizontalPosition: 'center',
-    verticalPosition: 'top',
-    panelClass: ['suit-snackbar-error']
-  });
-}
+    this.snackBar.open(message, 'Close', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'top',
+      panelClass: ['suit-snackbar-error']
+    });
+  }
 
 }
