@@ -15,7 +15,7 @@ func main() {
 	config.AllowOrigins = []string{"http://localhost:4200"}
 	config.AllowCredentials = true
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-CSRF-Token"}
 	r.Use(cors.New(config))
 
 	small, medium, large, xlarge := 50, 35, 25, 15
