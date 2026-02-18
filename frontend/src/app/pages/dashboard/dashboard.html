@@ -1,30 +1,49 @@
+<!-- dashboard.html -->
 <mat-toolbar color="primary">
-  <span>SUIT Dashboard</span>
+  <span class="app-title">SUIT</span>
+  <span class="app-subtitle">Dashboard</span>
 
   <span class="spacer"></span>
 
-  <button mat-button (click)="logout()">
+  <button mat-icon-button
+          (click)="logout()"
+          matTooltip="Sign out"
+          matTooltipPosition="below"
+          aria-label="Sign out of SUIT">
     <mat-icon>logout</mat-icon>
-    Logout
   </button>
 </mat-toolbar>
 
 <div class="dashboard-container">
-
-  <mat-card class="dashboard-card">
-    <h2>Manage Units</h2>
-    <p>View and manage storage units.</p>
-    <button mat-raised-button color="primary" routerLink="/units">
-      Go to Units
-    </button>
+  <mat-card class="dashboard-card" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>warehouse</mat-icon>
+      <mat-card-title>Units</mat-card-title>
+      <mat-card-subtitle>Manage storage units, availability & reservations</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Real-time overview • Move-in/out • Occupancy tracking</p>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" routerLink="/units">
+        Enter Units
+      </button>
+    </mat-card-actions>
   </mat-card>
 
-  <mat-card class="dashboard-card">
-    <h2>Manage Tenants</h2>
-    <p>View and manage tenants.</p>
-    <button mat-raised-button color="accent" routerLink="/tenants">
-      Go to Tenants
-    </button>
+  <mat-card class="dashboard-card" appearance="outlined">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>people</mat-icon>
+      <mat-card-title>Tenants</mat-card-title>
+      <mat-card-subtitle>Handle tenant lifecycle & billing</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p>Contracts • Insurance status • Payment history</p>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-raised-button color="accent" routerLink="/tenants">
+        Enter Tenants
+      </button>
+    </mat-card-actions>
   </mat-card>
-
 </div>

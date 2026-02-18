@@ -1,17 +1,136 @@
-.spacer {
-    flex: 1 1 auto;
+/* dashboard.scss — add / update these rules */
+
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--suit-bg);
 }
 
-.dashboard-container {
-    padding: 2rem;
+mat-toolbar {
+  background: var(--suit-primary);
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 32px;
+  min-height: 72px;
+
+  box-shadow: var(--suit-shadow-sm);
+
+  // Title
+  .app-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  // Subtitle
+  .app-subtitle {
+    margin-left: 8px;
+    font-size: 1.1rem;
+    font-weight: 400;
+    opacity: 0.9;
+  }
+
+  // Push logout button to right
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  // Logout button
+  button[mat-icon-button] {
+    margin-left: 16px;
+
     display: flex;
-    gap: 2rem;
+    align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+    color: #ffffff;
+
+    transition: background 0.2s ease, transform 0.15s ease;
+
+    mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+    }
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+
+.dashboard-container {
+  padding: 48px 32px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 32px;
+  max-width: 1280px;
+  margin: 0 auto;
 }
 
 .dashboard-card {
-    width: 300px;
-    padding: 1.5rem;
-    text-align: center;
+  border-radius: var(--suit-radius-lg);
+  box-shadow: var(--suit-shadow-md);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--suit-shadow-lg);
+  }
+
+  mat-card-header {
+    padding: 32px 32px 16px;
+  }
+
+  [mat-card-avatar] {
+    background: transparent;
+    color: var(--suit-primary);
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+  }
+
+  mat-card-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--suit-secondary);
+  }
+
+  mat-card-subtitle {
+    font-size: 1rem;
+    color: var(--suit-text-muted);
+    margin-top: 4px;
+  }
+
+  mat-card-content {
+    padding: 0 32px 24px;
+    color: var(--suit-text-muted);
+    font-size: 0.95rem;
+  }
+
+  mat-card-actions {
+    padding: 0 32px 32px;
+    justify-content: flex-end;
+  }
+
+  button[mat-raised-button] {
+    min-width: 160px;
+    height: 48px;
+    border-radius: var(--suit-radius-md);
+    font-weight: 500;
+  }
 }

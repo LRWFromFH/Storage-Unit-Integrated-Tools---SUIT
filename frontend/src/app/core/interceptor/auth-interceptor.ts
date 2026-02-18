@@ -4,24 +4,21 @@ import { Auth } from '../services/auth';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(Auth);
-  const token = auth.getToken();
+  const csrfToken = auth.getCsrfToken();
 
-  const skipAuth =
+  let modifiedReq = req.clone({
+    withCredentials: true
+  });
+
+  const skipCsrf =
     req.url.includes('/api/login') ||
     req.url.includes('/api/register');
 
-  let modifiedReq = req;
-
-  if (token && !skipAuth) {
-    modifiedReq = req.clone({
+  if (csrfToken && !skipCsrf) {
+    modifiedReq = modifiedReq.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
-      },
-      withCredentials: true
-    });
-  } else {
-    modifiedReq = req.clone({
-      withCredentials: true
+        'X-CSRF-TOKEN': csrfToken
+      }
     });
   }
 

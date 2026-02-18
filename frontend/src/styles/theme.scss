@@ -1,0 +1,38 @@
+// src/styles/theme.scss
+
+:root {
+  // Core palette (60-30-10 inspired)
+  --suit-primary:    #1976d2;     // Main brand blue – buttons, links, headers
+  --suit-accent:     #f57c00;     // Energetic orange – CTAs, highlights, warnings
+  --suit-secondary:  #455a64;     // Slate gray-blue – subtitles, borders, icons
+  --suit-bg:         #f5f7fa;     // ~60% neutral light background
+  --suit-surface:    #ffffff;     // Cards, panels
+  --suit-text:       #1a202c;     // Primary text
+  --suit-text-muted: #6b7280;     // Secondary / placeholder text
+  --suit-border:     #e2e8f0;     // Subtle borders
+  --suit-divider:    rgba(0, 0, 0, 0.08);
+
+  // Semantic / extended
+  --suit-success:    #10b981;
+  --suit-warn:       #ef4444;
+  --suit-error:      #dc2626;
+  --suit-info:       #3b82f6;
+
+  // Shadows (subtle Material-like)
+  --suit-shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+  --suit-shadow-md:  0 4px 12px rgba(0,0,0,0.10);
+  --suit-shadow-lg:  0 10px 25px rgba(0,0,0,0.12);
+
+  // Border radius (modern soft corners)
+  --suit-radius-sm:  8px;
+  --suit-radius-md:  12px;
+  --suit-radius-lg:  16px;
+}
+
+
+body {
+  background: var(--suit-bg);
+  color: var(--suit-text);
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+}
