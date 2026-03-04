@@ -9,15 +9,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-//Added CSRF protection and switched to cookie-based JWT storage, the csrf token is generated on login and stored in a cookie.
+// Added CSRF protection and switched to cookie-based JWT storage, the csrf token is generated on login and stored in a cookie.
 func CSRFRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.Method == "GET" || c.Request.Method == "HEAD" || c.Request.Method == "OPTIONS" {
-			c.Next()  // safe methods don't need CSRF
+			c.Next() // safe methods don't need CSRF
 			return
 		}
 		cookieToken, err := c.Cookie("csrf_token")
-		headerToken := c.GetHeader("X-CSRF-Token")
+		headerToken := c.GetHeader("X-CSRF-TOKEN")
 
 		if err != nil || cookieToken == "" || headerToken != cookieToken {
 			c.AbortWithStatusJSON(403, gin.H{"error": "CSRF validation failed"})

@@ -45,6 +45,10 @@ func setupTestRouter() *gin.Engine {
 		protected.POST("/protected-post", func(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"message": "POST succeeded"})
 		})
+
+		protected.GET("/session", controllers.Session)
+
+		protected.POST("/searchDB", controllers.SearchDB)
 	}
 
 	return r
@@ -469,7 +473,7 @@ func TestCSRF_AllowsPostWithValidToken(t *testing.T) {
 
 	req, _ := http.NewRequest("POST", "/api/protected-post", nil)
 	attachCookies(req, loginResp)
-	req.Header.Set("X-CSRF-Token", csrfToken)
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)
 
@@ -545,4 +549,75 @@ func TestLogout_ProtectedRouteFailsAfterLogout(t *testing.T) {
 	if w.Code != http.StatusUnauthorized {
 		t.Fatalf("Expected 401 after logout, got %d: %s", w.Code, w.Body.String())
 	}
+}
+
+func TestSearchDB(t *testing.T) {
+	r := setupTestRouter()
+	// Create test data
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+	unit := models.Unit{
+		UnitNumber: "A123",
+		SizeType:   "10x10",
+		Renter:     &customer,
+		CustomerID: &customer.ID,
+	}
+	database.DB.Create(&unit)
+
+	registerUser(r, map[string]string{
+		"username": "logout_protect_test",
+		"email":    "logoutprotect@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "logoutprotect@test.com",
+		"password": "securepassword123",
+	})
+
+	data := gin.H{"query": "John"}
+	jsonData, _ := json.Marshal(data)
+
+	req, _ := http.NewRequest("POST", "/api/searchDB", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	//t.Logf("CSRF Token: %s", csrfToken)
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// After r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+	// 1. Get the customers list from the response map
+	customers, ok := response["customers"].([]interface{})
+	if !ok || len(customers) == 0 {
+		t.Fatal("No customers found in the search response")
+	}
+
+	// 2. Access the first customer in the list
+	firstCustomer, ok := customers[0].(map[string]interface{})
+	if !ok {
+		t.Fatal("Customer data is not in the expected format")
+	}
+
+	// 3. Access the names using the correct JSON keys (lowercase with underscores)
+	firstName := firstCustomer["FirstName"]
+	lastName := firstCustomer["LastName"]
+
+	t.Logf("Found Customer Name: %v %v", firstName, lastName)
 }
