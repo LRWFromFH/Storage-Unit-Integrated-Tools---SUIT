@@ -1,0 +1,46 @@
+:host {
+  display: block;
+  min-height: 100vh;
+  background: var(--suit-bg);
+}
+
+mat-toolbar {
+  background: var(--suit-primary);
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  min-height: 72px;
+  box-shadow: var(--suit-shadow-sm);
+
+  .app-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .app-subtitle {
+    margin-left: 8px;
+    font-size: 1.1rem;
+    opacity: 0.9;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }
+
+  button[mat-icon-button] {
+    margin-left: 16px;
+    color: #ffffff;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+.layout-content {
+  padding: 40px 32px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
