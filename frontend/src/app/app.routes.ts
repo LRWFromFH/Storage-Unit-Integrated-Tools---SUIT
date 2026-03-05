@@ -5,13 +5,16 @@ import { Units } from './pages/units/units';
 import { Tenants } from './pages/tenants/tenants';
 import { authGuard } from './core/guards/auth-guard';
 import { Register } from './pages/register/register';
+import { AppLayout } from './layout/app-layout';
 
 export const routes: Routes = [
     { path: '', redirectTo: 'login', pathMatch: 'full' },
 
     { path: 'login', component: Login },
     { path: 'register', component: Register },
-    {
+    { path: '', component: AppLayout, 
+        children:[
+            {
         path: 'dashboard',
         component: Dashboard,
         canActivate: [authGuard]
@@ -27,7 +30,8 @@ export const routes: Routes = [
         path: 'tenants',
         component: Tenants,
         canActivate: [authGuard]
+    }
+        ]
     },
-
     { path: '**', redirectTo: 'login' }
 ];

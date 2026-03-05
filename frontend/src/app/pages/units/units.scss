@@ -1,0 +1,82 @@
+.suit-grid {
+  background: var(--suit-surface);
+  border-radius: var(--suit-radius-md);
+  box-shadow: var(--suit-shadow-sm);
+  padding: 12px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.unit-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.unit-card {
+  background: var(--suit-surface);
+  border-radius: var(--suit-radius-md);
+  box-shadow: var(--suit-shadow-sm);
+  padding: 16px;
+  transition: 0.2s ease;
+}
+
+.unit-card:hover {
+  box-shadow: var(--suit-shadow-md);
+}
+
+.unit-header {
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.status-badge.available {
+  background: var(--suit-success);
+  color: white;
+}
+
+.status-badge.occupied {
+  background: var(--suit-error);
+  color: white;
+}
+
+.status-badge.reserved {
+  background: var(--suit-accent);
+  color: white;
+}
+
+.status-badge.maintenance {
+  background: var(--suit-secondary);
+  color: white;
+}
+
+.units-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    color: var(--suit-secondary);
+  }
+}
+
+.units-header-actions {
+  display: flex;
+  gap: 16px;
+}

@@ -1,0 +1,61 @@
+<h2 mat-dialog-title>
+  {{ data ? 'Edit Unit' : 'Add Unit' }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="save()" mat-dialog-content>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Unit Number</mat-label>
+    <input matInput formControlName="unitNumber" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Unit Type</mat-label>
+    <mat-select formControlName="unitType">
+      <mat-option value="5x5">5x5</mat-option>
+      <mat-option value="10x10">10x10</mat-option>
+      <mat-option value="10x20">10x20</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Size (Sq Ft)</mat-label>
+    <input matInput type="number" formControlName="sizeSqFt" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Floor</mat-label>
+    <input matInput type="number" formControlName="floor" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Price Per Month</mat-label>
+    <input matInput type="number" formControlName="pricePerMonth" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Status</mat-label>
+    <mat-select formControlName="status">
+      <mat-option value="Available">Available</mat-option>
+      <mat-option value="Occupied">Occupied</mat-option>
+      <mat-option value="Reserved">Reserved</mat-option>
+      <mat-option value="Maintenance">Maintenance</mat-option>
+    </mat-select>
+  </mat-form-field>
+
+  <mat-checkbox formControlName="climateControlled">
+    Climate Controlled
+  </mat-checkbox>
+
+  <mat-checkbox formControlName="insuranceRequired">
+    Insurance Required
+  </mat-checkbox>
+
+</form>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()">
+    Save
+  </button>
+</div>

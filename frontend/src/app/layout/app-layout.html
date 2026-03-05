@@ -1,0 +1,18 @@
+<mat-toolbar>
+  <span class="app-title">SUIT</span>
+  <span class="app-subtitle">Storage-Unit-Integrated-Tools</span>
+
+  <span class="spacer"></span>
+
+  <button mat-icon-button
+          (click)="logout()"
+          matTooltip="Sign out"
+          matTooltipPosition="below"
+          aria-label="Sign out">
+    <mat-icon>logout</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="layout-content">
+  <router-outlet></router-outlet>
+</div>
