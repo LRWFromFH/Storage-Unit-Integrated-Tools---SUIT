@@ -1,7 +1,76 @@
-<h1>Tenants</h1>
+<div class="tenants-header">
 
-<div class="tenants-actions">
-    <button routerLink="/dashboard">
-        Back to Dashboard
+  <h2>Tenant Management</h2>
+
+  <div class="tenants-header-actions">
+
+    <button mat-stroked-button color="primary" routerLink="/dashboard">
+      Back to Dashboard
     </button>
+
+  </div>
+
+</div>
+
+<div class="view-toggle">
+
+  <button
+    mat-stroked-button
+    [color]="viewMode === 'table' ? 'primary' : ''"
+    (click)="toggleView('table')">
+
+    Table View
+  </button>
+
+  <button
+    mat-stroked-button
+    [color]="viewMode === 'grid' ? 'primary' : ''"
+    (click)="toggleView('grid')">
+
+    Grid View
+  </button>
+
+</div>
+
+
+<!-- TABLE VIEW -->
+
+<div *ngIf="viewMode === 'table'" class="suit-grid">
+
+  <ag-grid-angular
+    style="width: 100%; height: 500px;"
+    [theme]="theme"
+    [rowData]="filteredTenants"
+    [columnDefs]="columnDefs"
+    [pagination]="true">
+
+  </ag-grid-angular>
+
+</div>
+
+
+<!-- GRID VIEW -->
+
+<div *ngIf="viewMode === 'grid'" class="tenant-card-grid">
+
+  <div class="tenant-card" *ngFor="let tenant of filteredTenants">
+
+    <div class="tenant-header">
+      {{ tenant.name }}
+
+      <span class="status-badge" [ngClass]="tenant.status.toLowerCase()">
+        {{ tenant.status }}
+      </span>
+    </div>
+
+    <div class="tenant-body">
+      <div>Email: {{ tenant.email }}</div>
+      <div>Phone: {{ tenant.phone }}</div>
+      <div>Unit: {{ tenant.unitNumber }}</div>
+      <div>Move In: {{ tenant.moveInDate | date }}</div>
+      <div>Insurance: {{ tenant.insurance ? 'Yes' : 'No' }}</div>
+    </div>
+
+  </div>
+
 </div>
