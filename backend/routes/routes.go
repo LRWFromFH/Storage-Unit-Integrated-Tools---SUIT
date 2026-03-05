@@ -40,6 +40,11 @@ func SetupRoutes(r *gin.Engine) {
 				"role":        role,
 			})
 		})
+
+		protected.GET("/session", controllers.Session)
+
+		protected.POST("/searchDB", controllers.SearchDB)
+
 	}
 
 	r.Static("/assets", "../frontend/dist/frontend/browser/")

@@ -19,8 +19,6 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
-
-
 func JwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -97,22 +95,67 @@ func Login(c *gin.Context) {
 	}
 
 	c.SetCookie(
-      "session_token",  // cookie name
-      tokenString,      // the JWT value
-      86400,            // maxAge in seconds (24h to match your JWT expiry)
-      "/",              // path — available on all routes
-      "",               // domain — empty means current domain
-      false,            // secure — set to true in production (HTTPS only)
-      true,             // httpOnly — JS cannot read this cookie
-  	)
+		"session_token", // cookie name
+		tokenString,     // the JWT value
+		86400,           // maxAge in seconds (24h to match your JWT expiry)
+		"/",             // path — available on all routes
+		"",              // domain — empty means current domain
+		false,           // secure — set to true in production (HTTPS only)
+		true,            // httpOnly — JS cannot read this cookie
+	)
 	c.SetCookie("csrf_token", csrfToken, 86400, "/", "", false, false)
 
-  c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
+	//TODO: Add session to database.
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 func Logout(c *gin.Context) {
 	// MaxAge = -1 tells the browser to delete the cookie immediately
 	c.SetCookie("session_token", "", -1, "/", "", false, true)
 	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
+
+	//TODO: Remove session from database.
+
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
+// TODO: Session API endpoint to validate session and return user info.
+func Session(c *gin.Context) {
+	employeeID, _ := c.Get("employee_id")
+	role, _ := c.Get("role")
+	c.JSON(http.StatusOK, gin.H{
+		"employee_id": employeeID,
+		"role":        role,
+	})
+}
+
+func SearchDB(c *gin.Context) {
+	var req models.SearchRequest
+	// Bind the incoming JSON to our struct
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request format"})
+		return
+	}
+
+	searchQuery := req.Query
+	// Create a wildcard string for partial matches: e.g., "John" becomes "%John%"
+	likeQuery := "%" + searchQuery + "%"
+
+	var customers []models.Customer
+	var units []models.Unit
+
+	// 1. Search Customers by Name (First, Last, or Full), Email, or Phone
+	database.DB.Where(
+		"first_name LIKE ? OR last_name LIKE ? OR (first_name + ' ' + last_name) LIKE ? OR email LIKE ? OR phone LIKE ?",
+		likeQuery, likeQuery, likeQuery, likeQuery, likeQuery,
+	).Find(&customers)
+
+	// 2. Search Units by Unit Number/ID
+	// If unit_id is a string/varchar, use LIKE. If it's an integer, use =.
+	database.DB.Where("Unit_Number LIKE ?", likeQuery).Find(&units)
+
+	c.JSON(http.StatusOK, gin.H{
+		"customers": customers,
+		"units":     units,
+	})
+}

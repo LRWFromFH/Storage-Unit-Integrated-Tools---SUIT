@@ -19,9 +19,9 @@ func Connect() {
 
 	DB.AutoMigrate(&models.Employee{},
 		&models.Unit{},
-		&models.Customer{},
-		&models.RegisterRequest{},
-		&models.LoginRequest{}, &models.CreateUnitRequest{})
+		&models.Customer{})
+	//&models.RegisterRequest{},
+	//&models.LoginRequest{}, &models.CreateUnitRequest{})
 }
 
 func ConnectTest() {
