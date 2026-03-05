@@ -36,3 +36,9 @@ body {
   height: 100%;
 }
 /* You can add global styles to this file, and also import other style files */
+.suit-snackbar-error {
+  background: var(--suit-error) !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: var(--suit-radius-md);
+}
