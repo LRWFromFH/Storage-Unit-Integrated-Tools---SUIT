@@ -15,4 +15,7 @@ type Customer struct {
 	Phone     string `gorm:"uniqueIndex:idx_customer_identity"`
 	Address   string `gorm:"uniqueIndex:idx_customer_identity"`
 	Email     string `gorm:"unique"` // Email is usually unique on its own
+	// Relationships
+	Units []Unit `gorm:"foreignKey:CustomerID"` // One-to-Many
+	Notes []Note `gorm:"foreignKey:CustomerID"`
 }

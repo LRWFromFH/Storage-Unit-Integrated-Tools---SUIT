@@ -23,6 +23,10 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 			Price:      74.95,
 			Renter:     nil,
 			CustomerID: nil,
+			Length:     5,
+			Width:      5,
+			Height:     10,
+			Combined:   false,
 		}
 		DB.Create(&unit)
 	}
@@ -34,6 +38,10 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 			Price:      99.95,
 			Renter:     nil,
 			CustomerID: nil,
+			Length:     5,
+			Width:      10,
+			Height:     10,
+			Combined:   false,
 		}
 		DB.Create(&unit)
 	}
@@ -44,6 +52,10 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 			Price:      149.95,
 			Renter:     nil,
 			CustomerID: nil,
+			Length:     10,
+			Width:      10,
+			Height:     10,
+			Combined:   false,
 		}
 		DB.Create(&unit)
 	}
@@ -54,6 +66,10 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 			Price:      189.95,
 			Renter:     nil,
 			CustomerID: nil,
+			Length:     10,
+			Width:      15,
+			Height:     10,
+			Combined:   false,
 		}
 		DB.Create(&unit)
 	}
