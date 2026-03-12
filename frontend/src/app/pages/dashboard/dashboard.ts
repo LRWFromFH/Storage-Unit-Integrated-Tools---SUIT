@@ -25,8 +25,13 @@ export class Dashboard {
   private auth = inject(Auth);
   private router = inject(Router);
 
-  logout() {
-    this.auth.logout();
+  async logout() {
+  try {
+    await this.auth.logout();
+  } catch (e) {
+    console.error('Logout failed', e);
+  } finally {
     this.router.navigate(['/login']);
   }
+}
 }
