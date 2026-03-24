@@ -16,6 +16,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/register", controllers.Register)
 		api.POST("/login", controllers.Login)
 		api.POST("/logout", controllers.Logout) //Added logout route to clear the session and CSRF cookies on the client side
+		api.GET("/session", controllers.Session)
 	}
 
 	protected := r.Group("/api")
@@ -40,8 +41,6 @@ func SetupRoutes(r *gin.Engine) {
 				"role":        role,
 			})
 		})
-
-		protected.GET("/session", controllers.Session)
 
 		protected.POST("/searchDB", controllers.SearchDB)
 
