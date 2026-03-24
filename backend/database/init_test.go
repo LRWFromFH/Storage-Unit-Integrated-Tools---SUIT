@@ -37,3 +37,28 @@ func Test_Init(t *testing.T) {
 	t.Logf("Successfully initialized %d units: %d small, %d medium, %d large, %d xlarge", small+medium+large+xlarge, small, medium, large, xlarge)
 
 }
+
+func Test_Insert_Customers(t *testing.T) {
+	small, medium, large, xlarge := 50, 35, 25, 15
+
+	database.DevInit(small, medium, large, xlarge, true)
+	database.InsertCustomers()
+
+	var customers = []models.Customer{}
+
+	database.DB.Model(&models.Customer{}).Where("first_name = ?", "Bob").Find(&customers)
+	t.Logf("%v", customers)
+	if len(customers) == 0 {
+		t.Errorf("Expected at least 1 customer with first name of Bob.")
+		return
+	}
+
+	t.Logf("Number of Customers with first name of Bob: %v", len(customers))
+
+	//for i := 0; i < len(customers); i++{
+	//
+	//}
+
+	t.Logf("Successfully inserted customers")
+
+}

@@ -12,7 +12,7 @@ func main() {
 
 	r := gin.Default()
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:4200"}
+	config.AllowOrigins = []string{"http://localhost:4200", "http://127.0.0.1:8080"}
 	config.AllowCredentials = true
 	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization", "X-CSRF-Token"}

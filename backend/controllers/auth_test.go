@@ -581,7 +581,7 @@ func TestSearchDB(t *testing.T) {
 		"password": "securepassword123",
 	})
 
-	data := gin.H{"query": "John"}
+	data := gin.H{"query": "John Doe"}
 	jsonData, _ := json.Marshal(data)
 
 	req, _ := http.NewRequest("POST", "/api/searchDB", bytes.NewBuffer(jsonData))
