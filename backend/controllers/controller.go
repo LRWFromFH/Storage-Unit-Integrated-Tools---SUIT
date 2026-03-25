@@ -205,6 +205,36 @@ func Session(c *gin.Context) {
 	})
 }
 
+func UpdateEmployeeRole(c *gin.Context) {
+	id := c.Param("id")
+	employeeID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid employee id"})
+		return
+	}
+
+	var req models.RoleUpdateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if req.Role != "manager" && req.Role != "employee" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid role"})
+		return
+	}
+
+	var employee models.Employee
+	if result := database.DB.First(&employee, employeeID); result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "employee not found"})
+		return
+	}
+
+	employee.Role = req.Role
+	database.DB.Save(&employee)
+	c.JSON(http.StatusOK, gin.H{"message": "role updated", "employee": employee})
+}
+
 func SearchDB(c *gin.Context) {
 	var req models.SearchRequest
 	// Bind the incoming JSON to our struct
