@@ -26,6 +26,17 @@ func HasRole(c *gin.Context, role string) bool {
 	return GetRoleFromContext(c) == role
 }
 
+// middleware that aborts with 403 if the user doesn't have the required role
+func RoleRequired(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !HasRole(c, role) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+			return
+		}
+		c.Next()
+	}
+}
+
 // Added CSRF protection and switched to cookie-based JWT storage, the csrf token is generated on login and stored in a cookie.
 func CSRFRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
