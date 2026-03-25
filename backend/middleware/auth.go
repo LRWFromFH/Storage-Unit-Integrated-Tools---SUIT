@@ -9,6 +9,34 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+const (
+	RoleManager  = "manager"
+	RoleEmployee = "employee"
+)
+
+// reads the role that AuthRequired set in the context
+func GetRoleFromContext(c *gin.Context) string {
+	role, _ := c.Get("role")
+	roleStr, _ := role.(string)
+	return roleStr
+}
+
+// checks if the current user's role matches the required role
+func HasRole(c *gin.Context, role string) bool {
+	return GetRoleFromContext(c) == role
+}
+
+// middleware that aborts with 403 if the user doesn't have the required role
+func RoleRequired(role string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		if !HasRole(c, role) {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+			return
+		}
+		c.Next()
+	}
+}
+
 // Added CSRF protection and switched to cookie-based JWT storage, the csrf token is generated on login and stored in a cookie.
 func CSRFRequired() gin.HandlerFunc {
 	return func(c *gin.Context) {
