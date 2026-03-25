@@ -16,6 +16,7 @@ func SetupRoutes(r *gin.Engine) {
 		api.POST("/register", controllers.Register)
 		api.POST("/login", controllers.Login)
 		api.POST("/logout", controllers.Logout) //Added logout route to clear the session and CSRF cookies on the client side
+		api.GET("/session", controllers.Session)
 	}
 
 	protected := r.Group("/api")
@@ -41,8 +42,6 @@ func SetupRoutes(r *gin.Engine) {
 			})
 		})
 
-		protected.GET("/session", controllers.Session)
-
 		protected.POST("/searchDB", controllers.SearchDB)
 
 		//Customer crud routes.
@@ -54,7 +53,7 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
 
 		//Unit crud routes.
-		protected.POST("/units/:id", controllers.UpdateUnit)
+		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)

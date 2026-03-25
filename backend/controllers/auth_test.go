@@ -49,6 +49,22 @@ func setupTestRouter() *gin.Engine {
 		protected.GET("/session", controllers.Session)
 
 		protected.POST("/searchDB", controllers.SearchDB)
+
+		//Customer crud routes.
+		protected.GET("/customers", controllers.GetAllCustomers)
+		protected.POST("/customers", controllers.CreateCustomer)
+		protected.GET("/customers/:id", controllers.GetCustomer)
+		protected.POST("/customers/:id", controllers.UpdateCustomer)
+		protected.DELETE("/customers/:id", controllers.DeleteCustomer)
+		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
+
+		//Unit crud routes.
+		protected.POST("/units/:unit_number", controllers.UpdateUnit)
+		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
+		protected.GET("/units/:unit_number", controllers.GetUnit)
+		protected.POST("/units", controllers.CreateUnit)
+		protected.POST("/units/combine", controllers.CombineUnits)
+		protected.DELETE("/units/:unit_number", controllers.DeleteUnit)
 	}
 
 	return r

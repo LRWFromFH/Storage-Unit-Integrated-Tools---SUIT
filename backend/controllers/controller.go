@@ -21,6 +21,8 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+var defaultTimeoutLength int = 30
+
 func JwtSecret() []byte {
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
@@ -79,7 +81,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(time.Duration(defaultTimeoutLength) * time.Minute)
 	claims := &Claims{
 		EmployeeID: employee.ID,
 		Role:       employee.Role,
@@ -108,26 +110,98 @@ func Login(c *gin.Context) {
 	c.SetCookie("csrf_token", csrfToken, 86400, "/", "", false, false)
 
 	//TODO: Add session to database.
+	var session models.Session
+	session.Token = tokenString
+	session.EmployeeID = claims.EmployeeID
+	session.Expiration = time.Now().Add(time.Duration(defaultTimeoutLength) * time.Minute)
+	database.DB.Create(&session)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
 }
 func Logout(c *gin.Context) {
+	// 1. Manually get the token string from the cookie
+	tokenString, err := c.Cookie("session_token")
+	if err != nil {
+		//fmt.Println("Could not read Cookie!")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No session cookie found"})
+		return
+	}
+
+	// 2. Parse the JWT claims directly
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return JwtSecret(), nil
+	})
+
+	// 3. Validate the token and claims
+	if err != nil || !token.Valid {
+		//fmt.Println("Could not validate token!")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	// Now you have access to claims.EmployeeID and tokenString
+	var session models.Session
+	result := database.DB.Where("token = ? AND employee_id = ?", tokenString, claims.EmployeeID).First(&session)
+	if result.Error == nil {
+		database.DB.Delete(&session)
+	}
+
 	// MaxAge = -1 tells the browser to delete the cookie immediately
 	c.SetCookie("session_token", "", -1, "/", "", false, true)
 	c.SetCookie("csrf_token", "", -1, "/", "", false, false)
-
-	//TODO: Remove session from database.
 
 	c.JSON(http.StatusOK, gin.H{"message": "Logged out"})
 }
 
 // TODO: Session API endpoint to validate session and return user info.
 func Session(c *gin.Context) {
-	employeeID, _ := c.Get("employee_id")
-	role, _ := c.Get("role")
+	// 1. Manually get the token string from the cookie
+	tokenString, err := c.Cookie("session_token")
+	if err != nil {
+		//fmt.Println("Could not read Cookie!")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "No session cookie found"})
+		return
+	}
+
+	// 2. Parse the JWT claims directly
+	claims := &Claims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		return JwtSecret(), nil
+	})
+
+	// 3. Validate the token and claims
+	if err != nil || !token.Valid {
+		//fmt.Println("Could not validate token!")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+		return
+	}
+
+	// Now you have access to claims.EmployeeID and tokenString
+	var session models.Session
+	result := database.DB.Where("token = ? AND employee_id = ?", tokenString, claims.EmployeeID).First(&session)
+
+	if result.Error != nil {
+		Logout(c)
+		//c.JSON(http.StatusUnauthorized, gin.H{"error": "No active session in database"})
+		return
+	}
+
+	// Check expiration logic
+	if session.Expiration.Before(time.Now()) {
+		database.DB.Delete(&session)
+		Logout(c)
+		//c.JSON(http.StatusUnauthorized, gin.H{"error": "Session expired"})
+		return
+	}
+
+	// Extend session
+	session.Expiration = time.Now().Add(time.Duration(defaultTimeoutLength) * time.Minute)
+	database.DB.Save(&session)
+
 	c.JSON(http.StatusOK, gin.H{
-		"employee_id": employeeID,
-		"role":        role,
+		"employee_id": claims.EmployeeID,
+		"expires_at":  session.Expiration,
 	})
 }
 
@@ -183,7 +257,7 @@ func GetCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	// Convert string ID to uint
-	customerID, err := strconv.ParseUint(id, 10, 32)
+	customerID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
 		return
@@ -214,7 +288,7 @@ func CreateCustomer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Customer created successfully", "customer": customer})
+	c.JSON(http.StatusOK, gin.H{"message": "Customer created successfully", "customer": customer})
 }
 
 // UpdateCustomer updates an existing customer
@@ -337,6 +411,7 @@ func CreateUnit(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer"})
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func GetUnit(c *gin.Context) {
@@ -348,7 +423,7 @@ func GetUnit(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
 		return
 	}
-	c.JSON(http.StatusOK, unit)
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func UpdateUnit(c *gin.Context) {
@@ -375,7 +450,7 @@ func UpdateUnit(c *gin.Context) {
 	unit.Renter = updateData.Renter
 	unit.Insurance = updateData.Insurance
 	database.DB.Save(&unit)
-	c.JSON(http.StatusOK, unit)
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func DeleteUnit(c *gin.Context) {
@@ -406,7 +481,7 @@ func CombineUnits(c *gin.Context) {
 
 	//Get units in request
 	var units []models.Unit
-	result := database.DB.Where("id IN ?", combineRequest.UnitIDs).Find(&units)
+	result := database.DB.Where("unit_number IN ?", combineRequest.UnitIDs).Find(&units)
 	if result.Error != nil || len(units) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "One or more units not found"})
 		return

@@ -57,7 +57,7 @@ export class Register {
 
     try {
       await this.auth.register(username!, email!, password!);
-      this.router.navigate(['/dashboard']);
+      this.router.navigate(['/login']);
     } catch (err: any) {
       this.errorMessage = 'Registration failed. Try again.';
     } finally {
