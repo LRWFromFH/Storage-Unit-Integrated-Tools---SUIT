@@ -13,10 +13,18 @@ func SetupRoutes(r *gin.Engine) {
 
 	api := r.Group("/api")
 	{
-		api.POST("/register", controllers.Register)
 		api.POST("/login", controllers.Login)
 		api.POST("/logout", controllers.Logout) //Added logout route to clear the session and CSRF cookies on the client side
 		api.GET("/session", controllers.Session)
+	}
+
+	managerOnly := r.Group("/api")
+	managerOnly.Use(middleware.AuthRequired())
+	managerOnly.Use(middleware.CSRFRequired())
+	managerOnly.Use(middleware.RoleRequired(middleware.RoleManager))
+	{
+		managerOnly.POST("/register", controllers.Register)
+		managerOnly.POST("/employees/:id/role", controllers.UpdateEmployeeRole)
 	}
 
 	protected := r.Group("/api")
