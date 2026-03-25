@@ -2,6 +2,7 @@ package database
 
 import (
 	"backend/models"
+	"backend/utilities"
 	"math/rand"
 	"strconv"
 )
@@ -81,6 +82,20 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 	DB.Model(&models.Customer{}).Count(&count)
 	if count == 0 {
 		InsertCustomers()
+	}
+
+	var empCount int64
+	DB.Model(&models.Employee{}).Count(&empCount)
+	if empCount == 0 {
+		hashed, err := utilities.HashPassword("Manager123!")
+		if err == nil {
+			DB.Create(&models.Employee{
+				SMID:     "manager001",
+				Email:    "manager@suit.com",
+				Password: hashed,
+				Role:     "manager",
+			})
+		}
 	}
 }
 

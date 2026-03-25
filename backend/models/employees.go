@@ -20,3 +20,7 @@ type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
 }
+
+type RoleUpdateRequest struct {
+	Role string `json:"role" binding:"required"`
+}
