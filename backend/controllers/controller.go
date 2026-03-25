@@ -81,7 +81,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	expirationTime := time.Now().Add(24 * time.Hour)
+	expirationTime := time.Now().Add(time.Duration(defaultTimeoutLength) * time.Minute)
 	claims := &Claims{
 		EmployeeID: employee.ID,
 		Role:       employee.Role,
@@ -257,7 +257,7 @@ func GetCustomer(c *gin.Context) {
 	id := c.Param("id")
 
 	// Convert string ID to uint
-	customerID, err := strconv.ParseUint(id, 10, 32)
+	customerID, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
 		return
@@ -288,7 +288,7 @@ func CreateCustomer(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "Customer created successfully", "customer": customer})
+	c.JSON(http.StatusOK, gin.H{"message": "Customer created successfully", "customer": customer})
 }
 
 // UpdateCustomer updates an existing customer
@@ -411,6 +411,7 @@ func CreateUnit(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create customer"})
 		return
 	}
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func GetUnit(c *gin.Context) {
@@ -422,7 +423,7 @@ func GetUnit(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
 		return
 	}
-	c.JSON(http.StatusOK, unit)
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func UpdateUnit(c *gin.Context) {
@@ -449,7 +450,7 @@ func UpdateUnit(c *gin.Context) {
 	unit.Renter = updateData.Renter
 	unit.Insurance = updateData.Insurance
 	database.DB.Save(&unit)
-	c.JSON(http.StatusOK, unit)
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
 func DeleteUnit(c *gin.Context) {
@@ -480,7 +481,7 @@ func CombineUnits(c *gin.Context) {
 
 	//Get units in request
 	var units []models.Unit
-	result := database.DB.Where("id IN ?", combineRequest.UnitIDs).Find(&units)
+	result := database.DB.Where("unit_number IN ?", combineRequest.UnitIDs).Find(&units)
 	if result.Error != nil || len(units) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "One or more units not found"})
 		return

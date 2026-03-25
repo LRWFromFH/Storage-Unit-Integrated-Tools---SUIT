@@ -53,7 +53,7 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
 
 		//Unit crud routes.
-		protected.POST("/units/:id", controllers.UpdateUnit)
+		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
