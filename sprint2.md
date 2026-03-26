@@ -71,6 +71,140 @@ Manager-only routes specifically require a four-stage validation:
 
 ## 📦 Data & Testing
 
+# Testing Documentation
+ 
+## Overview
+ 
+This project includes both **unit tests** (Vitest) and **end-to-end tests** (Cypress) for the Tenants and Units features of the Angular application.
+ 
+---
+ 
+## Unit Tests
+ 
+Unit tests are written using **Vitest** and **Angular's TestBed**.
+ 
+### Tenants Component (`tenants.spec.ts`)
+ 
+Tests for the `Tenants` component with mocked dependencies (`TenantsService`, `MatDialog`, `MatSnackBar`).
+ 
+| Test | Description |
+|------|-------------|
+| should create the component | Verifies the component instantiates successfully |
+| should load customers on init | Confirms `getCustomers()` is called on `ngOnInit` |
+| should toggle between table and grid view | Validates `toggleView()` switches `viewMode` correctly |
+ 
+**Mocked Services:**
+- `TenantsService` — stubs `getCustomers`, `createCustomer`, `updateCustomer`, `deleteCustomer` (all return `of([])` / `of({})`)
+- `MatDialog` — stubs `open()` returning `{ afterClosed: () => of(null) }`
+- `MatSnackBar` — stubs `open()`
+ 
+---
+ 
+### Units Component (`units.spec.ts`)
+ 
+Tests for the `Units` component with mocked dependencies (`UnitsService`, `MatDialog`, `MatSnackBar`).
+ 
+| Test | Description |
+|------|-------------|
+| should create the component | Verifies the component instantiates successfully |
+| should load units on init | Confirms `getUnits()` is called on `ngOnInit` |
+| should set units after loading | Checks that `units` and `filteredUnits` are populated from the service response |
+| should toggle between table and grid view | Validates `toggleView()` switches `viewMode` correctly |
+| should call deleteUnit service | Confirms `deleteUnit()` calls the service when the user confirms the dialog |
+ 
+**Mocked Services:**
+- `UnitsService` — stubs `getUnits`, `createUnit`, `updateUnit`, `deleteUnit`
+- `MatDialog` — stubs `open()` returning `{ afterClosed: () => of(null) }`
+- `MatSnackBar` — stubs `open()`
+ 
+---
+ 
+### Running Unit Tests
+ 
+```bash
+npx vitest
+```
+ 
+---
+ 
+## End-to-End Tests
+ 
+E2E tests are written using **Cypress** and require the Angular dev server to be running at `http://localhost:4200`.
+ 
+### Prerequisites
+ 
+- The Angular app must be running: `ng serve`
+- A `cy.login()` custom command must be defined in `cypress/support/commands.ts`
+ 
+---
+ 
+### Tenants Page (`tenants.cy.ts`)
+ 
+| Test | Description |
+|------|-------------|
+| loads the tenants page | Checks that "Tenant Management" heading is visible |
+| shows table view with data | Verifies `ag-grid-angular` exists and sample data (e.g. "John") is rendered |
+| can switch to grid view | Clicks "Grid View" and asserts `.tenant-card` elements appear |
+| can switch back to table view | Toggles to Grid View then back, confirms AG Grid is restored |
+| has Back to Dashboard button | Clicks the button and asserts URL navigates to `/dashboard` |
+ 
+---
+ 
+### Units Page (`units.cy.ts`)
+ 
+| Test | Description |
+|------|-------------|
+| loads the units page | Checks that "Unit Management" heading is visible |
+| shows table view with data | Verifies `ag-grid-angular` exists and sample data (e.g. "Unit 100") is rendered |
+| can switch to grid view | Clicks "Grid View" and asserts `.unit-card` elements appear |
+| can switch back to table view | Toggles to Grid View then back, confirms AG Grid is restored |
+| has Back to Dashboard button | Clicks the button and asserts URL navigates to `/dashboard` |
+ 
+---
+ 
+### Running E2E Tests
+ 
+```bash
+# Open Cypress Test Runner (interactive)
+npx cypress open
+ 
+# Run headlessly (CI)
+npx cypress run
+```
+ 
+---
+ 
+## Project Structure
+ 
+```
+cypress/
+  e2e/
+    tenants.cy.ts       # E2E tests for Tenants page
+    units.cy.ts         # E2E tests for Units page
+  support/
+    commands.ts         # Custom commands (e.g. cy.login())
+ 
+src/
+  app/
+    tenants/
+      tenants.ts        # Tenants component
+      tenants.service.ts
+      tenants.spec.ts   # Unit tests
+    units/
+      units.ts          # Units component
+      units.service.ts
+      units.spec.ts     # Unit tests
+```
+ 
+---
+ 
+## Notes
+ 
+- Unit tests use `provideRouter([])` to satisfy Angular Router dependencies without a full routing setup.
+- `window.confirm` is spied on in the `deleteUnit` unit test to simulate user confirmation.
+- E2E tests include a `cy.wait(2000)` buffer to allow Angular to fully bootstrap before assertions run.
+- Adjust sample data values in E2E tests (e.g. `"Unit 100"`, `"John"`) to match your actual seed/mock data.
+
 ### Initial Seeding (Development)
 Upon initialization, the database is automatically populated to facilitate testing:
 * **144** Basic Test Customers
