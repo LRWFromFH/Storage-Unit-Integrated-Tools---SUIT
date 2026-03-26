@@ -220,16 +220,16 @@ Upon initialization, the database is automatically populated to facilitate testi
 | Test Function | Method | Endpoint | Description |
 | :--- | :--- | :--- | :--- |
 | `TestGetAllCustomers` | **GET** | `/api/customers` | Verifies the retrieval of all customer records. |
-| `TestGetCustomer` | **GET** | `/api/customers/1` | Verifies retrieval of a specific customer by ID. |
-| `TestUpdateCustomer` | **POST** | `/api/customers/1` | Validates updating existing customer details (e.g., FirstName). |
+| `TestGetCustomer` | **GET** | `/api/customers/:id` | Verifies retrieval of a specific customer by ID. |
+| `TestUpdateCustomer` | **POST** | `/api/customers/:id` | Validates updating existing customer details (e.g., FirstName). |
 | `TestCreateCustomer` | **POST** | `/api/customers` | Ensures new customer records can be created successfully. |
-| `TestDeleteCustomer` | **DELETE** | `/api/customers/1` | Verifies the deletion of a customer record. |
-| `TestGetCustomerUnits` | **GET** | `/api/customers/1/units` | Verifies retrieval of all storage units assigned to a specific customer. |
+| `TestDeleteCustomer` | **DELETE** | `/api/customers/:id` | Verifies the deletion of a customer record. |
+| `TestGetCustomerUnits` | **GET** | `/api/customers/:id/units` | Verifies retrieval of all storage units assigned to a specific customer. |
 | `TestGetAllUnits` | **GET** | `/api/AvailableUnits` | Checks the retrieval of all currently available storage units. |
-| `TestGetUnit` | **GET** | `/api/units/A123` | Verifies retrieval of specific unit details by unit number. |
-| `TestUpdateUnit` | **POST** | `/api/units/A123` | Validates updating unit properties (e.g., UnitNumber). |
+| `TestGetUnit` | **GET** | `/api/units/:unit_number` | Verifies retrieval of specific unit details by unit number. |
+| `TestUpdateUnit` | **POST** | `/api/units/:unit_number` | Validates updating unit properties (e.g., UnitNumber). |
 | `TestCreateUnit` | **POST** | `/api/units` | Ensures new storage units can be added to the system. |
-| `TestDeleteUnit` | **DELETE** | `/api/units/A123` | Verifies the removal of a storage unit from the database. |
+| `TestDeleteUnit` | **DELETE** | `/api/units/:unit_number` | Verifies the removal of a storage unit from the database. |
 
 * **Manual Testing:** All routes have been verified to ensure the middleware correctly blocks unauthorized access.
 
