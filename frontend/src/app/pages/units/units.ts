@@ -1,13 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AgGridModule } from 'ag-grid-angular';
 import { RouterLink } from '@angular/router';
 import { ColDef } from 'ag-grid-community';
@@ -25,29 +26,20 @@ import {
 import { themeQuartz } from 'ag-grid-community';
 
 ModuleRegistry.registerModules([
-  ClientSideRowModelModule,
-  PaginationModule,
-  TextFilterModule,
-  NumberFilterModule,
-  ValidationModule
+  ClientSideRowModelModule, PaginationModule, TextFilterModule,
+  NumberFilterModule, ValidationModule
 ]);
+
 @Component({
   selector: 'app-units',
   standalone: true,
   templateUrl: './units.html',
   styleUrls: ['./units.scss'],
   imports: [
-    RouterLink,
-    CommonModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatButtonModule,
-    MatDialogModule,
-    MatToolbarModule,
-    MatIconModule,
-    AgGridModule
+    RouterLink, CommonModule, FormsModule,
+    MatFormFieldModule, MatInputModule, MatButtonModule,
+    MatDialogModule, MatToolbarModule, MatIconModule,
+    AgGridModule, MatSnackBarModule
   ]
 })
 export class Units implements OnInit {
@@ -55,70 +47,91 @@ export class Units implements OnInit {
   units: Unit[] = [];
   filteredUnits: Unit[] = [];
   public theme = themeQuartz;
-  searchTerm = '';
-  statusFilter = 'All';
-  typeFilter = 'All';
+  loading = false;
+  private gridApi: any;
 
   columnDefs: ColDef[] = [
-    { field: 'unitNumber', headerName: 'Unit #', sortable: true, filter: true },
-    { field: 'unitType', headerName: 'Type', sortable: true },
-    { field: 'sizeSqFt', headerName: 'Sq Ft', sortable: true },
-    { field: 'floor', headerName: 'Floor', sortable: true },
+    { field: 'ID', headerName: 'ID', sortable: true, filter: true, width: 90 },
+    { field: 'UnitNumber', headerName: 'Unit #', sortable: true, filter: true, flex: 1 },
+    { field: 'SizeType', headerName: 'Size Type', sortable: true },
+    { field: 'Length', headerName: 'Length (ft)', sortable: true },
+    { field: 'Width', headerName: 'Width (ft)', sortable: true },
+    { field: 'Height', headerName: 'Height (ft)', sortable: true },
     {
-      field: 'climateControlled',
-      headerName: 'Climate',
+      field: 'Price',
+      headerName: 'Price',
+      sortable: true,
+      valueFormatter: p => `$${Number(p.value).toFixed(2)}`
+    },
+    {
+      field: 'Combined',
+      headerName: 'Combined',
+      sortable: true,
       valueFormatter: p => p.value ? 'Yes' : 'No'
     },
     {
-      field: 'pricePerMonth',
-      headerName: 'Price',
-      valueFormatter: p => `$${p.value}`
+      headerName: 'Status',
+      valueGetter: params => params.data.CustomerID ? 'Occupied' : 'Available',
+      sortable: true
     },
-    { field: 'status', headerName: 'Status', sortable: true },
-    { field: 'tenantName', headerName: 'Tenant' },
     {
       headerName: 'Actions',
-      cellRenderer: (params: any) => {
-        return `
-          <button class="action-btn edit">Edit</button>
-          <button class="action-btn delete">Delete</button>
-        `;
+      width: 180,
+      cellRenderer: (params: any) => `
+        <button class="action-btn edit-btn" data-unitnumber="${params.data.UnitNumber || ''}">Edit</button>
+        <button class="action-btn delete-btn" data-unitnumber="${params.data.UnitNumber || ''}">Delete</button>
+      `,
+      onCellClicked: (params: any) => {
+        if (!params.event?.target) return;
+        const target = params.event.target as HTMLElement;
+        const unitNumber = target.getAttribute('data-unitnumber') || '';
+
+        if (target.classList.contains('edit-btn') && unitNumber) {
+          const unit = this.units.find(u => u.UnitNumber === unitNumber);
+          if (unit) this.openDialog(unit);
+        } else if (target.classList.contains('delete-btn') && unitNumber) {
+          if (confirm(`Delete unit ${unitNumber}?`)) {
+            this.deleteUnit(unitNumber);
+          }
+        }
       }
     }
   ];
 
   constructor(
     private unitsService: UnitsService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
-    this.unitsService.getUnits().subscribe(data => {
-      this.units = data;
-      this.applyFilters();
-    });
+    this.loadUnits();
   }
 
-  applyFilters() {
-    this.filteredUnits = this.units.filter(unit => {
+  onGridReady(params: any) {
+    this.gridApi = params.api;
+  }
 
-      const matchesSearch =
-        unit.unitNumber.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (unit.tenantName?.toLowerCase().includes(this.searchTerm.toLowerCase()) ?? false);
-
-      const matchesStatus =
-        this.statusFilter === 'All' || unit.status === this.statusFilter;
-
-      const matchesType =
-        this.typeFilter === 'All' || unit.unitType === this.typeFilter;
-
-      return matchesSearch && matchesStatus && matchesType;
+  loadUnits() {
+    this.loading = true;
+    this.unitsService.getUnits().subscribe({
+      next: (data) => {
+        this.units = data;
+        this.filteredUnits = [...data];
+        this.loading = false;
+        if (this.gridApi) this.gridApi.setRowData(data);
+      },
+      error: (err: HttpErrorResponse) => {
+        console.error(err);
+        this.snackBar.open('Failed to load units', 'Close', { duration: 5000 });
+        this.loading = false;
+      }
     });
   }
 
   openDialog(unit?: Unit) {
     const dialogRef = this.dialog.open(UnitDialog, {
-      width: '500px',
+      width: '520px',
       data: unit || null
     });
 
@@ -126,23 +139,48 @@ export class Units implements OnInit {
       if (!result) return;
 
       if (unit) {
-        this.unitsService.updateUnit(result);
+        this.unitsService.updateUnit(unit.UnitNumber, result).subscribe({
+          next: () => {
+            this.snackBar.open('Unit updated successfully', 'Close', { duration: 3000 });
+            this.loadUnits();
+          },
+          error: (err) => {
+            console.error(err);
+            this.snackBar.open('Failed to update unit', 'Close', { duration: 5000 });
+          }
+        });
       } else {
-        this.unitsService.addUnit({
-          ...result,
-          id: Date.now().toString(),
-          lastUpdated: new Date()
+        // CREATE
+        this.unitsService.createUnit(result).subscribe({
+          next: () => {
+            this.snackBar.open('Unit created successfully', 'Close', { duration: 3000 });
+            this.loadUnits();
+          },
+          error: (err: HttpErrorResponse) => {
+            console.error(err);
+            this.snackBar.open('Failed to create unit. Unit number may already exist.', 'Close', { duration: 6000 });
+          }
         });
       }
     });
   }
 
-  deleteUnit(id: string) {
-    this.unitsService.deleteUnit(id);
+  deleteUnit(unitNumber: string) {
+    this.unitsService.deleteUnit(unitNumber).subscribe({
+      next: () => {
+        this.snackBar.open('Unit deleted successfully', 'Close', { duration: 3000 });
+        this.loadUnits();
+      },
+      error: (err) => {
+        console.error(err);
+        this.snackBar.open('Failed to delete unit', 'Close', { duration: 5000 });
+      }
+    });
   }
+
   viewMode: 'table' | 'grid' = 'table';
 
-toggleView(mode: 'table' | 'grid') {
-  this.viewMode = mode;
-}
+  toggleView(mode: 'table' | 'grid') {
+    this.viewMode = mode;
+  }
 }

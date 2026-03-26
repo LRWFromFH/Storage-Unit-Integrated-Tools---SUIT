@@ -1,59 +1,51 @@
 <div class="units-container">
-
-    <div class="header">
-        <div class="units-header">
-            <h2>Unit Management</h2>
-            <div class="units-header-actions">
-                <button mat-stroked-button color="primary" routerLink="/dashboard">
-                    Back to Dashboard
-                </button>
-
-                <button mat-raised-button color="primary" (click)="openDialog()">
-                    + Add Unit
-                </button>
-            </div>
-        </div>
-        <div class="view-toggle">
-            <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">
-                Table View
-            </button>
-
-            <button mat-stroked-button [color]="viewMode === 'grid' ? 'primary' : ''" (click)="toggleView('grid')">
-                Grid View
-            </button>
-        </div>
-        <!-- TABLE VIEW -->
-        <div *ngIf="viewMode === 'table'" class="suit-grid">
-            <ag-grid-angular style="width: 100%; height: 500px;" [theme]="theme" [rowData]="filteredUnits"
-                [columnDefs]="columnDefs" [pagination]="true">
-                <!-- [paginationPageSize]="paginationPageSize"
-  [paginationPageSizeSelector]="paginationPageSizeSelector"> -->
-            </ag-grid-angular>
-        </div>
-
-        <!-- CARD GRID VIEW -->
-        <div *ngIf="viewMode === 'grid'" class="unit-card-grid">
-            <div class="unit-card" *ngFor="let unit of filteredUnits">
-                <div class="unit-header">
-                    {{ unit.unitNumber }}
-                    <span class="status-badge" [ngClass]="unit.status.toLowerCase()">
-                        {{ unit.status }}
-                    </span>
-                </div>
-
-                <div class="unit-body">
-                    <div>Type: {{ unit.unitType }}</div>
-                    <div>Size: {{ unit.sizeSqFt }} sq ft</div>
-                    <div>Floor: {{ unit.floor }}</div>
-                    <div>Price: ${{ unit.pricePerMonth }}</div>
-                    <div *ngIf="unit.tenantName">Tenant: {{ unit.tenantName }}</div>
-                </div>
-
-                <div class="unit-actions">
-                    <!-- <button mat-button color="primary" (click)="editUnit(unit)">Edit</button> -->
-                    <button mat-button color="warn" (click)="deleteUnit(unit.id)">Delete</button>
-                </div>
-            </div>
-        </div>
-
+  <div class="header">
+    <div class="units-header">
+      <h2>Unit Management</h2>
+      <div class="units-header-actions">
+        <button mat-stroked-button color="primary" routerLink="/dashboard">Back to Dashboard</button>
+        <button mat-raised-button color="primary" (click)="openDialog()">+ Add Unit</button>
+      </div>
     </div>
+
+    <div class="view-toggle">
+      <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">Table View</button>
+      <button mat-stroked-button [color]="viewMode === 'grid' ? 'primary' : ''" (click)="toggleView('grid')">Grid View</button>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div *ngIf="viewMode === 'table'" class="suit-grid">
+      <ag-grid-angular 
+        style="width: 100%; height: 550px;" 
+        [theme]="theme" 
+        [rowData]="units"
+        [columnDefs]="columnDefs" 
+        [pagination]="true"
+        [defaultColDef]="{ resizable: true, sortable: true, filter: true }"
+        (gridReady)="onGridReady($event)">
+      </ag-grid-angular>
+    </div>
+
+    <!-- CARD GRID VIEW -->
+    <div *ngIf="viewMode === 'grid'" class="unit-card-grid">
+      <div class="unit-card" *ngFor="let unit of filteredUnits">
+        <div class="unit-header">
+          ID: {{ unit.ID }} — {{ unit.UnitNumber || '(No Number)' }}
+          <span class="status-badge" [ngClass]="unit.CustomerID ? 'occupied' : 'available'">
+            {{ unit.CustomerID ? 'Occupied' : 'Available' }}
+          </span>
+        </div>
+        <div class="unit-body">
+          <div><strong>Size:</strong> {{ unit.SizeType || '—' }}</div>
+          <div><strong>Dimensions:</strong> {{ unit.Length }}×{{ unit.Width }}×{{ unit.Height }} ft</div>
+          <div><strong>Price:</strong> ${{ unit.Price }}</div>
+          <div *ngIf="unit.Combined"><strong>Combined:</strong> Yes</div>
+        </div>
+        <div class="unit-actions">
+          <button mat-button color="primary" (click)="openDialog(unit)">Edit</button>
+          <button mat-button color="warn" (click)="deleteUnit(unit.UnitNumber)">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

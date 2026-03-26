@@ -1,15 +1,35 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
 
 import { AgGridModule } from 'ag-grid-angular';
 import { ColDef } from 'ag-grid-community';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
 
 import { themeQuartz } from 'ag-grid-community';
+import { ModuleRegistry } from 'ag-grid-community';
+import {
+  ClientSideRowModelModule,
+  PaginationModule,
+  TextFilterModule,
+  NumberFilterModule,
+  ValidationModule
+} from 'ag-grid-community';
 
-import { Tenant } from './tenants.model';
+import { TenantsService } from './tenants.service';
+import { Customer } from './tenants.model';
+import { TenantDialog } from './tenant-dialog';
+
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule, PaginationModule, TextFilterModule,
+  NumberFilterModule, ValidationModule
+]);
 
 @Component({
   selector: 'app-tenants',
@@ -18,6 +38,10 @@ import { Tenant } from './tenants.model';
     CommonModule,
     RouterLink,
     MatButtonModule,
+    MatDialogModule,
+    MatSnackBarModule,
+    MatToolbarModule,
+    MatIconModule,
     AgGridModule
   ],
   templateUrl: './tenants.html',
@@ -27,73 +51,117 @@ export class Tenants implements OnInit {
 
   public theme = themeQuartz;
 
-  tenants: Tenant[] = [];
-  filteredTenants: Tenant[] = [];
+  customers: Customer[] = [];
+  loading = false;
 
   viewMode: 'table' | 'grid' = 'table';
 
+  private gridApi: any;
+
   columnDefs: ColDef[] = [
-    { field: 'name', headerName: 'Name', sortable: true, filter: true },
-    { field: 'email', headerName: 'Email', sortable: true },
-    { field: 'phone', headerName: 'Phone' },
-    { field: 'unitNumber', headerName: 'Unit #' },
+    { field: 'ID', headerName: 'ID', sortable: true, filter: true, width: 80 },
+    { field: 'FirstName', headerName: 'First Name', sortable: true },
+    { field: 'LastName', headerName: 'Last Name', sortable: true },
+    { field: 'Email', headerName: 'Email', sortable: true },
+    { field: 'Phone', headerName: 'Phone', sortable: true },
+    { field: 'Address', headerName: 'Address', sortable: true, flex: 1 },
     {
-      field: 'moveInDate',
-      headerName: 'Move In',
-      valueFormatter: p => new Date(p.value).toLocaleDateString()
-    },
-    {
-      field: 'insurance',
-      headerName: 'Insurance',
-      valueFormatter: p => p.value ? 'Yes' : 'No'
-    },
-    { field: 'status', headerName: 'Status' }
+      headerName: 'Actions',
+      width: 180,
+      cellRenderer: (params: any) => `
+        <button class="action-btn edit-btn" data-id="${params.data.ID}">Edit</button>
+        <button class="action-btn delete-btn" data-id="${params.data.ID}">Delete</button>
+      `,
+      onCellClicked: (params: any) => {
+        if (!params.event?.target) return;
+        const target = params.event.target as HTMLElement;
+        const id = parseInt(target.getAttribute('data-id') || '0', 10);
+
+        if (target.classList.contains('edit-btn') && id > 0) {
+          const customer = this.customers.find(c => c.ID === id);
+          if (customer) this.openDialog(customer);
+        } else if (target.classList.contains('delete-btn') && id > 0) {
+          if (confirm(`Delete customer ${params.data.FirstName} ${params.data.LastName}?`)) {
+            this.deleteCustomer(id);
+          }
+        }
+      }
+    }
   ];
 
+  constructor(
+    private tenantsService: TenantsService,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {}
+
   ngOnInit(): void {
-    this.loadMockTenants();
+    this.loadCustomers();
   }
 
-  loadMockTenants() {
+  onGridReady(params: any) {
+    this.gridApi = params.api;
+  }
 
-    this.tenants = [
-      {
-        id: '1',
-        name: 'Alice Johnson',
-        email: 'alice@example.com',
-        phone: '352-111-2222',
-        unitNumber: 'A101',
-        moveInDate: new Date('2025-10-01'),
-        insurance: true,
-        status: 'Active'
+  loadCustomers() {
+    this.loading = true;
+    this.tenantsService.getCustomers().subscribe({
+      next: (data) => {
+        this.customers = data;
+        this.loading = false;
+
+        if (this.gridApi) {
+          this.gridApi.setRowData(data);
+        }
       },
-      {
-        id: '2',
-        name: 'Michael Smith',
-        email: 'michael@example.com',
-        phone: '352-333-4444',
-        unitNumber: 'B204',
-        moveInDate: new Date('2025-09-15'),
-        insurance: false,
-        status: 'Pending'
-      },
-      {
-        id: '3',
-        name: 'Sarah Williams',
-        email: 'sarah@example.com',
-        phone: '352-555-7777',
-        unitNumber: 'C305',
-        moveInDate: new Date('2025-07-22'),
-        insurance: true,
-        status: 'Active'
+      error: (err: HttpErrorResponse) => {
+        console.error('Error loading customers:', err);
+        this.snackBar.open('Failed to load customers', 'Close', { duration: 5000 });
+        this.loading = false;
       }
-    ];
+    });
+  }
 
-    this.filteredTenants = [...this.tenants];
+  openDialog(customer?: Customer) {
+    const dialogRef = this.dialog.open(TenantDialog, {
+      width: '500px',
+      data: customer || null
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      if (customer) {
+        this.tenantsService.updateCustomer(customer.ID, result).subscribe({
+          next: () => {
+            this.snackBar.open('Customer updated successfully', 'Close', { duration: 3000 });
+            this.loadCustomers();
+          },
+          error: () => this.snackBar.open('Failed to update customer', 'Close', { duration: 5000 })
+        });
+      } else {
+        this.tenantsService.createCustomer(result).subscribe({
+          next: () => {
+            this.snackBar.open('Customer created successfully', 'Close', { duration: 3000 });
+            this.loadCustomers();
+          },
+          error: () => this.snackBar.open('Failed to create customer', 'Close', { duration: 5000 })
+        });
+      }
+    });
+  }
+
+  deleteCustomer(id: number) {
+    this.tenantsService.deleteCustomer(id).subscribe({
+      next: () => {
+        this.snackBar.open('Customer deleted successfully', 'Close', { duration: 3000 });
+        this.loadCustomers();
+      },
+      error: () => this.snackBar.open('Failed to delete customer', 'Close', { duration: 5000 })
+    });
   }
 
   toggleView(mode: 'table' | 'grid') {
     this.viewMode = mode;
   }
-
 }

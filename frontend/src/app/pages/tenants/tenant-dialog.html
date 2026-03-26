@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Customer' : 'Add New Customer' }}</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="form" style="display: flex; flex-direction: column; gap: 16px;">
+    <mat-form-field appearance="outline">
+      <mat-label>First Name</mat-label>
+      <input matInput formControlName="first_name">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Last Name</mat-label>
+      <input matInput formControlName="last_name">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Phone</mat-label>
+      <input matInput formControlName="phone">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Address</mat-label>
+      <input matInput formControlName="address">
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">
+    {{ isEdit ? 'Update' : 'Create' }}
+  </button>
+</mat-dialog-actions>
