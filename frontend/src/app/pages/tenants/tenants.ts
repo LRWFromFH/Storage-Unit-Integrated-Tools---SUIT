@@ -1,3 +1,4 @@
+// src/app/pages/tenants/tenants.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -35,14 +36,8 @@ ModuleRegistry.registerModules([
   selector: 'app-tenants',
   standalone: true,
   imports: [
-    CommonModule,
-    RouterLink,
-    MatButtonModule,
-    MatDialogModule,
-    MatSnackBarModule,
-    MatToolbarModule,
-    MatIconModule,
-    AgGridModule
+    CommonModule, RouterLink, MatButtonModule, MatDialogModule,
+    MatSnackBarModule, MatToolbarModule, MatIconModule, AgGridModule
   ],
   templateUrl: './tenants.html',
   styleUrl: './tenants.scss',
@@ -50,13 +45,11 @@ ModuleRegistry.registerModules([
 export class Tenants implements OnInit {
 
   public theme = themeQuartz;
-
   customers: Customer[] = [];
   loading = false;
+  private gridApi: any;                    // ← Keep this
 
   viewMode: 'table' | 'grid' = 'table';
-
-  private gridApi: any;
 
   columnDefs: ColDef[] = [
     { field: 'ID', headerName: 'ID', sortable: true, filter: true, width: 80 },
@@ -99,6 +92,7 @@ export class Tenants implements OnInit {
     this.loadCustomers();
   }
 
+  // ← THIS IS REQUIRED
   onGridReady(params: any) {
     this.gridApi = params.api;
   }
@@ -110,6 +104,7 @@ export class Tenants implements OnInit {
         this.customers = data;
         this.loading = false;
 
+        // Safely update grid if it exists
         if (this.gridApi) {
           this.gridApi.setRowData(data);
         }
