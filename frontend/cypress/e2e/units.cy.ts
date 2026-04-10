@@ -1,24 +1,24 @@
-// cypress/e2e/tenants.cy.ts
-describe('Tenants Page', () => {
+// cypress/e2e/units.cy.ts
+describe('Units Page', () => {
 
   beforeEach(() => {
     cy.login();
-    cy.visit('http://localhost:4200/tenants');
-    cy.wait(2000); // Give Angular time to load
+    cy.visit('http://localhost:4200/units');
+    cy.wait(2000);
   });
 
-  it('loads the tenants page', () => {
-    cy.contains('Tenant Management').should('be.visible');
+  it('loads the units page', () => {
+    cy.contains('Unit Management').should('be.visible');
   });
 
   it('shows table view with data', () => {
     cy.get('ag-grid-angular').should('exist');
-    cy.contains('John').should('be.visible');   // from your sample data
+    cy.contains('Unit 100').should('be.visible');   // adjust if your unit numbers are different
   });
 
   it('can switch to grid view', () => {
     cy.contains('Grid View').click();
-    cy.get('.tenant-card').should('have.length.greaterThan', 0);
+    cy.get('.unit-card').should('have.length.greaterThan', 0);
   });
 
   it('can switch back to table view', () => {

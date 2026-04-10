@@ -20,6 +20,7 @@
 </div>
 
 <!-- TABLE VIEW -->
+<!-- TABLE VIEW -->
 <div *ngIf="viewMode === 'table'" class="suit-grid">
   <ag-grid-angular
     style="width: 100%; height: 500px;"
@@ -27,7 +28,7 @@
     [rowData]="customers"
     [columnDefs]="columnDefs"
     [pagination]="true"
-    (gridReady)="onGridReady($event)">
+    (gridReady)="onGridReady($event)"> 
   </ag-grid-angular>
 </div>
 
