@@ -47,9 +47,8 @@ export class Tenants implements OnInit {
   public theme = themeQuartz;
   customers: Customer[] = [];
   loading = false;
-  private gridApi: any;                    // ← Keep this
-
   viewMode: 'table' | 'grid' = 'table';
+  private gridApi: any;
 
   columnDefs: ColDef[] = [
     { field: 'ID', headerName: 'ID', sortable: true, filter: true, width: 80 },
@@ -92,7 +91,6 @@ export class Tenants implements OnInit {
     this.loadCustomers();
   }
 
-  // ← THIS IS REQUIRED
   onGridReady(params: any) {
     this.gridApi = params.api;
   }
@@ -103,11 +101,7 @@ export class Tenants implements OnInit {
       next: (data) => {
         this.customers = data;
         this.loading = false;
-
-        // Safely update grid if it exists
-        if (this.gridApi) {
-          this.gridApi.setRowData(data);
-        }
+        this.gridApi?.setGridOption('rowData', data);
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error loading customers:', err);

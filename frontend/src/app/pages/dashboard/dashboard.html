@@ -1,33 +1,15 @@
-<!-- dashboard.html -->
-<!-- <mat-toolbar color="primary">
-  <span class="app-title">SUIT</span>
-  <span class="app-subtitle">Dashboard</span>
-
-  <span class="spacer"></span>
-
-  <button mat-icon-button
-          (click)="logout()"
-          matTooltip="Sign out"
-          matTooltipPosition="below"
-          aria-label="Sign out of SUIT">
-    <mat-icon>logout</mat-icon>
-  </button>
-</mat-toolbar> -->
-
 <div class="dashboard-container">
   <mat-card class="dashboard-card" appearance="outlined">
     <mat-card-header>
       <mat-icon mat-card-avatar>warehouse</mat-icon>
       <mat-card-title>Units</mat-card-title>
-      <mat-card-subtitle>Manage storage units, availability & reservations</mat-card-subtitle>
+      <mat-card-subtitle>Manage storage units, availability &amp; reservations</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
       <p>Real-time overview • Move-in/out • Occupancy tracking</p>
     </mat-card-content>
     <mat-card-actions align="end">
-      <button mat-raised-button color="primary" routerLink="/units">
-        Enter Units
-      </button>
+      <button mat-raised-button color="primary" routerLink="/units">Enter Units</button>
     </mat-card-actions>
   </mat-card>
 
@@ -35,15 +17,29 @@
     <mat-card-header>
       <mat-icon mat-card-avatar>people</mat-icon>
       <mat-card-title>Tenants</mat-card-title>
-      <mat-card-subtitle>Handle tenant lifecycle & billing</mat-card-subtitle>
+      <mat-card-subtitle>Handle tenant lifecycle &amp; billing</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
       <p>Contracts • Insurance status • Payment history</p>
     </mat-card-content>
     <mat-card-actions align="end">
-      <button mat-raised-button color="accent" routerLink="/tenants">
-        Enter Tenants
-      </button>
+      <button mat-raised-button color="accent" routerLink="/tenants">Enter Tenants</button>
     </mat-card-actions>
   </mat-card>
+
+  @if (auth.isManager()) {
+    <mat-card class="dashboard-card manager-card" appearance="outlined">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>admin_panel_settings</mat-icon>
+        <mat-card-title>Employee Management</mat-card-title>
+        <mat-card-subtitle>Manager-only • Register and manage employee accounts</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Create new employee accounts • Assign roles • Manage access</p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="warn" routerLink="/register">Register Employee</button>
+      </mat-card-actions>
+    </mat-card>
+  }
 </div>

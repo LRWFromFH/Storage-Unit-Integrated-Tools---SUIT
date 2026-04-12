@@ -33,39 +33,35 @@ export class Register {
 
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
 
   form = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+    email:    ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]]
   });
-
-  constructor() {
-    // If already logged in → go to dashboard
-    if (this.auth.isAuthenticated()) {
-      this.router.navigate(['/dashboard']);
-    }
-  }
 
   async onSubmit() {
     if (this.form.invalid) return;
 
     this.errorMessage = '';
+    this.successMessage = '';
     this.isLoading = true;
 
     const { username, email, password } = this.form.value;
 
     try {
-      await this.auth.register(username!, email!, password!);
-      this.router.navigate(['/login']);
+      await this.auth.registerEmployee(username!, email!, password!);
+      this.successMessage = `Employee account for ${email} created successfully.`;
+      this.form.reset();
     } catch (err: any) {
-      this.errorMessage = 'Registration failed. Try again.';
+      this.errorMessage = err?.message ?? 'Registration failed. Please try again.';
     } finally {
       this.isLoading = false;
     }
   }
 
-  goToLogin() {
-    this.router.navigate(['/login']);
+  goToDashboard() {
+    this.router.navigate(['/dashboard']);
   }
 }

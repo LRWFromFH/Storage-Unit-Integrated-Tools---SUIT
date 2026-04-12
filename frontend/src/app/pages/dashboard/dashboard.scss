@@ -1,5 +1,3 @@
-/* dashboard.scss — add / update these rules */
-
 :host {
   display: block;
   min-height: 100vh;
@@ -132,5 +130,13 @@ mat-toolbar {
     height: 48px;
     border-radius: var(--suit-radius-md);
     font-weight: 500;
+  }
+}
+
+.manager-card {
+  border: 1px solid rgba(var(--suit-error-rgb, 211, 47, 47), 0.3);
+
+  [mat-card-avatar] {
+    color: var(--suit-error, #d32f2f);
   }
 }
