@@ -4,6 +4,12 @@
 
   <span class="spacer"></span>
 
+  @if (auth.isManager()) {
+    <span class="role-badge manager-badge" matTooltip="Manager account">Manager</span>
+  } @else if (auth.role()) {
+    <span class="role-badge employee-badge" matTooltip="Employee account">Employee</span>
+  }
+
   <button mat-icon-button
           (click)="logout()"
           matTooltip="Sign out"

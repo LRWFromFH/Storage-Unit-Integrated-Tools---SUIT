@@ -13,13 +13,4 @@
 // https://on.cypress.io/configuration
 // ***********************************************************
 
-// Import commands.js using ES2015 syntax:
 import './commands'
-// cypress/support/e2e.ts
-Cypress.on('uncaught:exception', (err) => {
-  // Ignore the gridApi error that sometimes happens during navigation
-  if (err.message.includes('setRowData is not a function')) {
-    return false;
-  }
-  return true;
-});

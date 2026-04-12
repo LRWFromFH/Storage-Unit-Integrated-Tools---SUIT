@@ -29,8 +29,30 @@ mat-toolbar {
     flex: 1 1 auto;
   }
 
+  .role-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-right: 8px;
+  }
+
+  .manager-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+  }
+
+  .employee-badge {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
   button[mat-icon-button] {
-    margin-left: 16px;
+    margin-left: 8px;
     color: #ffffff;
 
     &:hover {

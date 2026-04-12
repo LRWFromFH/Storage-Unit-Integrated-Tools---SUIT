@@ -1,33 +1,38 @@
-// cypress/e2e/tenants.cy.ts
 describe('Tenants Page', () => {
 
   beforeEach(() => {
     cy.login();
-    cy.visit('http://localhost:4200/tenants');
-    cy.wait(2000); // Give Angular time to load
+    cy.visit('/tenants');
   });
 
   it('loads the tenants page', () => {
     cy.contains('Tenant Management').should('be.visible');
   });
 
-  it('shows table view with data', () => {
+  it('shows the ag-grid table by default', () => {
     cy.get('ag-grid-angular').should('exist');
-    cy.contains('John').should('be.visible');   // from your sample data
   });
 
-  it('can switch to grid view', () => {
+  it('can switch to grid view and back to table view', () => {
     cy.contains('Grid View').click();
-    cy.get('.tenant-card').should('have.length.greaterThan', 0);
-  });
+    cy.get('ag-grid-angular').should('not.exist');
+    cy.get('.tenant-card-grid').should('exist');
 
-  it('can switch back to table view', () => {
-    cy.contains('Grid View').click();
     cy.contains('Table View').click();
     cy.get('ag-grid-angular').should('exist');
   });
 
-  it('has Back to Dashboard button', () => {
+  it('has an Add Customer button', () => {
+    cy.contains('+ Add Customer').should('be.visible');
+  });
+
+  it('opens the add customer dialog when Add Customer is clicked', () => {
+    cy.contains('+ Add Customer').click();
+    cy.contains('Add New Customer').should('be.visible');
+    cy.contains('Cancel').click();
+  });
+
+  it('navigates back to dashboard', () => {
     cy.contains('Back to Dashboard').click();
     cy.url().should('include', '/dashboard');
   });

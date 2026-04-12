@@ -1,11 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -36,8 +33,7 @@ ModuleRegistry.registerModules([
   templateUrl: './units.html',
   styleUrls: ['./units.scss'],
   imports: [
-    RouterLink, CommonModule, FormsModule,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
+    RouterLink, CommonModule, MatButtonModule,
     MatDialogModule, MatToolbarModule, MatIconModule,
     AgGridModule, MatSnackBarModule
   ]
@@ -46,8 +42,10 @@ export class Units implements OnInit {
 
   units: Unit[] = [];
   filteredUnits: Unit[] = [];
+  viewMode: 'table' | 'grid' = 'table';
   public theme = themeQuartz;
   loading = false;
+  defaultColDef: ColDef = { resizable: true, sortable: true, filter: true };
   private gridApi: any;
 
   columnDefs: ColDef[] = [
@@ -119,7 +117,7 @@ export class Units implements OnInit {
         this.units = data;
         this.filteredUnits = [...data];
         this.loading = false;
-        if (this.gridApi) this.gridApi.setRowData(data);
+        this.gridApi?.setGridOption('rowData', data);
       },
       error: (err: HttpErrorResponse) => {
         console.error(err);
@@ -150,7 +148,6 @@ export class Units implements OnInit {
           }
         });
       } else {
-        // CREATE
         this.unitsService.createUnit(result).subscribe({
           next: () => {
             this.snackBar.open('Unit created successfully', 'Close', { duration: 3000 });
@@ -177,8 +174,6 @@ export class Units implements OnInit {
       }
     });
   }
-
-  viewMode: 'table' | 'grid' = 'table';
 
   toggleView(mode: 'table' | 'grid') {
     this.viewMode = mode;
