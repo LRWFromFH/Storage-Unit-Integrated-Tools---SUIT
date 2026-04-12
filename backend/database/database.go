@@ -37,5 +37,7 @@ func ConnectTest() {
 		&models.RegisterRequest{},
 		&models.LoginRequest{},
 		&models.CreateUnitRequest{},
-		&models.Session{})
+		&models.Session{},
+		&models.Invoice{},
+		&models.LedgerEntry{})
 }
