@@ -1,13 +1,14 @@
-<div class="auth-page">
-  <mat-card appearance="outlined" class="auth-card">
+<div class="manager-page">
+  <!-- Register new employee -->
+  <mat-card appearance="outlined" class="manager-card">
     <mat-card-header>
       <mat-icon mat-card-avatar>person_add</mat-icon>
       <mat-card-title>Register New Employee</mat-card-title>
-      <mat-card-subtitle>Manager action — creates a new employee account</mat-card-subtitle>
+      <mat-card-subtitle>Creates a new employee account with default role</mat-card-subtitle>
     </mat-card-header>
 
     <mat-card-content>
-      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="auth-form">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="manager-form">
         <mat-form-field appearance="outline">
           <mat-label>Employee ID (SMID)</mat-label>
           <mat-icon matPrefix>badge</mat-icon>
@@ -45,17 +46,10 @@
         </mat-form-field>
 
         @if (successMessage) {
-          <div class="success-message">
-            <mat-icon>check_circle</mat-icon>
-            {{ successMessage }}
-          </div>
+          <div class="success-message"><mat-icon>check_circle</mat-icon> {{ successMessage }}</div>
         }
-
         @if (errorMessage) {
-          <div class="error-message">
-            <mat-icon>error_outline</mat-icon>
-            {{ errorMessage }}
-          </div>
+          <div class="error-message"><mat-icon>error_outline</mat-icon> {{ errorMessage }}</div>
         }
 
         <mat-card-actions>
@@ -64,14 +58,61 @@
             @if (!isLoading) { Create Employee Account }
             @else { <mat-spinner diameter="24"></mat-spinner> }
           </button>
-
-          <div class="auth-link">
-            <button type="button" mat-button (click)="goToDashboard()">
-              ← Back to Dashboard
-            </button>
-          </div>
         </mat-card-actions>
       </form>
     </mat-card-content>
   </mat-card>
+
+  <!-- Update employee role -->
+  <mat-card appearance="outlined" class="manager-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>manage_accounts</mat-icon>
+      <mat-card-title>Update Employee Role</mat-card-title>
+      <mat-card-subtitle>Promote an employee to manager or demote a manager to employee</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="roleForm" (ngSubmit)="onUpdateRole()" class="manager-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Employee DB ID (shown after registration)</mat-label>
+          <mat-icon matPrefix>tag</mat-icon>
+          <input matInput formControlName="employeeId" type="number" placeholder="e.g. 2" autocomplete="off">
+          @if (roleForm.get('employeeId')?.hasError('required') && roleForm.get('employeeId')?.touched) {
+            <mat-error>Employee ID is required</mat-error>
+          }
+          @if (roleForm.get('employeeId')?.hasError('pattern') && roleForm.get('employeeId')?.touched) {
+            <mat-error>Must be a numeric ID</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>New Role</mat-label>
+          <mat-icon matPrefix>shield</mat-icon>
+          <mat-select formControlName="role">
+            <mat-option value="employee">Employee</mat-option>
+            <mat-option value="manager">Manager</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        @if (roleSuccess) {
+          <div class="success-message"><mat-icon>check_circle</mat-icon> {{ roleSuccess }}</div>
+        }
+        @if (roleError) {
+          <div class="error-message"><mat-icon>error_outline</mat-icon> {{ roleError }}</div>
+        }
+
+        <mat-card-actions>
+          <button mat-raised-button color="accent" type="submit"
+                  [disabled]="roleLoading || roleForm.invalid" class="submit-btn">
+            @if (!roleLoading) { Update Role }
+            @else { <mat-spinner diameter="24"></mat-spinner> }
+          </button>
+        </mat-card-actions>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <div class="back-link">
+    <button mat-stroked-button color="primary" (click)="goToDashboard()">← Back to Dashboard</button>
+  </div>
 </div>

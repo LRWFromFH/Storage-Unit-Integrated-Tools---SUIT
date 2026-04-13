@@ -35,12 +35,13 @@ export class Auth {
     }
   }
 
-  /** Called by managers to register a new employee account. Does not affect the manager's own session. */
-  async registerEmployee(username: string, email: string, password: string): Promise<void> {
+  /** Called by managers to register a new employee account. Returns the new employee's database ID. */
+  async registerEmployee(username: string, email: string, password: string): Promise<number> {
     try {
-      await firstValueFrom(
-        this.http.post(`${this.apiUrl}/api/register`, { username, email, password }, { withCredentials: true })
+      const resp = await firstValueFrom(
+        this.http.post<{ user: { ID: number } }>(`${this.apiUrl}/api/register`, { username, email, password }, { withCredentials: true })
       );
+      return resp.user.ID;
     } catch (err) {
       if (err instanceof HttpErrorResponse && err.status === 403) {
         throw { status: 403, message: 'Only managers can register new employees' };

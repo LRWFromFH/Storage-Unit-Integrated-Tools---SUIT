@@ -73,9 +73,6 @@ export class Login {
   }
 
 
-  goToRegister() {
-    this.router.navigate(['/register']);
-  }
   private showErrorToast(message: string) {
     this.snackBar.open(message, 'Close', {
       duration: 3000,

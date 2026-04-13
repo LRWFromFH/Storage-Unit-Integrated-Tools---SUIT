@@ -26,6 +26,9 @@ import {
 import { TenantsService } from './tenants.service';
 import { Customer } from './tenants.model';
 import { TenantDialog } from './tenant-dialog';
+import { AssignUnitDialog } from './assign-unit-dialog';
+import { UnitsService } from '../units/units.service';
+import { Unit } from '../units/unit.model';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule, PaginationModule, TextFilterModule,
@@ -49,6 +52,11 @@ export class Tenants implements OnInit {
   loading = false;
   viewMode: 'table' | 'grid' = 'table';
   private gridApi: any;
+
+  // Tracks which customer's units are expanded (card view)
+  expandedCustomerId: number | null = null;
+  customerUnitsMap: Record<number, Unit[]> = {};
+  customerUnitsLoading: Record<number, boolean> = {};
 
   columnDefs: ColDef[] = [
     { field: 'ID', headerName: 'ID', sortable: true, filter: true, width: 80 },
@@ -83,6 +91,7 @@ export class Tenants implements OnInit {
 
   constructor(
     private tenantsService: TenantsService,
+    private unitsService: UnitsService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar
   ) {}
@@ -147,6 +156,56 @@ export class Tenants implements OnInit {
         this.loadCustomers();
       },
       error: () => this.snackBar.open('Failed to delete customer', 'Close', { duration: 5000 })
+    });
+  }
+
+  toggleCustomerUnits(customerId: number) {
+    if (this.expandedCustomerId === customerId) {
+      this.expandedCustomerId = null;
+      return;
+    }
+    this.expandedCustomerId = customerId;
+    if (!this.customerUnitsMap[customerId]) {
+      this.customerUnitsLoading[customerId] = true;
+      this.tenantsService.getCustomerUnits(customerId).subscribe({
+        next: (units) => {
+          this.customerUnitsMap[customerId] = units;
+          this.customerUnitsLoading[customerId] = false;
+        },
+        error: () => {
+          this.customerUnitsMap[customerId] = [];
+          this.customerUnitsLoading[customerId] = false;
+        }
+      });
+    }
+  }
+
+  openAssignUnitDialog(customer: Customer) {
+    this.unitsService.getUnits().subscribe({
+      next: (availableUnits) => {
+        const dialogRef = this.dialog.open(AssignUnitDialog, {
+          width: '520px',
+          data: { customer, availableUnits }
+        });
+
+        dialogRef.afterClosed().subscribe((selectedUnitNumber: string | undefined) => {
+          if (!selectedUnitNumber) return;
+          const unit = availableUnits.find(u => u.UnitNumber === selectedUnitNumber);
+          if (!unit) return;
+
+          this.unitsService.assignUnit(unit, customer.ID).subscribe({
+            next: () => {
+              this.snackBar.open('Unit assigned successfully', 'Close', { duration: 3000 });
+              // Refresh the customer's units
+              delete this.customerUnitsMap[customer.ID];
+              this.expandedCustomerId = customer.ID;
+              this.toggleCustomerUnits(customer.ID);
+            },
+            error: () => this.snackBar.open('Failed to assign unit', 'Close', { duration: 5000 })
+          });
+        });
+      },
+      error: () => this.snackBar.open('Failed to load available units', 'Close', { duration: 5000 })
     });
   }
 

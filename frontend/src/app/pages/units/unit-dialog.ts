@@ -40,11 +40,17 @@ export class UnitDialog {
   }
 
   save() {
-    if (this.form.invalid) {
-      console.warn('Form is invalid', this.form.value);
-      return;
-    }
-    this.dialogRef.close(this.form.value);
+    if (this.form.invalid) return;
+    const v = this.form.value;
+    // Backend Unit model has no JSON tags — must send Pascal case field names
+    this.dialogRef.close({
+      UnitNumber: v.unit_number,
+      SizeType:   v.size_type,
+      Price:      Number(v.price),
+      Length:     Number(v.length),
+      Width:      Number(v.width),
+      Height:     Number(v.height)
+    });
   }
 
   cancel() {
