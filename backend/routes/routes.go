@@ -27,6 +27,8 @@ func SetupRoutes(r *gin.Engine) {
 		managerOnly.POST("/employees/:id/role", controllers.UpdateEmployeeRole)
 		managerOnly.DELETE("/customers/:id", controllers.DeleteCustomer)
 		managerOnly.DELETE("/units/:unit_number", controllers.DeleteUnit)
+		managerOnly.GET("/employees", controllers.GetAllEmployees)
+		managerOnly.GET("/AllUnits", controllers.GetAllUnits)
 	}
 
 	protected := r.Group("/api")

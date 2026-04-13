@@ -59,6 +59,8 @@ export class Auth {
       await firstValueFrom(
         this.http.post(`${this.apiUrl}/api/logout`, {}, { withCredentials: true })
       );
+    } catch {
+      // Logout clears local auth state regardless of server response
     } finally {
       this._isAuthenticated.set(false);
       this._role.set('');

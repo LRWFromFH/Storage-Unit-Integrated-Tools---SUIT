@@ -1,5 +1,5 @@
 // src/app/pages/tenants/tenants.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
@@ -93,7 +93,8 @@ export class Tenants implements OnInit {
     private tenantsService: TenantsService,
     private unitsService: UnitsService,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -166,15 +167,17 @@ export class Tenants implements OnInit {
     }
     this.expandedCustomerId = customerId;
     if (!this.customerUnitsMap[customerId]) {
-      this.customerUnitsLoading[customerId] = true;
+      this.customerUnitsLoading = { ...this.customerUnitsLoading, [customerId]: true };
       this.tenantsService.getCustomerUnits(customerId).subscribe({
         next: (units) => {
-          this.customerUnitsMap[customerId] = units;
-          this.customerUnitsLoading[customerId] = false;
+          this.customerUnitsMap = { ...this.customerUnitsMap, [customerId]: units };
+          this.customerUnitsLoading = { ...this.customerUnitsLoading, [customerId]: false };
+          this.cdr.detectChanges();
         },
         error: () => {
-          this.customerUnitsMap[customerId] = [];
-          this.customerUnitsLoading[customerId] = false;
+          this.customerUnitsMap = { ...this.customerUnitsMap, [customerId]: [] };
+          this.customerUnitsLoading = { ...this.customerUnitsLoading, [customerId]: false };
+          this.cdr.detectChanges();
         }
       });
     }
@@ -196,9 +199,10 @@ export class Tenants implements OnInit {
           this.unitsService.assignUnit(unit, customer.ID).subscribe({
             next: () => {
               this.snackBar.open('Unit assigned successfully', 'Close', { duration: 3000 });
-              // Refresh the customer's units
+              // Refresh the customer's units — clear cache then re-fetch
+              this.customerUnitsMap = { ...this.customerUnitsMap };
               delete this.customerUnitsMap[customer.ID];
-              this.expandedCustomerId = customer.ID;
+              this.expandedCustomerId = null;
               this.toggleCustomerUnits(customer.ID);
             },
             error: () => this.snackBar.open('Failed to assign unit', 'Close', { duration: 5000 })

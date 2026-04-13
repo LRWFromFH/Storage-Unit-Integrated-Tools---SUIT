@@ -112,6 +112,46 @@
     </mat-card-content>
   </mat-card>
 
+  <!-- Employee list -->
+  <mat-card appearance="outlined" class="manager-card employee-list-card">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>groups</mat-icon>
+      <mat-card-title>All Employees</mat-card-title>
+      <mat-card-subtitle>Reference list — use the DB ID when updating a role</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content class="employee-list-content">
+      @if (employeesLoading) {
+        <div class="list-loading"><mat-spinner diameter="32"></mat-spinner></div>
+      } @else if (!employees.length) {
+        <p class="no-employees">No employees registered yet.</p>
+      } @else {
+        <table mat-table [dataSource]="employees" class="employee-table">
+          <ng-container matColumnDef="id">
+            <th mat-header-cell *matHeaderCellDef>DB ID</th>
+            <td mat-cell *matCellDef="let emp">{{ emp.ID }}</td>
+          </ng-container>
+          <ng-container matColumnDef="smid">
+            <th mat-header-cell *matHeaderCellDef>Employee ID (SMID)</th>
+            <td mat-cell *matCellDef="let emp">{{ emp.smid }}</td>
+          </ng-container>
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef>Email</th>
+            <td mat-cell *matCellDef="let emp">{{ emp.email }}</td>
+          </ng-container>
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef>Role</th>
+            <td mat-cell *matCellDef="let emp">
+              <span class="role-badge" [class.role-manager]="emp.role === 'manager'">{{ emp.role }}</span>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="employeeColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: employeeColumns;"></tr>
+        </table>
+      }
+    </mat-card-content>
+  </mat-card>
+
   <div class="back-link">
     <button mat-stroked-button color="primary" (click)="goToDashboard()">← Back to Dashboard</button>
   </div>

@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { Customer } from './tenants.model';
+import { Unit } from '../units/unit.model';
 
 const mockCustomer: Customer = {
   ID: 1,
@@ -18,6 +19,24 @@ const mockCustomer: Customer = {
   Email: 'jane@example.com',
   Phone: '555-0100',
   Address: '1 Main St'
+};
+
+const mockUnit: Unit = {
+  ID: 10,
+  CreatedAt: '',
+  UpdatedAt: '',
+  DeletedAt: null,
+  UnitNumber: 'A1',
+  SizeType: 'Small',
+  Length: 5,
+  Width: 5,
+  Height: 10,
+  Price: 75,
+  CustomerID: 1,
+  Renter: null,
+  Insurance: null,
+  Combined: false,
+  CombinedFrom: ''
 };
 
 describe('Tenants Component', () => {
@@ -55,14 +74,13 @@ describe('Tenants Component', () => {
     fixture = TestBed.createComponent(Tenants);
     component = fixture.componentInstance;
 
-    // Replace the private injected services directly on the component instance.
-    // TestBed.inject(MatDialog) returns the root-injector instance, which differs
-    // from the one the standalone component gets from its own module injector.
     openDialogSpy   = vi.fn().mockReturnValue({ afterClosed: () => of(null) });
     openSnackBarSpy = vi.fn().mockReturnValue(null);
     (component as any).dialog   = { open: openDialogSpy };
     (component as any).snackBar = { open: openSnackBarSpy };
   });
+
+  // ── lifecycle ───────────────────────────────────────────────────────────────
 
   it('should create the component', () => {
     expect(component).toBeTruthy();
@@ -87,6 +105,8 @@ describe('Tenants Component', () => {
     expect(component.loading).toBe(false);
   });
 
+  // ── view toggle ─────────────────────────────────────────────────────────────
+
   it('should toggle between table and grid view', () => {
     component.toggleView('grid');
     expect(component.viewMode).toBe('grid');
@@ -95,13 +115,14 @@ describe('Tenants Component', () => {
     expect(component.viewMode).toBe('table');
   });
 
+  // ── create / update dialog ──────────────────────────────────────────────────
+
   it('should open dialog for creating a new customer', () => {
     component.openDialog();
     expect(openDialogSpy).toHaveBeenCalled();
   });
 
   it('should call createCustomer when dialog returns data without an existing customer', () => {
-    // Dialog returns Pascal case to match Go struct fields (fixed in tenant-dialog.ts)
     const formResult = { FirstName: 'Jane', LastName: 'Doe', Email: 'jane@example.com', Phone: '555', Address: '1 St' };
     openDialogSpy.mockReturnValue({ afterClosed: () => of(formResult) });
 
@@ -128,7 +149,24 @@ describe('Tenants Component', () => {
     expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to create customer', 'Close', { duration: 5000 });
   });
 
-  it('should call deleteCustomer and reload on success', () => {
+  it('should show snackbar on update error', () => {
+    openDialogSpy.mockReturnValue({ afterClosed: () => of({ FirstName: 'Jane' }) });
+    tenantsService.updateCustomer.mockReturnValue(throwError(() => ({ status: 500 })));
+
+    component.openDialog(mockCustomer);
+
+    expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to update customer', 'Close', { duration: 5000 });
+  });
+
+  it('should not call createCustomer when dialog is cancelled', () => {
+    openDialogSpy.mockReturnValue({ afterClosed: () => of(null) });
+    component.openDialog();
+    expect(tenantsService.createCustomer).not.toHaveBeenCalled();
+  });
+
+  // ── delete ──────────────────────────────────────────────────────────────────
+
+  it('should call deleteCustomer and show success snackbar', () => {
     component.deleteCustomer(1);
     expect(tenantsService.deleteCustomer).toHaveBeenCalledWith(1);
     expect(openSnackBarSpy).toHaveBeenCalledWith('Customer deleted successfully', 'Close', { duration: 3000 });
@@ -140,9 +178,60 @@ describe('Tenants Component', () => {
     expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to delete customer', 'Close', { duration: 5000 });
   });
 
-  it('should not call createCustomer when dialog is cancelled', () => {
-    openDialogSpy.mockReturnValue({ afterClosed: () => of(null) });
-    component.openDialog();
-    expect(tenantsService.createCustomer).not.toHaveBeenCalled();
+  // ── toggleCustomerUnits ─────────────────────────────────────────────────────
+
+  it('should set expandedCustomerId when toggling open', () => {
+    component.toggleCustomerUnits(1);
+    expect(component.expandedCustomerId).toBe(1);
+  });
+
+  it('should collapse panel when the same customer is toggled again', () => {
+    component.toggleCustomerUnits(1);
+    component.toggleCustomerUnits(1);
+    expect(component.expandedCustomerId).toBeNull();
+  });
+
+  it('should fetch units on first expand and set loading state', () => {
+    tenantsService.getCustomerUnits.mockReturnValue(of([mockUnit]));
+    component.toggleCustomerUnits(1);
+    expect(tenantsService.getCustomerUnits).toHaveBeenCalledWith(1);
+    expect(component.customerUnitsLoading[1]).toBe(false);
+    expect(component.customerUnitsMap[1]).toEqual([mockUnit]);
+  });
+
+  it('should not re-fetch units if already cached', () => {
+    tenantsService.getCustomerUnits.mockReturnValue(of([mockUnit]));
+    component.toggleCustomerUnits(1);   // first open — fetches
+    component.toggleCustomerUnits(1);   // close
+    component.toggleCustomerUnits(1);   // second open — should use cache
+    expect(tenantsService.getCustomerUnits).toHaveBeenCalledTimes(1);
+  });
+
+  it('should set empty units array and clear loading on fetch error', () => {
+    tenantsService.getCustomerUnits.mockReturnValue(throwError(() => ({ status: 500 })));
+    component.toggleCustomerUnits(1);
+    expect(component.customerUnitsMap[1]).toEqual([]);
+    expect(component.customerUnitsLoading[1]).toBe(false);
+  });
+
+  it('should clear cache and re-fetch after assigning a unit', () => {
+    tenantsService.getCustomerUnits
+      .mockReturnValueOnce(of([]))         // first expand
+      .mockReturnValue(of([mockUnit]));    // after assign
+
+    const availableUnit = { ...mockUnit, CustomerID: null };
+    unitsService.getUnits.mockReturnValue(of([availableUnit]));
+    unitsService.assignUnit.mockReturnValue(of({}));
+
+    // Prime the cache
+    component.toggleCustomerUnits(1);
+
+    // Open assign dialog with a unit selection returned
+    openDialogSpy.mockReturnValue({ afterClosed: () => of(availableUnit.UnitNumber) });
+    component.openAssignUnitDialog(mockCustomer);
+
+    expect(unitsService.assignUnit).toHaveBeenCalled();
+    expect(tenantsService.getCustomerUnits).toHaveBeenCalledTimes(2);
+    expect(component.customerUnitsMap[1]).toEqual([mockUnit]);
   });
 });
