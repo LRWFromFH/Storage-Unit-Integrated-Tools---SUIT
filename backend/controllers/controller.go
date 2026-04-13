@@ -498,6 +498,24 @@ func DeleteUnit(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Unit deleted successfully"})
 }
 
+func GetNotes(c *gin.Context) {
+	id := c.Param("id")
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var notes []models.Note
+	result := database.DB.Where("customer_id = ?", customerID).Find(&notes)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"notes": notes})
+}
+
 // This function expects the frontend to send additional delete requests
 // to delete the combined units from the database
 func CombineUnits(c *gin.Context) {
