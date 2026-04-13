@@ -404,6 +404,32 @@ func TestDeleteUnit(t *testing.T) {
 	var _ = boilerplate(t, "", "DELETE", "units/A123", r)
 }
 
+func TestCreateNote(t *testing.T) {
+	r := setupTestRouter()
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	payload := gin.H{
+		"content": "Customer called about late payment",
+	}
+
+	var response = boilerplate(t, payload, "POST", "customers/1/notes", r)
+
+	note, ok := response["note"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Note data is not in the expected format")
+	}
+
+	t.Logf("Created note: %v", note["Content"])
+}
+
 func TestGetNotes(t *testing.T) {
 	r := setupTestRouter()
 
