@@ -57,6 +57,7 @@ func setupTestRouter() *gin.Engine {
 		protected.POST("/customers/:id", controllers.UpdateCustomer)
 		protected.DELETE("/customers/:id", controllers.DeleteCustomer)
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
+		protected.GET("/customers/:id/notes", controllers.GetNotes)
 
 		//Unit crud routes.
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)

@@ -404,6 +404,40 @@ func TestDeleteUnit(t *testing.T) {
 	var _ = boilerplate(t, "", "DELETE", "units/A123", r)
 }
 
+func TestGetNotes(t *testing.T) {
+	r := setupTestRouter()
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	note := models.Note{
+		CustomerID: customer.ID,
+		Content:    "Test note content",
+		AuthorID:   1,
+	}
+	database.DB.Create(&note)
+
+	var response = boilerplate(t, "", "GET", "customers/1/notes", r)
+
+	notes, ok := response["notes"].([]interface{})
+	if !ok || len(notes) == 0 {
+		t.Fatal("No notes found in response")
+	}
+
+	firstNote, ok := notes[0].(map[string]interface{})
+	if !ok {
+		t.Fatal("Note data is not in the expected format")
+	}
+
+	t.Logf("Found note: %v", firstNote["Content"])
+}
+
 //func TestCombineUnits(t *testing.T) {
 //	r := setupTestRouter()
 //
