@@ -22,6 +22,14 @@ func setupTestRouter() *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	database.ConnectTest()
 
+	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), 14)
+	database.DB.Create(&models.Employee{
+		SMID:     "manager001",
+		Email:    "manager@suit.com",
+		Password: string(hashed),
+		Role:     "manager",
+	})
+
 	r := gin.New()
 	api := r.Group("/api")
 	{
@@ -58,6 +66,11 @@ func setupTestRouter() *gin.Engine {
 		protected.POST("/customers/:id", controllers.UpdateCustomer)
 		protected.DELETE("/customers/:id", controllers.DeleteCustomer)
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
+		protected.GET("/customers/:id/notes", controllers.GetNotes)
+		protected.POST("/customers/:id/notes", controllers.CreateNote)
+		protected.DELETE("/customers/:id/notes/:nid", controllers.DeleteNote)
+		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
+		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
 
 		//Unit crud routes.
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)

@@ -9,3 +9,7 @@ type Note struct {
 	Content    string
 	AuthorID   uint // Linked to Employee.ID
 }
+
+type NoteRequest struct {
+	Content string `json:"content" binding:"required"`
+}

@@ -64,12 +64,21 @@ func SetupRoutes(r *gin.Engine) {
 
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
 
+		//Note routes.
+		protected.GET("/customers/:id/notes", controllers.GetNotes)
+		protected.POST("/customers/:id/notes", controllers.CreateNote)
+		protected.DELETE("/customers/:id/notes/:nid", controllers.DeleteNote)
+
 		//Unit crud routes.
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
+
+		//Insurance routes.
+		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
+		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
 
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
