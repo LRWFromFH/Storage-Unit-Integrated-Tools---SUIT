@@ -582,6 +582,28 @@ func DeleteNote(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
 }
 
+// Insurance handlers
+
+func GetInsurance(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	result := database.DB.Where("unit_number = ?", unitNumber).First(&unit)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	var insurance models.Insurance
+	result = database.DB.Where("unit_id = ?", unit.ID).First(&insurance)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No insurance found for this unit"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
+}
+
 // This function expects the frontend to send additional delete requests
 // to delete the combined units from the database
 func CombineUnits(c *gin.Context) {
