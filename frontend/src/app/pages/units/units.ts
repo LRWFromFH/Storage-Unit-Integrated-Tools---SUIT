@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +15,7 @@ import { UnitsService } from './units.service';
 import { Unit } from './unit.model';
 import { UnitDialog } from './unit-dialog';
 import { CombineDialog } from './combine-dialog';
+import { Auth } from '../../core/services/auth';
 import { ModuleRegistry } from 'ag-grid-community';
 import {
   ClientSideRowModelModule,
@@ -40,6 +43,8 @@ ModuleRegistry.registerModules([
   ]
 })
 export class Units implements OnInit {
+
+  auth = inject(Auth);
 
   units: Unit[] = [];
   filteredUnits: Unit[] = [];
@@ -113,12 +118,15 @@ export class Units implements OnInit {
 
   loadUnits() {
     this.loading = true;
-    this.unitsService.getUnits().subscribe({
+    const fetch$ = this.auth.isManager()
+      ? this.unitsService.getAllUnits()
+      : this.unitsService.getUnits();
+
+    fetch$.subscribe({
       next: (data) => {
         this.units = data;
         this.filteredUnits = [...data];
         this.loading = false;
-        this.gridApi?.setGridOption('rowData', data);
       },
       error: (err: HttpErrorResponse) => {
         console.error(err);
@@ -177,21 +185,28 @@ export class Units implements OnInit {
   }
 
   openCombineDialog() {
-    if (this.units.length < 2) {
+    const availableUnits = this.units.filter(u => !u.CustomerID);
+    if (availableUnits.length < 2) {
       this.snackBar.open('Need at least 2 available units to combine', 'Close', { duration: 4000 });
       return;
     }
     const dialogRef = this.dialog.open(CombineDialog, {
       width: '560px',
-      data: { units: this.units }
+      data: { units: availableUnits }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
+      const unitsToDelete = availableUnits.filter(u => result.unit_ids.includes(u.ID));
       this.unitsService.combineUnits(result).subscribe({
         next: () => {
-          this.snackBar.open('Units combined successfully', 'Close', { duration: 3000 });
-          this.loadUnits();
+          const deletions = unitsToDelete.map(u =>
+            this.unitsService.deleteUnit(u.UnitNumber).pipe(catchError(() => of(null)))
+          );
+          forkJoin(deletions.length ? deletions : [of(null)]).subscribe(() => {
+            this.snackBar.open('Units combined successfully', 'Close', { duration: 3000 });
+            this.loadUnits();
+          });
         },
         error: (err) => {
           console.error(err);

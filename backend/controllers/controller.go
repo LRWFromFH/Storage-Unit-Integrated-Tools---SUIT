@@ -9,6 +9,7 @@ import (
 
 	"backend/database"
 	"backend/models"
+	"backend/services"
 	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
@@ -430,6 +431,32 @@ func GetAvailableUnits(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"units": units})
 }
 
+// Fetch all units (occupied + available) — manager only
+func GetAllUnits(c *gin.Context) {
+	var units []models.Unit
+
+	result := database.DB.Find(&units)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch units"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"units": units})
+}
+
+// Fetch all employees — manager only
+func GetAllEmployees(c *gin.Context) {
+	var employees []models.Employee
+
+	result := database.DB.Find(&employees)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch employees"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"employees": employees})
+}
+
 func CreateUnit(c *gin.Context) {
 	var unit models.Unit
 	if err := c.ShouldBindJSON(&unit); err != nil {
@@ -617,7 +644,7 @@ func CombineUnits(c *gin.Context) {
 
 	//Get units in request
 	var units []models.Unit
-	result := database.DB.Where("unit_number IN ?", combineRequest.UnitIDs).Find(&units)
+	result := database.DB.Where("id IN ?", combineRequest.UnitIDs).Find(&units)
 	if result.Error != nil || len(units) == 0 {
 		c.JSON(http.StatusNotFound, gin.H{"error": "One or more units not found"})
 		return
@@ -646,9 +673,11 @@ func CombineUnits(c *gin.Context) {
 	}
 	combinedUnitNumber := strings.Join(unitNumbers, "-")
 
-	//Assign cutomerID as it will be either nil or a single customer
+	//Assign customerID only when a real customer was specified (0 means none provided)
 	var combinedUnit models.Unit
-	combinedUnit.CustomerID = &combineRequest.CustomerID
+	if combineRequest.CustomerID != 0 {
+		combinedUnit.CustomerID = &combineRequest.CustomerID
+	}
 	combinedUnit.Combined = true
 	combinedUnit.Height = 10
 	combinedUnit.Length = length
@@ -660,4 +689,52 @@ func CombineUnits(c *gin.Context) {
 	database.DB.Create(&combinedUnit)
 
 	c.JSON(http.StatusOK, combinedUnit)
+}
+
+func GetCustomerBalance(c *gin.Context) {
+	id := c.Param("id")
+
+	// Convert string ID to uint
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var customer models.Customer
+
+	if err := database.DB.First(&customer, customerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
+		return
+	}
+
+	balance, err := services.GetCustomerBalance(uint(customerID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"balance": balance})
+}
+
+func GetTransactions(c *gin.Context) {
+	id := c.Param("id")
+
+	// Convert string ID to uint
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var transactions []models.LedgerEntry
+	// Preload("Invoice") if you want to see the invoice details in the list
+	result := database.DB.Where("customer_id = ?", customerID).Find(&transactions)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }

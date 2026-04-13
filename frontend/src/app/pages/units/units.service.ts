@@ -16,6 +16,12 @@ export class UnitsService {
     );
   }
 
+  getAllUnits(): Observable<Unit[]> {
+    return this.http.get<UnitsResponse>(`${this.API_URL}/AllUnits`).pipe(
+      map(response => response.units || [])
+    );
+  }
+
   createUnit(payload: any): Observable<any> {
     return this.http.post(`${this.API_URL}/units`, payload);
   }

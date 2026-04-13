@@ -18,7 +18,7 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 		Connect()
 	}
 	var count int64
-	DB.Model(&models.Customer{}).Count(&count)
+	DB.Model(&models.Unit{}).Count(&count)
 	if count == 0 {
 		var unit models.Unit
 		for i := 1; i <= small; i++ {

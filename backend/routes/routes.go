@@ -27,6 +27,8 @@ func SetupRoutes(r *gin.Engine) {
 		managerOnly.POST("/employees/:id/role", controllers.UpdateEmployeeRole)
 		managerOnly.DELETE("/customers/:id", controllers.DeleteCustomer)
 		managerOnly.DELETE("/units/:unit_number", controllers.DeleteUnit)
+		managerOnly.GET("/employees", controllers.GetAllEmployees)
+		managerOnly.GET("/AllUnits", controllers.GetAllUnits)
 	}
 
 	protected := r.Group("/api")
@@ -74,6 +76,9 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
 
+
+		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
+		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
 
 	}
 

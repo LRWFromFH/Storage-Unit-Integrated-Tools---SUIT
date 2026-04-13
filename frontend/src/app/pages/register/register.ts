@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -13,12 +13,22 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTableModule } from '@angular/material/table';
+import { CommonModule } from '@angular/common';
+
+interface Employee {
+  ID: number;
+  smid: string;
+  email: string;
+  role: string;
+}
 
 @Component({
   selector: 'app-register',
   standalone: true,
   imports: [
     ReactiveFormsModule,
+    CommonModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -26,19 +36,26 @@ import { MatDividerModule } from '@angular/material/divider';
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatDividerModule
+    MatDividerModule,
+    MatTableModule
   ],
   templateUrl: './register.html',
   styleUrl: './register.scss'
 })
-export class Register {
+export class Register implements OnInit {
 
   private auth = inject(Auth);
   private router = inject(Router);
   private fb = inject(FormBuilder);
   private http = inject(HttpClient);
+  private cdr = inject(ChangeDetectorRef);
 
   private readonly apiUrl = 'http://localhost:8080/api';
+
+  // Employee list
+  employees: Employee[] = [];
+  employeesLoading = false;
+  employeeColumns = ['id', 'smid', 'email', 'role'];
 
   // Register new employee
   isLoading = false;
@@ -61,6 +78,25 @@ export class Register {
     role:       ['employee', Validators.required]
   });
 
+  ngOnInit(): void {
+    this.loadEmployees();
+  }
+
+  loadEmployees() {
+    this.employeesLoading = true;
+    this.http.get<{ employees: Employee[] }>(`${this.apiUrl}/employees`, { withCredentials: true }).subscribe({
+      next: (resp) => {
+        this.employees = resp.employees || [];
+        this.employeesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.employeesLoading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   async onSubmit() {
     if (this.form.invalid) return;
     this.errorMessage = '';
@@ -71,6 +107,7 @@ export class Register {
       const newId = await this.auth.registerEmployee(username!, email!, password!);
       this.successMessage = `Employee account for ${email} created successfully. Their DB ID is ${newId} — use this in "Update Employee Role".`;
       this.form.reset();
+      this.loadEmployees();
     } catch (err: any) {
       this.errorMessage = err?.message ?? 'Registration failed. Please try again.';
     } finally {
@@ -90,6 +127,7 @@ export class Register {
       );
       this.roleSuccess = `Role updated to "${role}" for employee ID ${employeeId}.`;
       this.roleForm.patchValue({ employeeId: '' });
+      this.loadEmployees();
     } catch (err: any) {
       if (err?.status === 404) {
         this.roleError = `Employee ID ${employeeId} not found.`;
