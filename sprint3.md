@@ -1,8 +1,19 @@
-# Billing & Ledger System
+# SUIT — Sprint 3 Development Update
+
+**Repository:** [LRWFromFH/Storage-Unit-Integrated-Tools---SUIT](https://github.com/LRWFromFH/Storage-Unit-Integrated-Tools---SUIT/issues)  
+**Team Members:**
+- Sumanthra Yerrabelly | Backend
+- Manasa Kallam | Frontend
+- Satvik LNU | Frontend
+- Alexander Martin | Backend
+
+---
+
+## Billing & Ledger System
 
 This module handles financial transactions, balance tracking, and ledger management. Core logic is located in `services/billing.go`.
 
-## 📡 API Endpoints
+### 📡 API Endpoints
 
 All endpoints require active session validation and standard security headers.
 
@@ -13,23 +24,23 @@ All endpoints require active session validation and standard security headers.
 
 ---
 
-## ⚙️ Core Logic (`billing.go`)
+### ⚙️ Core Logic (`billing.go`)
 
 The billing service manages the creation of charges and the recording of payments. 
 
-### Function Headers
+#### Function Headers
 ```go
 func CreateCharge(customerID uint, unitID uint, amount float64, desc string) error
 
 func RecordPayment(customerID uint, unitID uint, amount float64, desc string) error
 ```
 
-### Balance Calculation
+#### Balance Calculation
 * **`GetUnitBalance`** / **`GetCustomerBalance`**: These functions return a `float64` representing the current balance derived from the sum of all invoices and payments.
 
 ---
 
-## 📑 Business Rules & Logic
+### 📑 Business Rules & Logic
 
 * **Ledger Entries**: Every charge and payment is automatically recorded as an entry in the ledger.
 * **Associations**: The system uses a **loose/naive association** between invoices and ledger entries. 
@@ -41,7 +52,7 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 
 ---
 
-## 🛠 Roadmap
+### 🛠 Roadmap
 
 - [ ] **Payment Reversals**: Scheduled for the next sprint.
 - [ ] **On-Demand Invoicing**: Implementation of automated invoice generation for overpayment scenarios.
