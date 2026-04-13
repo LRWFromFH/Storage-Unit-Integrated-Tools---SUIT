@@ -578,6 +578,38 @@ func TestGetNotes(t *testing.T) {
 	t.Logf("Found note: %v", firstNote["Content"])
 }
 
+func TestGetInsurance(t *testing.T) {
+	r := setupTestRouter()
+
+	unit := models.Unit{
+		UnitNumber: "A123",
+		SizeType:   "10x10",
+		Length:     10,
+		Width:      10,
+		Height:     10,
+		Price:      149.95,
+		Combined:   false,
+	}
+	database.DB.Create(&unit)
+
+	insurance := models.Insurance{
+		UnitID:        unit.ID,
+		ProviderName:  "SafeGuard Insurance",
+		PolicyNumber:  "POL-001",
+		CoverageLimit: 5000.00,
+	}
+	database.DB.Create(&insurance)
+
+	var response = boilerplate(t, "", "GET", "units/A123/insurance", r)
+
+	ins, ok := response["insurance"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Insurance data is not in the expected format")
+	}
+
+	t.Logf("Found insurance: provider=%v policy=%v", ins["ProviderName"], ins["PolicyNumber"])
+}
+
 //func TestCombineUnits(t *testing.T) {
 //	r := setupTestRouter()
 //
