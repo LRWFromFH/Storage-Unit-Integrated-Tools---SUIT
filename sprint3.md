@@ -21,6 +21,16 @@ All endpoints require active session validation and standard security headers.
 | :--- | :--- | :--- |
 | `/customers/:id/balance` | `GET` | Returns a `float64`. A **negative** value indicates an outstanding balance (debt). |
 | `/customers/:id/transactions` | `GET` | Returns a list of transactions to populate the frontend ledger. |
+| `/PostPayment` | `POST` | Receives PaymentRequest from frontend to apply payment via billing's RecordPayment. |
+
+```go
+type PaymentRequest struct {
+		CustomerID  uint    `json:"customer_id" binding:"required"`
+		Unit        uint    `json:"unit_id"`
+		Amount      float64 `json:"amount" binding:"required"`
+		Description string  `json:"description"`
+	}
+```
 
 ---
 
