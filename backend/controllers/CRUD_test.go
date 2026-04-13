@@ -404,6 +404,80 @@ func TestDeleteUnit(t *testing.T) {
 	var _ = boilerplate(t, "", "DELETE", "units/A123", r)
 }
 
+func TestDeleteNote(t *testing.T) {
+	r := setupTestRouter()
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	// AuthorID=1 matches the employee boilerplate registers (first employee in fresh DB)
+	note := models.Note{
+		CustomerID: customer.ID,
+		Content:    "Note to be deleted",
+		AuthorID:   1,
+	}
+	database.DB.Create(&note)
+
+	var response = boilerplate(t, "", "DELETE", "customers/1/notes/1", r)
+	message, ok := response["message"].(string)
+	if !ok || message != "Note deleted successfully" {
+		t.Fatal("Expected note deleted message")
+	}
+
+	t.Logf("Delete response: %v", message)
+}
+
+func TestDeleteNote_Forbidden(t *testing.T) {
+	r := setupTestRouter()
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	// AuthorID=999 means a different employee wrote this note
+	note := models.Note{
+		CustomerID: customer.ID,
+		Content:    "Someone else's note",
+		AuthorID:   999,
+	}
+	database.DB.Create(&note)
+
+	// Register and login as a regular employee
+	registerUser(r, map[string]string{
+		"username": "employee_test",
+		"email":    "employee@test.com",
+		"password": "securepassword123",
+	})
+	loginResp := loginUser(r, map[string]string{
+		"email":    "employee@test.com",
+		"password": "securepassword123",
+	})
+
+	req, _ := http.NewRequest("DELETE", "/api/customers/1/notes/1", nil)
+	req.Header.Set("X-CSRF-TOKEN", getCSRFToken(loginResp))
+	attachCookies(req, loginResp)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Errorf("Expected 403, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	t.Logf("Correctly blocked with status: %d", w.Code)
+}
+
 func TestCreateNote(t *testing.T) {
 	r := setupTestRouter()
 
