@@ -11,6 +11,7 @@ import (
 	"backend/database"
 	"backend/middleware"
 	"backend/models"
+	"backend/services"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -65,6 +66,9 @@ func setupTestRouter() *gin.Engine {
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
 		protected.DELETE("/units/:unit_number", controllers.DeleteUnit)
+
+		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
+		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
 	}
 
 	return r
@@ -636,4 +640,122 @@ func TestSearchDB(t *testing.T) {
 	lastName := firstCustomer["LastName"]
 
 	t.Logf("Found Customer Name: %v %v", firstName, lastName)
+}
+
+func TestGetBalance(t *testing.T) {
+	r := setupTestRouter()
+
+	small, medium, large, xlarge := 50, 35, 25, 15
+
+	database.DevInit(small, medium, large, xlarge, true)
+
+	// Login as Manager.
+	loginResp := loginUser(r, map[string]string{
+		"email":    "manager@suit.com",
+		"password": "Manager123!",
+	})
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	err := services.CreateCharge(1, 0, 420, "Old Unit")
+	if err != nil {
+		t.Logf("Something went wrong with CreateCharge.")
+	}
+
+	data := gin.H{}
+	jsonData, _ := json.Marshal(data)
+
+	req, _ := http.NewRequest("GET", "/api/customers/1/balance", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	//t.Logf("CSRF Token: %s", csrfToken)
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// After r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	balance, ok := response["balance"].(float64)
+	if !ok {
+		t.Fatalf("Expected balance to be a float64, but got %T", response["balance"])
+	}
+
+	t.Logf("Transactions: %f", balance)
+}
+
+func TestGetTransactions(t *testing.T) {
+	r := setupTestRouter()
+
+	small, medium, large, xlarge := 50, 35, 25, 15
+
+	database.DevInit(small, medium, large, xlarge, true)
+
+	// Login as Manager.
+	loginResp := loginUser(r, map[string]string{
+		"email":    "manager@suit.com",
+		"password": "Manager123!",
+	})
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	err := services.CreateCharge(1, 0, 420, "Old Unit")
+	if err != nil {
+		t.Logf("Something went wrong with CreateCharge.")
+	}
+
+	err = services.RecordPayment(1, 0, 420, "Exiting Storage Forever!")
+
+	data := gin.H{}
+	jsonData, _ := json.Marshal(data)
+
+	req, _ := http.NewRequest("GET", "/api/customers/1/transactions", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	//t.Logf("CSRF Token: %s", csrfToken)
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// After r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	transactions, ok := response["transactions"].([]interface{})
+	if !ok {
+		t.Fatalf("Expected balance to be a float64, but got %T", response["transactions"])
+	}
+
+	t.Logf("Transactions: %s", transactions)
 }

@@ -9,6 +9,7 @@ import (
 
 	"backend/database"
 	"backend/models"
+	"backend/services"
 	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
@@ -582,4 +583,52 @@ func CombineUnits(c *gin.Context) {
 	database.DB.Create(&combinedUnit)
 
 	c.JSON(http.StatusOK, combinedUnit)
+}
+
+func GetCustomerBalance(c *gin.Context) {
+	id := c.Param("id")
+
+	// Convert string ID to uint
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var customer models.Customer
+
+	if err := database.DB.First(&customer, customerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
+		return
+	}
+
+	balance, err := services.GetCustomerBalance(uint(customerID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"balance": balance})
+}
+
+func GetTransactions(c *gin.Context) {
+	id := c.Param("id")
+
+	// Convert string ID to uint
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var transactions []models.LedgerEntry
+	// Preload("Invoice") if you want to see the invoice details in the list
+	result := database.DB.Where("customer_id = ?", customerID).Find(&transactions)
+
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch transactions"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }
