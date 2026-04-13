@@ -628,6 +628,80 @@ func TestGetInsurance(t *testing.T) {
 	t.Logf("Found insurance: provider=%v policy=%v", ins["ProviderName"], ins["PolicyNumber"])
 }
 
+func TestCreateInsurance(t *testing.T) {
+	r := setupTestRouter()
+
+	unit := models.Unit{
+		UnitNumber: "INS-CREATE-001",
+		SizeType:   "10x10",
+		Length:     10,
+		Width:      10,
+		Height:     10,
+		Price:      149.95,
+		Combined:   false,
+	}
+	database.DB.Create(&unit)
+
+	payload := gin.H{
+		"provider_name":  "SafeGuard Insurance",
+		"policy_number":  "POL-CREATE-001",
+		"coverage_limit": 5000.00,
+		"expiry_date":    "2027-01-01T00:00:00Z",
+	}
+
+	var response = boilerplate(t, payload, "POST", "units/INS-CREATE-001/insurance", r)
+
+	ins, ok := response["insurance"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Insurance data is not in the expected format")
+	}
+
+	t.Logf("Created insurance: provider=%v policy=%v", ins["ProviderName"], ins["PolicyNumber"])
+}
+
+func TestUpdateInsurance(t *testing.T) {
+	r := setupTestRouter()
+
+	unit := models.Unit{
+		UnitNumber: "INS-UPDATE-001",
+		SizeType:   "10x10",
+		Length:     10,
+		Width:      10,
+		Height:     10,
+		Price:      149.95,
+		Combined:   false,
+	}
+	database.DB.Create(&unit)
+
+	// seed existing insurance
+	database.DB.Create(&models.Insurance{
+		UnitID:        unit.ID,
+		ProviderName:  "Old Provider",
+		PolicyNumber:  "OLD-POL-001",
+		CoverageLimit: 1000.00,
+	})
+
+	payload := gin.H{
+		"provider_name":  "New Provider",
+		"policy_number":  "NEW-POL-001",
+		"coverage_limit": 9000.00,
+		"expiry_date":    "2028-01-01T00:00:00Z",
+	}
+
+	var response = boilerplate(t, payload, "POST", "units/INS-UPDATE-001/insurance", r)
+
+	ins, ok := response["insurance"].(map[string]interface{})
+	if !ok {
+		t.Fatal("Insurance data is not in the expected format")
+	}
+
+	if ins["ProviderName"] != "New Provider" {
+		t.Errorf("Expected updated provider, got %v", ins["ProviderName"])
+	}
+
+	t.Logf("Updated insurance: provider=%v policy=%v", ins["ProviderName"], ins["PolicyNumber"])
+}
+
 //func TestCombineUnits(t *testing.T) {
 //	r := setupTestRouter()
 //
