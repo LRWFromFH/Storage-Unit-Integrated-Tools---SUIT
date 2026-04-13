@@ -30,14 +30,41 @@
   <div class="tenant-card-grid">
     @for (customer of customers; track customer.ID) {
       <div class="tenant-card">
-        <div class="tenant-header">
-          {{ customer.FirstName }} {{ customer.LastName }}
-        </div>
+        <div class="tenant-header">{{ customer.FirstName }} {{ customer.LastName }}</div>
         <div class="tenant-body">
           <div><strong>Email:</strong> {{ customer.Email }}</div>
           <div><strong>Phone:</strong> {{ customer.Phone }}</div>
           <div><strong>Address:</strong> {{ customer.Address }}</div>
         </div>
+
+        <!-- Assigned units section -->
+        <div class="tenant-units-section">
+          <button mat-button class="units-toggle-btn"
+                  (click)="toggleCustomerUnits(customer.ID)">
+            {{ expandedCustomerId === customer.ID ? 'Hide Units ▲' : 'View Units ▼' }}
+          </button>
+
+          @if (expandedCustomerId === customer.ID) {
+            <div class="tenant-units-panel">
+              @if (customerUnitsLoading[customer.ID]) {
+                <p class="units-loading">Loading units…</p>
+              } @else if (!customerUnitsMap[customer.ID]?.length) {
+                <p class="no-units">No units assigned.</p>
+              } @else {
+                @for (unit of customerUnitsMap[customer.ID]; track unit.ID) {
+                  <div class="unit-chip">
+                    <strong>{{ unit.UnitNumber }}</strong> · {{ unit.SizeType }} · ${{ unit.Price }}/mo
+                  </div>
+                }
+              }
+              <button mat-stroked-button color="accent" class="assign-btn"
+                      (click)="openAssignUnitDialog(customer)">
+                + Assign Unit
+              </button>
+            </div>
+          }
+        </div>
+
         <div class="tenant-actions">
           <button mat-button color="primary" (click)="openDialog(customer)">Edit</button>
           <button mat-button color="warn" (click)="deleteCustomer(customer.ID)">Delete</button>

@@ -52,6 +52,44 @@
   margin-top: 12px;
 }
 
+.tenant-units-section {
+  margin-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+}
+
+.units-toggle-btn {
+  font-size: 12px;
+  padding: 0;
+  min-width: 0;
+}
+
+.tenant-units-panel {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unit-chip {
+  background: #f0f4ff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.no-units, .units-loading {
+  font-size: 12px;
+  color: var(--suit-text-muted);
+  margin: 0;
+}
+
+.assign-btn {
+  font-size: 12px;
+  margin-top: 4px;
+  align-self: flex-start;
+}
+
 .status-badge {
 
   padding: 4px 10px;

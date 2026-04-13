@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Tenants } from './tenants';
 import { TenantsService } from './tenants.service';
-import { MatDialog } from '@angular/material/dialog';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { UnitsService } from '../units/units.service';
 import { of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { provideRouter } from '@angular/router';
+import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { Customer } from './tenants.model';
 
 const mockCustomer: Customer = {
@@ -24,35 +24,44 @@ describe('Tenants Component', () => {
   let component: Tenants;
   let fixture: ComponentFixture<Tenants>;
   let tenantsService: any;
-  let dialogSpy: any;
-  let snackBarSpy: any;
+  let unitsService: any;
+  let openDialogSpy: ReturnType<typeof vi.fn>;
+  let openSnackBarSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     tenantsService = {
-      getCustomers: vi.fn().mockReturnValue(of([])),
-      createCustomer: vi.fn().mockReturnValue(of({})),
-      updateCustomer: vi.fn().mockReturnValue(of({})),
-      deleteCustomer: vi.fn().mockReturnValue(of({}))
+      getCustomers:     vi.fn().mockReturnValue(of([])),
+      createCustomer:   vi.fn().mockReturnValue(of({})),
+      updateCustomer:   vi.fn().mockReturnValue(of({})),
+      deleteCustomer:   vi.fn().mockReturnValue(of({})),
+      getCustomerUnits: vi.fn().mockReturnValue(of([]))
     };
 
-    dialogSpy = {
-      open: vi.fn().mockReturnValue({ afterClosed: () => of(null) })
+    unitsService = {
+      getUnits:   vi.fn().mockReturnValue(of([])),
+      assignUnit: vi.fn().mockReturnValue(of({}))
     };
-
-    snackBarSpy = { open: vi.fn() };
 
     await TestBed.configureTestingModule({
       imports: [Tenants],
       providers: [
         provideRouter([]),
+        provideNoopAnimations(),
         { provide: TenantsService, useValue: tenantsService },
-        { provide: MatDialog, useValue: dialogSpy },
-        { provide: MatSnackBar, useValue: snackBarSpy }
+        { provide: UnitsService,   useValue: unitsService }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Tenants);
     component = fixture.componentInstance;
+
+    // Replace the private injected services directly on the component instance.
+    // TestBed.inject(MatDialog) returns the root-injector instance, which differs
+    // from the one the standalone component gets from its own module injector.
+    openDialogSpy   = vi.fn().mockReturnValue({ afterClosed: () => of(null) });
+    openSnackBarSpy = vi.fn().mockReturnValue(null);
+    (component as any).dialog   = { open: openDialogSpy };
+    (component as any).snackBar = { open: openSnackBarSpy };
   });
 
   it('should create the component', () => {
@@ -74,7 +83,7 @@ describe('Tenants Component', () => {
   it('should show snackbar on load error', () => {
     tenantsService.getCustomers.mockReturnValue(throwError(() => ({ status: 500 })));
     fixture.detectChanges();
-    expect(snackBarSpy.open).toHaveBeenCalledWith('Failed to load customers', 'Close', { duration: 5000 });
+    expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to load customers', 'Close', { duration: 5000 });
     expect(component.loading).toBe(false);
   });
 
@@ -88,12 +97,13 @@ describe('Tenants Component', () => {
 
   it('should open dialog for creating a new customer', () => {
     component.openDialog();
-    expect(dialogSpy.open).toHaveBeenCalled();
+    expect(openDialogSpy).toHaveBeenCalled();
   });
 
   it('should call createCustomer when dialog returns data without an existing customer', () => {
-    const formResult = { first_name: 'Jane', last_name: 'Doe', email: 'jane@example.com', phone: '555', address: '1 St' };
-    dialogSpy.open.mockReturnValue({ afterClosed: () => of(formResult) });
+    // Dialog returns Pascal case to match Go struct fields (fixed in tenant-dialog.ts)
+    const formResult = { FirstName: 'Jane', LastName: 'Doe', Email: 'jane@example.com', Phone: '555', Address: '1 St' };
+    openDialogSpy.mockReturnValue({ afterClosed: () => of(formResult) });
 
     component.openDialog();
 
@@ -101,8 +111,8 @@ describe('Tenants Component', () => {
   });
 
   it('should call updateCustomer when dialog returns data for an existing customer', () => {
-    const formResult = { first_name: 'Jane', last_name: 'Smith', email: 'jane@example.com', phone: '555', address: '1 St' };
-    dialogSpy.open.mockReturnValue({ afterClosed: () => of(formResult) });
+    const formResult = { FirstName: 'Jane', LastName: 'Smith', Email: 'jane@example.com', Phone: '555', Address: '1 St' };
+    openDialogSpy.mockReturnValue({ afterClosed: () => of(formResult) });
 
     component.openDialog(mockCustomer);
 
@@ -110,28 +120,28 @@ describe('Tenants Component', () => {
   });
 
   it('should show snackbar on create error', () => {
-    dialogSpy.open.mockReturnValue({ afterClosed: () => of({ first_name: 'Jane' }) });
+    openDialogSpy.mockReturnValue({ afterClosed: () => of({ FirstName: 'Jane' }) });
     tenantsService.createCustomer.mockReturnValue(throwError(() => ({ status: 500 })));
 
     component.openDialog();
 
-    expect(snackBarSpy.open).toHaveBeenCalledWith('Failed to create customer', 'Close', { duration: 5000 });
+    expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to create customer', 'Close', { duration: 5000 });
   });
 
   it('should call deleteCustomer and reload on success', () => {
     component.deleteCustomer(1);
     expect(tenantsService.deleteCustomer).toHaveBeenCalledWith(1);
-    expect(snackBarSpy.open).toHaveBeenCalledWith('Customer deleted successfully', 'Close', { duration: 3000 });
+    expect(openSnackBarSpy).toHaveBeenCalledWith('Customer deleted successfully', 'Close', { duration: 3000 });
   });
 
   it('should show snackbar on delete error', () => {
     tenantsService.deleteCustomer.mockReturnValue(throwError(() => ({ status: 500 })));
     component.deleteCustomer(1);
-    expect(snackBarSpy.open).toHaveBeenCalledWith('Failed to delete customer', 'Close', { duration: 5000 });
+    expect(openSnackBarSpy).toHaveBeenCalledWith('Failed to delete customer', 'Close', { duration: 5000 });
   });
 
   it('should not call createCustomer when dialog is cancelled', () => {
-    dialogSpy.open.mockReturnValue({ afterClosed: () => of(null) });
+    openDialogSpy.mockReturnValue({ afterClosed: () => of(null) });
     component.openDialog();
     expect(tenantsService.createCustomer).not.toHaveBeenCalled();
   });

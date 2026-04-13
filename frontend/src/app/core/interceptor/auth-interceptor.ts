@@ -10,9 +10,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     withCredentials: true
   });
 
-  const skipCsrf =
-    req.url.includes('/api/login') ||
-    req.url.includes('/api/register');
+  const skipCsrf = req.url.includes('/api/login');
 
   if (csrfToken && !skipCsrf) {
     modifiedReq = modifiedReq.clone({

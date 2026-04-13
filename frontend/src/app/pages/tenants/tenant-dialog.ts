@@ -45,7 +45,15 @@ export class TenantDialog {
 
   save() {
     if (this.form.invalid) return;
-    this.dialogRef.close(this.form.value);
+    const v = this.form.value;
+    // Backend Customer model has no JSON tags — must send Pascal case field names
+    this.dialogRef.close({
+      FirstName: v.first_name,
+      LastName:  v.last_name,
+      Email:     v.email,
+      Phone:     v.phone,
+      Address:   v.address
+    });
   }
 
   cancel() {

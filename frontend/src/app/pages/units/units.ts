@@ -12,6 +12,7 @@ import { ColDef } from 'ag-grid-community';
 import { UnitsService } from './units.service';
 import { Unit } from './unit.model';
 import { UnitDialog } from './unit-dialog';
+import { CombineDialog } from './combine-dialog';
 import { ModuleRegistry } from 'ag-grid-community';
 import {
   ClientSideRowModelModule,
@@ -172,6 +173,31 @@ export class Units implements OnInit {
         console.error(err);
         this.snackBar.open('Failed to delete unit', 'Close', { duration: 5000 });
       }
+    });
+  }
+
+  openCombineDialog() {
+    if (this.units.length < 2) {
+      this.snackBar.open('Need at least 2 available units to combine', 'Close', { duration: 4000 });
+      return;
+    }
+    const dialogRef = this.dialog.open(CombineDialog, {
+      width: '560px',
+      data: { units: this.units }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+      this.unitsService.combineUnits(result).subscribe({
+        next: () => {
+          this.snackBar.open('Units combined successfully', 'Close', { duration: 3000 });
+          this.loadUnits();
+        },
+        error: (err) => {
+          console.error(err);
+          this.snackBar.open('Failed to combine units', 'Close', { duration: 5000 });
+        }
+      });
     });
   }
 
