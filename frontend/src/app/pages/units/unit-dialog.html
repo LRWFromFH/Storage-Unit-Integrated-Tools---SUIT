@@ -1,61 +1,42 @@
-<h2 mat-dialog-title>
-  {{ data ? 'Edit Unit' : 'Add Unit' }}
-</h2>
+<h2 mat-dialog-title>{{ isEdit ? 'Edit Unit' : 'Add New Unit' }}</h2>
 
-<form [formGroup]="form" (ngSubmit)="save()" mat-dialog-content>
+<mat-dialog-content>
+  <form [formGroup]="form" style="display: flex; flex-direction: column; gap: 16px;">
+    <mat-form-field appearance="outline">
+      <mat-label>Unit Number</mat-label>
+      <input matInput formControlName="unit_number" [readonly]="isEdit">
+    </mat-form-field>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Unit Number</mat-label>
-    <input matInput formControlName="unitNumber" />
-  </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Size Type</mat-label>
+      <input matInput formControlName="size_type">
+    </mat-form-field>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Unit Type</mat-label>
-    <mat-select formControlName="unitType">
-      <mat-option value="5x5">5x5</mat-option>
-      <mat-option value="10x10">10x10</mat-option>
-      <mat-option value="10x20">10x20</mat-option>
-    </mat-select>
-  </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Price per Month ($)</mat-label>
+      <input matInput type="number" formControlName="price" step="0.01">
+    </mat-form-field>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Size (Sq Ft)</mat-label>
-    <input matInput type="number" formControlName="sizeSqFt" />
-  </mat-form-field>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+      <mat-form-field appearance="outline">
+        <mat-label>Length (ft)</mat-label>
+        <input matInput type="number" formControlName="length">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Width (ft)</mat-label>
+        <input matInput type="number" formControlName="width">
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Height (ft)</mat-label>
+        <input matInput type="number" formControlName="height">
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
 
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Floor</mat-label>
-    <input matInput type="number" formControlName="floor" />
-  </mat-form-field>
-
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Price Per Month</mat-label>
-    <input matInput type="number" formControlName="pricePerMonth" />
-  </mat-form-field>
-
-  <mat-form-field appearance="outline" class="full-width">
-    <mat-label>Status</mat-label>
-    <mat-select formControlName="status">
-      <mat-option value="Available">Available</mat-option>
-      <mat-option value="Occupied">Occupied</mat-option>
-      <mat-option value="Reserved">Reserved</mat-option>
-      <mat-option value="Maintenance">Maintenance</mat-option>
-    </mat-select>
-  </mat-form-field>
-
-  <mat-checkbox formControlName="climateControlled">
-    Climate Controlled
-  </mat-checkbox>
-
-  <mat-checkbox formControlName="insuranceRequired">
-    Insurance Required
-  </mat-checkbox>
-
-</form>
-
-<div mat-dialog-actions align="end">
+<mat-dialog-actions align="end">
   <button mat-button (click)="cancel()">Cancel</button>
-  <button mat-raised-button color="primary" (click)="save()">
-    Save
+  <button mat-raised-button color="primary" (click)="save()" [disabled]="form.invalid">
+    {{ isEdit ? 'Update Unit' : 'Create Unit' }}
   </button>
-</div>
+</mat-dialog-actions>

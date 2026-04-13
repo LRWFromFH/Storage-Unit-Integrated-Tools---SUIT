@@ -2,6 +2,7 @@ package database
 
 import (
 	"backend/models"
+	"backend/utilities"
 	"math/rand"
 	"strconv"
 )
@@ -26,7 +27,6 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 				SizeType:   "5x5",
 				Price:      74.95,
 				Renter:     nil,
-				CustomerID: nil,
 				Length:     5,
 				Width:      5,
 				Height:     10,
@@ -41,7 +41,6 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 				SizeType:   "5x10",
 				Price:      99.95,
 				Renter:     nil,
-				CustomerID: nil,
 				Length:     5,
 				Width:      10,
 				Height:     10,
@@ -55,7 +54,6 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 				SizeType:   "10x10",
 				Price:      149.95,
 				Renter:     nil,
-				CustomerID: nil,
 				Length:     10,
 				Width:      10,
 				Height:     10,
@@ -69,7 +67,6 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 				SizeType:   "10x15",
 				Price:      189.95,
 				Renter:     nil,
-				CustomerID: nil,
 				Length:     10,
 				Width:      15,
 				Height:     10,
@@ -81,6 +78,20 @@ func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
 	DB.Model(&models.Customer{}).Count(&count)
 	if count == 0 {
 		InsertCustomers()
+	}
+
+	var empCount int64
+	DB.Model(&models.Employee{}).Count(&empCount)
+	if empCount == 0 {
+		hashed, err := utilities.HashPassword("Manager123!")
+		if err == nil {
+			DB.Create(&models.Employee{
+				SMID:     "manager001",
+				Email:    "manager@suit.com",
+				Password: hashed,
+				Role:     "manager",
+			})
+		}
 	}
 }
 

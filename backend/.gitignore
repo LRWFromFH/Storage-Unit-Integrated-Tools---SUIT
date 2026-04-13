@@ -3,3 +3,5 @@
 /*.exe
 /*.bat
 CHANGELOG.md
+RBAC_LOG.md
+controllers/rbac_test.go

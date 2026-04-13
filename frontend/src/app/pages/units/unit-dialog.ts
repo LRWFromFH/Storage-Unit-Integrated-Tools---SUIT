@@ -4,8 +4,6 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 
 import { Unit } from './unit.model';
@@ -15,46 +13,38 @@ import { Unit } from './unit.model';
   standalone: true,
   templateUrl: './unit-dialog.html',
   imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatButtonModule
+    CommonModule, ReactiveFormsModule, MatDialogModule,
+    MatFormFieldModule, MatInputModule, MatButtonModule
   ]
 })
 export class UnitDialog {
 
   form: FormGroup;
+  isEdit = false;
 
   constructor(
     private fb: FormBuilder,
     private dialogRef: MatDialogRef<UnitDialog>,
     @Inject(MAT_DIALOG_DATA) public data: Unit | null
   ) {
+    this.isEdit = !!data;
 
     this.form = this.fb.group({
-      unitNumber: [data?.unitNumber ?? '', Validators.required],
-      unitType: [data?.unitType ?? '', Validators.required],
-      sizeSqFt: [data?.sizeSqFt ?? 0, [Validators.required, Validators.min(1)]],
-      floor: [data?.floor ?? 1, Validators.required],
-      climateControlled: [data?.climateControlled ?? false],
-      pricePerMonth: [data?.pricePerMonth ?? 0, [Validators.required, Validators.min(0)]],
-      status: [data?.status ?? 'Available', Validators.required],
-      insuranceRequired: [data?.insuranceRequired ?? true]
+      unit_number: [data?.UnitNumber ?? '', [Validators.required, Validators.minLength(1)]],
+      size_type:   [data?.SizeType ?? '', Validators.required],
+      price:       [data?.Price ?? 0, [Validators.required, Validators.min(0)]],
+      length:      [data?.Length ?? 5, [Validators.required, Validators.min(1)]],
+      width:       [data?.Width ?? 5, [Validators.required, Validators.min(1)]],
+      height:      [data?.Height ?? 10, [Validators.required, Validators.min(1)]]
     });
   }
 
   save() {
-    if (this.form.invalid) return;
-
-    this.dialogRef.close({
-      ...this.data,
-      ...this.form.value,
-      lastUpdated: new Date()
-    });
+    if (this.form.invalid) {
+      console.warn('Form is invalid', this.form.value);
+      return;
+    }
+    this.dialogRef.close(this.form.value);
   }
 
   cancel() {

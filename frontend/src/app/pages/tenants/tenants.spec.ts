@@ -1,59 +1,65 @@
-// import { ComponentFixture, TestBed } from '@angular/core/testing';
-
-// import { Tenants } from './tenants';
-
-// describe('Tenants', () => {
-//   let component: Tenants;
-//   let fixture: ComponentFixture<Tenants>;
-
-//   beforeEach(async () => {
-//     await TestBed.configureTestingModule({
-//       imports: [Tenants]
-//     })
-//     .compileComponents();
-
-//     fixture = TestBed.createComponent(Tenants);
-//     component = fixture.componentInstance;
-//     await fixture.whenStable();
-//   });
-
-//   it('should create', () => {
-//     expect(component).toBeTruthy();
-//   });
-// });
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Tenants } from './tenants';
-import { RouterTestingModule } from '@angular/router/testing';
+import { TenantsService } from './tenants.service';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { of } from 'rxjs';
+import { vi } from 'vitest';
+import { provideRouter } from '@angular/router';
 
 describe('Tenants Component', () => {
   let component: Tenants;
   let fixture: ComponentFixture<Tenants>;
+  let tenantsService: any;
+  let dialogSpy: any;
+  let snackBarSpy: any;
 
   beforeEach(async () => {
+    tenantsService = {
+      getCustomers: vi.fn().mockReturnValue(of([])),
+      createCustomer: vi.fn().mockReturnValue(of({})),
+      updateCustomer: vi.fn().mockReturnValue(of({})),
+      deleteCustomer: vi.fn().mockReturnValue(of({}))
+    };
+
+    dialogSpy = {
+      open: vi.fn().mockReturnValue({
+        afterClosed: () => of(null)
+      })
+    };
+
+    snackBarSpy = {
+      open: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
-      imports: [
-        Tenants,
-        RouterTestingModule   // ✅ FIX
+      imports: [Tenants],
+      providers: [
+        provideRouter([]), // ✅ FIX
+        { provide: TenantsService, useValue: tenantsService },
+        { provide: MatDialog, useValue: dialogSpy },
+        { provide: MatSnackBar, useValue: snackBarSpy }
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(Tenants);
     component = fixture.componentInstance;
-    fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('should create the component', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should load mock tenants', () => {
-    expect(component.tenants.length).toBeGreaterThan(0);
+  it('should load customers on init', () => {
+    fixture.detectChanges();
+    expect(tenantsService.getCustomers).toHaveBeenCalled();
   });
 
-  it('should toggle view mode', () => {
-    const initial = component.viewMode;
+  it('should toggle between table and grid view', () => {
     component.toggleView('grid');
-    expect(component.viewMode).not.toBe(initial);
+    expect(component.viewMode).toBe('grid');
+
+    component.toggleView('table');
+    expect(component.viewMode).toBe('table');
   });
 });
