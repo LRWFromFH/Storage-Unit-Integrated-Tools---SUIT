@@ -516,6 +516,37 @@ func GetNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"notes": notes})
 }
 
+func CreateNote(c *gin.Context) {
+	id := c.Param("id")
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	authorID, _ := c.Get("employee_id")
+
+	var req models.NoteRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	note := models.Note{
+		CustomerID: uint(customerID),
+		Content:    req.Content,
+		AuthorID:   authorID.(uint),
+	}
+
+	result := database.DB.Create(&note)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create note"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"note": note})
+}
+
 // This function expects the frontend to send additional delete requests
 // to delete the combined units from the database
 func CombineUnits(c *gin.Context) {
