@@ -631,6 +631,35 @@ func GetInsurance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
 }
 
+func UpsertInsurance(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	result := database.DB.Where("unit_number = ?", unitNumber).First(&unit)
+	if result.Error != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	var req models.InsuranceRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var insurance models.Insurance
+	database.DB.Where("unit_id = ?", unit.ID).First(&insurance)
+
+	insurance.UnitID = unit.ID
+	insurance.ProviderName = req.ProviderName
+	insurance.PolicyNumber = req.PolicyNumber
+	insurance.CoverageLimit = req.CoverageLimit
+	insurance.ExpiryDate = req.ExpiryDate
+
+	database.DB.Save(&insurance)
+	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
+}
+
 // This function expects the frontend to send additional delete requests
 // to delete the combined units from the database
 func CombineUnits(c *gin.Context) {
