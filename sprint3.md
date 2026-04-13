@@ -221,4 +221,6 @@ The following table outlines the validation logic implemented in the test suite 
 ## Video Backend Team:
 https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4kF4Q-JCSYbu-M8zIQvKAQgFW2Ow1sT0PjMAq1yNEZk?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=86WO8p
 
+### Backend - Billing unit tests video:
+https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g
 
