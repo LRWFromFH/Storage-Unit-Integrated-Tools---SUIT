@@ -20,7 +20,7 @@ func Connect() {
 	DB.AutoMigrate(&models.Customer{},
 		&models.Employee{},
 		&models.Unit{}, &models.Session{},
-		&models.Note{})
+		&models.Note{}, &models.Insurance{})
 	//&models.RegisterRequest{},
 	//&models.LoginRequest{}, &models.CreateUnitRequest{})
 }
@@ -39,5 +39,5 @@ func ConnectTest() {
 		&models.LoginRequest{},
 		&models.CreateUnitRequest{},
 		&models.Session{},
-		&models.Note{})
+		&models.Note{}, &models.Insurance{})
 }
