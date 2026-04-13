@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -416,21 +417,38 @@ func TestDeleteNote(t *testing.T) {
 	}
 	database.DB.Create(&customer)
 
-	// AuthorID=2 — manager is seeded first (ID=1), boilerplate employee gets ID=2
+	registerUser(r, map[string]string{
+		"username": "note_author",
+		"email":    "note_author@test.com",
+		"password": "securepassword123",
+	})
+	loginResp := loginUser(r, map[string]string{
+		"email":    "note_author@test.com",
+		"password": "securepassword123",
+	})
+
+	var author models.Employee
+	database.DB.Where("email = ?", "note_author@test.com").First(&author)
+
 	note := models.Note{
 		CustomerID: customer.ID,
 		Content:    "Note to be deleted",
-		AuthorID:   2,
+		AuthorID:   author.ID,
 	}
 	database.DB.Create(&note)
 
-	var response = boilerplate(t, "", "DELETE", "customers/1/notes/1", r)
-	message, ok := response["message"].(string)
-	if !ok || message != "Note deleted successfully" {
-		t.Fatal("Expected note deleted message")
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/customers/%d/notes/%d", customer.ID, note.ID), nil)
+	req.Header.Set("X-CSRF-TOKEN", getCSRFToken(loginResp))
+	attachCookies(req, loginResp)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200, got %d. Body: %s", w.Code, w.Body.String())
 	}
 
-	t.Logf("Delete response: %v", message)
+	t.Logf("Delete response: %d", w.Code)
 }
 
 func TestDeleteNote_Forbidden(t *testing.T) {
@@ -464,7 +482,7 @@ func TestDeleteNote_Forbidden(t *testing.T) {
 		"password": "securepassword123",
 	})
 
-	req, _ := http.NewRequest("DELETE", "/api/customers/1/notes/1", nil)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/customers/%d/notes/%d", customer.ID, note.ID), nil)
 	req.Header.Set("X-CSRF-TOKEN", getCSRFToken(loginResp))
 	attachCookies(req, loginResp)
 
@@ -504,7 +522,7 @@ func TestDeleteNote_Manager(t *testing.T) {
 		"password": "Manager123!",
 	})
 
-	req, _ := http.NewRequest("DELETE", "/api/customers/1/notes/1", nil)
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/api/customers/%d/notes/%d", customer.ID, note.ID), nil)
 	req.Header.Set("X-CSRF-TOKEN", getCSRFToken(loginResp))
 	attachCookies(req, loginResp)
 
@@ -582,7 +600,7 @@ func TestGetInsurance(t *testing.T) {
 	r := setupTestRouter()
 
 	unit := models.Unit{
-		UnitNumber: "A123",
+		UnitNumber: "INS-TEST-001",
 		SizeType:   "10x10",
 		Length:     10,
 		Width:      10,
@@ -600,7 +618,7 @@ func TestGetInsurance(t *testing.T) {
 	}
 	database.DB.Create(&insurance)
 
-	var response = boilerplate(t, "", "GET", "units/A123/insurance", r)
+	var response = boilerplate(t, "", "GET", "units/INS-TEST-001/insurance", r)
 
 	ins, ok := response["insurance"].(map[string]interface{})
 	if !ok {
