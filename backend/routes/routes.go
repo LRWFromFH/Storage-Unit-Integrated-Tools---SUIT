@@ -68,6 +68,9 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units/combine", controllers.CombineUnits)
 		protected.DELETE("/units/:unit_number", controllers.DeleteUnit)
 
+		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
+		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+
 	}
 
 	r.Static("/assets", "../frontend/dist/frontend/browser/")

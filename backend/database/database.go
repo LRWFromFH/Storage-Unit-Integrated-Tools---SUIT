@@ -17,9 +17,15 @@ func Connect() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	DB.AutoMigrate(&models.Customer{},
-		&models.Employee{},
-		&models.Unit{}, &models.Session{})
+	DB.AutoMigrate(&models.Employee{},
+		&models.Unit{},
+		&models.Customer{},
+		&models.RegisterRequest{},
+		&models.LoginRequest{},
+		&models.CreateUnitRequest{},
+		&models.Session{},
+		&models.Invoice{},
+		&models.LedgerEntry{})
 	//&models.RegisterRequest{},
 	//&models.LoginRequest{}, &models.CreateUnitRequest{})
 }

@@ -98,7 +98,7 @@ func TestUnderpayment(t *testing.T) {
 
 	balance, _ := services.GetCustomerBalance(cust.ID)
 
-	// Balance should be +400 (a credit)
+	// Balance should be -50 (a partial)
 	assert.Equal(t, -50.0, balance)
 }
 
