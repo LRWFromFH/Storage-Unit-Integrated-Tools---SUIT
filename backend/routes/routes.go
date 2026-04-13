@@ -71,9 +71,9 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
 
-
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+		protected.POST("/PostPayment", controllers.PostCustomerPayment)
 
 	}
 
