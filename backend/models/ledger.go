@@ -10,8 +10,9 @@ import "gorm.io/gorm"
 type LedgerEntry struct {
 	gorm.Model
 	CustomerID  uint
-	UnitID      *uint // Nullable (e.g., a general account credit not tied to a unit)
-	InvoiceID   *uint // Nullable (e.g., a payment made before an invoice was generated)
+	UnitID      *uint    // Nullable (e.g., a general account credit not tied to a unit)
+	InvoiceID   uint     `gorm:"not null"` // Nullable (e.g., a payment made before an invoice was generated)
+	Invoice     *Invoice `gorm:"foreignKey:InvoiceID"`
 	Amount      float64
 	Type        string // "charge", "payment", "refund"
 	Description string

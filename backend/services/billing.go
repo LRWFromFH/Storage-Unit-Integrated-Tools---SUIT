@@ -29,7 +29,8 @@ func CreateCharge(customerID uint, unitID uint, amount float64, desc string) err
 		entry := models.LedgerEntry{
 			CustomerID:  customerID,
 			UnitID:      &unitID,
-			InvoiceID:   &inv.ID, // Link to the invoice we just created
+			InvoiceID:   inv.ID, // Link to the invoice we just created
+			Invoice:     &inv,
 			Amount:      -amount, // Charges decrease the balance
 			Type:        type_string,
 			Description: desc,
@@ -66,9 +67,18 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 			uID = &unitID
 		}
 
+		// "Pay off" the oldest unpaid invoice for this unit
+		var unpaidInvoice models.Invoice
+		err := tx.Where("customer_id = ? AND unit_id = ? AND (status != ? AND status != ?)", customerID, unitID, "paid", "credit").
+			Order("created_at asc").
+			First(&unpaidInvoice).Error
+
+		//Associate a payment with an invoice.
 		entry := models.LedgerEntry{
 			CustomerID:  customerID,
 			UnitID:      uID,
+			InvoiceID:   unpaidInvoice.ID,
+			Invoice:     &unpaidInvoice,
 			Amount:      amount,
 			Type:        "payment",
 			Description: desc,
@@ -76,12 +86,6 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 		if err := tx.Create(&entry).Error; err != nil {
 			return err
 		}
-
-		// "Pay off" the oldest unpaid invoice for this unit
-		var unpaidInvoice models.Invoice
-		err := tx.Where("customer_id = ? AND unit_id = ? AND status != ?", customerID, unitID, "paid").
-			Order("created_at asc").
-			First(&unpaidInvoice).Error
 
 		if err == nil {
 			// Logic: Simple check if payment covers the invoice

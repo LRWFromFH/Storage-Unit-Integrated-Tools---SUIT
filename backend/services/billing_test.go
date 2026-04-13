@@ -101,3 +101,21 @@ func TestUnderpayment(t *testing.T) {
 	// Balance should be +400 (a credit)
 	assert.Equal(t, -50.0, balance)
 }
+
+func TestTransactionRollback(t *testing.T) {
+	small, medium, large, xlarge := 50, 35, 25, 15
+
+	database.DevInit(small, medium, large, xlarge, true)
+	db := database.DB
+
+	// Attempt to create a charge with an invalid Customer ID (0)
+	// assuming your DB enforces foreign key constraints
+	err := services.CreateCharge(0, 1, 100.0, "Ghost Charge")
+
+	assert.Error(t, err)
+
+	// Verify that NO invoice was created because the transaction should have rolled back
+	var count int64
+	db.Model(&models.Invoice{}).Count(&count)
+	assert.Equal(t, int64(0), count, "Invoice should not exist if ledger entry failed")
+}

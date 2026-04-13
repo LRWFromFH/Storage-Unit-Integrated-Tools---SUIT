@@ -12,7 +12,7 @@ var DB *gorm.DB
 
 func Connect() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open("app.db"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open("app.db?_pragma=foreign_keys(1)"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
@@ -26,7 +26,7 @@ func Connect() {
 
 func ConnectTest() {
 	var err error
-	DB, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	DB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared&_pragma=foreign_keys(1)"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to test database:", err)
 	}
