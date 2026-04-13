@@ -1,19 +1,19 @@
 .tenants-header {
-
   display: flex;
   justify-content: space-between;
   align-items: center;
-
   margin-bottom: 24px;
+}
 
+.tenants-header-actions {
+  display: flex;
+  gap: 16px;
 }
 
 .view-toggle {
-
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
-
 }
 
 .suit-grid {
@@ -22,31 +22,72 @@
 }
 
 .tenant-card-grid {
-
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 20px;
-
 }
 
 .tenant-card {
-
   background: white;
   padding: 20px;
-
   border-radius: var(--suit-radius-lg);
   box-shadow: var(--suit-shadow-md);
-
 }
 
 .tenant-header {
-
-  display: flex;
-  justify-content: space-between;
-
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
+}
 
+.tenant-body {
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.tenant-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.tenant-units-section {
+  margin-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 8px;
+}
+
+.units-toggle-btn {
+  font-size: 12px;
+  padding: 0;
+  min-width: 0;
+}
+
+.tenant-units-panel {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.unit-chip {
+  background: #f0f4ff;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.no-units, .units-loading {
+  font-size: 12px;
+  color: var(--suit-text-muted);
+  margin: 0;
+}
+
+.assign-btn {
+  font-size: 12px;
+  margin-top: 4px;
+  align-self: flex-start;
 }
 
 .status-badge {

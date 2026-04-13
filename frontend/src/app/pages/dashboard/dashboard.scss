@@ -1,5 +1,3 @@
-/* dashboard.scss — add / update these rules */
-
 :host {
   display: block;
   min-height: 100vh;
@@ -85,6 +83,8 @@ mat-toolbar {
   border-radius: var(--suit-radius-lg);
   box-shadow: var(--suit-shadow-md);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex !important;
+  flex-direction: column !important;
 
   &:hover {
     transform: translateY(-4px);
@@ -120,11 +120,13 @@ mat-toolbar {
     padding: 0 32px 24px;
     color: var(--suit-text-muted);
     font-size: 0.95rem;
+    flex: 1;
   }
 
   mat-card-actions {
     padding: 0 32px 32px;
     justify-content: flex-end;
+    margin-top: auto;
   }
 
   button[mat-raised-button] {
@@ -132,5 +134,13 @@ mat-toolbar {
     height: 48px;
     border-radius: var(--suit-radius-md);
     font-weight: 500;
+  }
+}
+
+.manager-card {
+  border: 1px solid rgba(var(--suit-error-rgb, 211, 47, 47), 0.3);
+
+  [mat-card-avatar] {
+    color: var(--suit-error, #d32f2f);
   }
 }

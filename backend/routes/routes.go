@@ -25,6 +25,10 @@ func SetupRoutes(r *gin.Engine) {
 	{
 		managerOnly.POST("/register", controllers.Register)
 		managerOnly.POST("/employees/:id/role", controllers.UpdateEmployeeRole)
+		managerOnly.DELETE("/customers/:id", controllers.DeleteCustomer)
+		managerOnly.DELETE("/units/:unit_number", controllers.DeleteUnit)
+		managerOnly.GET("/employees", controllers.GetAllEmployees)
+		managerOnly.GET("/AllUnits", controllers.GetAllUnits)
 	}
 
 	protected := r.Group("/api")
@@ -57,7 +61,7 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/customers", controllers.CreateCustomer)
 		protected.GET("/customers/:id", controllers.GetCustomer)
 		protected.POST("/customers/:id", controllers.UpdateCustomer)
-		protected.DELETE("/customers/:id", controllers.DeleteCustomer)
+
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
 
 		//Unit crud routes.
@@ -66,7 +70,7 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
-		protected.DELETE("/units/:unit_number", controllers.DeleteUnit)
+
 
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)

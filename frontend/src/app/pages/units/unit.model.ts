@@ -21,10 +21,26 @@ export interface UnitsResponse {
 }
 
 export interface CreateUnitRequest {
-  unit_number: string;
-  size_type: string;
+  UnitNumber: string;
+  SizeType: string;
+  Price: number;
+  Length?: number;
+  Width?: number;
+  Height?: number;
+}
+
+export interface AssignUnitRequest {
+  UnitNumber: string;
+  SizeType: string;
+  Price: number;
+  Length: number;
+  Width: number;
+  Height: number;
+  CustomerID: number | null;
+}
+
+export interface CombineUnitsRequest {
+  unit_ids: number[];
   price: number;
-  length?: number;
-  width?: number;
-  height?: number;
+  customer_id?: number;
 }

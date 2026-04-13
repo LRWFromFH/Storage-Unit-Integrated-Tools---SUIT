@@ -1,11 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
@@ -15,6 +14,8 @@ import { ColDef } from 'ag-grid-community';
 import { UnitsService } from './units.service';
 import { Unit } from './unit.model';
 import { UnitDialog } from './unit-dialog';
+import { CombineDialog } from './combine-dialog';
+import { Auth } from '../../core/services/auth';
 import { ModuleRegistry } from 'ag-grid-community';
 import {
   ClientSideRowModelModule,
@@ -36,18 +37,21 @@ ModuleRegistry.registerModules([
   templateUrl: './units.html',
   styleUrls: ['./units.scss'],
   imports: [
-    RouterLink, CommonModule, FormsModule,
-    MatFormFieldModule, MatInputModule, MatButtonModule,
+    RouterLink, CommonModule, MatButtonModule,
     MatDialogModule, MatToolbarModule, MatIconModule,
     AgGridModule, MatSnackBarModule
   ]
 })
 export class Units implements OnInit {
 
+  auth = inject(Auth);
+
   units: Unit[] = [];
   filteredUnits: Unit[] = [];
+  viewMode: 'table' | 'grid' = 'table';
   public theme = themeQuartz;
   loading = false;
+  defaultColDef: ColDef = { resizable: true, sortable: true, filter: true };
   private gridApi: any;
 
   columnDefs: ColDef[] = [
@@ -114,12 +118,15 @@ export class Units implements OnInit {
 
   loadUnits() {
     this.loading = true;
-    this.unitsService.getUnits().subscribe({
+    const fetch$ = this.auth.isManager()
+      ? this.unitsService.getAllUnits()
+      : this.unitsService.getUnits();
+
+    fetch$.subscribe({
       next: (data) => {
         this.units = data;
         this.filteredUnits = [...data];
         this.loading = false;
-        if (this.gridApi) this.gridApi.setRowData(data);
       },
       error: (err: HttpErrorResponse) => {
         console.error(err);
@@ -150,7 +157,6 @@ export class Units implements OnInit {
           }
         });
       } else {
-        // CREATE
         this.unitsService.createUnit(result).subscribe({
           next: () => {
             this.snackBar.open('Unit created successfully', 'Close', { duration: 3000 });
@@ -178,7 +184,37 @@ export class Units implements OnInit {
     });
   }
 
-  viewMode: 'table' | 'grid' = 'table';
+  openCombineDialog() {
+    const availableUnits = this.units.filter(u => !u.CustomerID);
+    if (availableUnits.length < 2) {
+      this.snackBar.open('Need at least 2 available units to combine', 'Close', { duration: 4000 });
+      return;
+    }
+    const dialogRef = this.dialog.open(CombineDialog, {
+      width: '560px',
+      data: { units: availableUnits }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+      const unitsToDelete = availableUnits.filter(u => result.unit_ids.includes(u.ID));
+      this.unitsService.combineUnits(result).subscribe({
+        next: () => {
+          const deletions = unitsToDelete.map(u =>
+            this.unitsService.deleteUnit(u.UnitNumber).pipe(catchError(() => of(null)))
+          );
+          forkJoin(deletions.length ? deletions : [of(null)]).subscribe(() => {
+            this.snackBar.open('Units combined successfully', 'Close', { duration: 3000 });
+            this.loadUnits();
+          });
+        },
+        error: (err) => {
+          console.error(err);
+          this.snackBar.open('Failed to combine units', 'Close', { duration: 5000 });
+        }
+      });
+    });
+  }
 
   toggleView(mode: 'table' | 'grid') {
     this.viewMode = mode;

@@ -1,71 +1,55 @@
-/* Page Layout */
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--suit-bg);
-  padding: 24px;
+.manager-page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 32px;
+  padding: 8px 0 32px;
 }
 
-/* Card */
-.auth-card {
-  width: 100%;
-  max-width: 420px;
+.back-link {
+  grid-column: 1 / -1;
+}
 
+.manager-card {
   border-radius: var(--suit-radius-lg);
-  box-shadow: var(--suit-shadow-lg);
+  box-shadow: var(--suit-shadow-md);
   background: var(--suit-surface);
-
-  padding-bottom: 24px;
+  padding-bottom: 16px;
 }
 
-/* Header */
 mat-card-header {
-  padding: 48px 40px 24px;
-  text-align: center;
-  flex-direction: column;
-  align-items: center;
+  padding: 32px 32px 16px;
 }
 
 [mat-card-avatar] {
   background: rgba(25, 118, 210, 0.08);
   color: var(--suit-primary);
-
-  font-size: 48px;
-  width: 72px;
-  height: 72px;
-
+  font-size: 36px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
-
   border-radius: 50%;
-  margin-bottom: 16px;
 }
 
 mat-card-title {
-  font-size: 2rem;
+  font-size: 1.4rem;
   font-weight: 600;
   color: var(--suit-secondary);
-  margin: 0;
 }
 
 mat-card-subtitle {
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--suit-text-muted);
-  margin-top: 8px;
 }
 
-/* Form */
-.auth-form {
+.manager-form {
   display: flex;
   flex-direction: column;
-  gap: 22px;
-  padding: 0 40px;
+  gap: 16px;
+  padding: 0 32px;
 }
 
-/* Form Fields */
 mat-form-field {
   width: 100%;
 }
@@ -74,77 +58,84 @@ mat-icon[matPrefix] {
   color: var(--suit-text-muted);
 }
 
-/* Error Message */
 .error-message {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
-
   background: rgba(220, 38, 38, 0.08);
   color: var(--suit-error);
-
   padding: 10px 14px;
   border-radius: var(--suit-radius-md);
-
   font-size: 0.9rem;
-  font-weight: 500;
 }
 
-/* Submit Button */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(22, 163, 74, 0.08);
+  color: #15803d;
+  padding: 10px 14px;
+  border-radius: var(--suit-radius-md);
+  font-size: 0.9rem;
+}
+
 .submit-btn {
   width: 100%;
-  height: 52px;
-
+  height: 48px;
   font-size: 1rem;
   font-weight: 600;
-
   border-radius: var(--suit-radius-md);
-  box-shadow: var(--suit-shadow-sm);
-
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.submit-btn:hover:not(:disabled) {
-  box-shadow: var(--suit-shadow-md);
-  transform: translateY(-1px);
+.employee-list-card {
+  grid-column: 1 / -1;
 }
 
-/* Auth Link */
-.auth-link {
-  margin-top: 12px;
-  text-align: center;
-  font-size: 0.95rem;
+.employee-list-content {
+  padding: 0 32px 24px;
+}
+
+.list-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.no-employees {
   color: var(--suit-text-muted);
+  text-align: center;
+  padding: 16px 0;
 }
 
-.auth-link button {
-  color: var(--suit-accent);
-  background: none;
-  border: none;
+.employee-table {
+  width: 100%;
+  border-radius: var(--suit-radius-md);
+  overflow: hidden;
 
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0 4px;
-
-  transition: opacity 0.2s ease;
-}
-
-.auth-link button:hover {
-  text-decoration: underline;
-  opacity: 0.85;
-}
-.auth-card {
-  animation: fadeSlide 0.4s ease;
-}
-
-@keyframes fadeSlide {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
+  th {
+    font-weight: 600;
+    color: var(--suit-secondary);
+    background: var(--suit-bg);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  td, th {
+    padding: 12px 16px;
+  }
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: rgba(25, 118, 210, 0.1);
+  color: var(--suit-primary);
+  text-transform: capitalize;
+
+  &.role-manager {
+    background: rgba(211, 47, 47, 0.1);
+    color: var(--suit-error, #d32f2f);
   }
 }
