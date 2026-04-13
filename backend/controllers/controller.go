@@ -544,7 +544,7 @@ func CreateNote(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"note": note})
+	c.JSON(http.StatusOK, gin.H{"note": note})
 }
 
 // This function expects the frontend to send additional delete requests
