@@ -767,3 +767,38 @@ func GetTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }
+
+func PostCustomerPayment(c *gin.Context) {
+
+	type PaymentRequest struct {
+		CustomerID  uint    `json:"customer_id" binding:"required"`
+		Unit        uint    `json:"unit_id"`
+		Amount      float64 `json:"amount" binding:"required"`
+		Description string  `json:"description"`
+	}
+
+	var req PaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var customer models.Customer
+	if err := database.DB.First(&customer, req.CustomerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
+		return
+	}
+	var unit models.Unit
+	if err := database.DB.First(&unit, req.Unit).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	result := services.RecordPayment(customer.ID, unit.ID, req.Amount, req.Description)
+	if result != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Payment accepted."})
+}

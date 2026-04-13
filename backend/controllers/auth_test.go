@@ -82,6 +82,7 @@ func setupTestRouter() *gin.Engine {
 
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+		protected.POST("/PostPayment", controllers.PostCustomerPayment)
 	}
 
 	return r
@@ -771,4 +772,65 @@ func TestGetTransactions(t *testing.T) {
 	}
 
 	t.Logf("Transactions: %s", transactions)
+}
+
+func TestPortPayment(t *testing.T) {
+	r := setupTestRouter()
+
+	small, medium, large, xlarge := 50, 35, 25, 15
+
+	database.DevInit(small, medium, large, xlarge, true)
+
+	// Login as Manager.
+	loginResp := loginUser(r, map[string]string{
+		"email":    "manager@suit.com",
+		"password": "Manager123!",
+	})
+
+	err := services.CreateCharge(1, 1, 420, "Old Unit")
+	if err != nil {
+		t.Logf("Something went wrong with CreateCharge.")
+	}
+
+	data := gin.H{
+		"customer_id": 1,
+		"unit_id":     1,
+		"amount":      420.00,
+		"desc":        "Done with storage forever!",
+	}
+	// 	gin.H{
+	//     "status":  "success",
+	//     "message": "Payment processed",
+	//     "data":    req, // This will serialize your PaymentRequest struct into JSON
+	// }
+	jsonData, _ := json.Marshal(data)
+
+	req, _ := http.NewRequest("POST", "/api/PostPayment", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	//t.Logf("CSRF Token: %s", csrfToken)
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// After r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	t.Logf("Raw Response: %s", w.Body.String())
+
+	var response map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &response)
+
+	message, ok := response["message"].(string)
+	if !ok {
+		t.Fatalf("Expected balance to be a string, but got %T", response["message"])
+	}
+
+	t.Logf("%s", message)
 }

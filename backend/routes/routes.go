@@ -80,9 +80,9 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
 		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
 
-
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+		protected.POST("/PostPayment", controllers.PostCustomerPayment)
 
 	}
 
