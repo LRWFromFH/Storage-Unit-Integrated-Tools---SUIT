@@ -416,11 +416,11 @@ func TestDeleteNote(t *testing.T) {
 	}
 	database.DB.Create(&customer)
 
-	// AuthorID=1 matches the employee boilerplate registers (first employee in fresh DB)
+	// AuthorID=2 — manager is seeded first (ID=1), boilerplate employee gets ID=2
 	note := models.Note{
 		CustomerID: customer.ID,
 		Content:    "Note to be deleted",
-		AuthorID:   1,
+		AuthorID:   2,
 	}
 	database.DB.Create(&note)
 
@@ -476,6 +476,46 @@ func TestDeleteNote_Forbidden(t *testing.T) {
 	}
 
 	t.Logf("Correctly blocked with status: %d", w.Code)
+}
+
+func TestDeleteNote_Manager(t *testing.T) {
+	r := setupTestRouter()
+
+	customer := models.Customer{
+		FirstName: "John",
+		LastName:  "Doe",
+		Address:   "11490 San Jose Blvd",
+		Email:     "john.doe@email.com",
+		Phone:     "123-456-7890",
+	}
+	database.DB.Create(&customer)
+
+	// AuthorID=999 — written by someone else
+	note := models.Note{
+		CustomerID: customer.ID,
+		Content:    "Note written by another employee",
+		AuthorID:   999,
+	}
+	database.DB.Create(&note)
+
+	// Login as manager
+	loginResp := loginUser(r, map[string]string{
+		"email":    "manager@suit.com",
+		"password": "Manager123!",
+	})
+
+	req, _ := http.NewRequest("DELETE", "/api/customers/1/notes/1", nil)
+	req.Header.Set("X-CSRF-TOKEN", getCSRFToken(loginResp))
+	attachCookies(req, loginResp)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	t.Logf("Manager successfully deleted note with status: %d", w.Code)
 }
 
 func TestCreateNote(t *testing.T) {
