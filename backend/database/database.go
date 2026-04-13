@@ -25,7 +25,7 @@ func Connect() {
 		&models.CreateUnitRequest{},
 		&models.Session{},
 		&models.Invoice{},
-		&models.LedgerEntry{})
+		&models.LedgerEntry{},
 		&models.Note{})
 	//&models.RegisterRequest{},
 	//&models.LoginRequest{}, &models.CreateUnitRequest{})
@@ -46,6 +46,6 @@ func ConnectTest() {
 		&models.CreateUnitRequest{},
 		&models.Session{},
 		&models.Invoice{},
-		&models.LedgerEntry{})
+		&models.LedgerEntry{},
 		&models.Note{})
 }
