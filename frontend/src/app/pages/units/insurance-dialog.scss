@@ -1,0 +1,51 @@
+.center-spinner {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.current-insurance {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+}
+
+.insurance-header {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #166534;
+  margin-bottom: 8px;
+}
+
+.insurance-details {
+  font-size: 0.85rem;
+  line-height: 1.8;
+  color: #1e293b;
+}
+
+.no-insurance-text {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #1e293b;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+.insurance-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  mat-form-field {
+    width: 100%;
+  }
+}

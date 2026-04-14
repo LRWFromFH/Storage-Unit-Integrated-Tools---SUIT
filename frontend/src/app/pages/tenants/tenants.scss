@@ -109,3 +109,15 @@
 .status-badge.closed {
   background: #fee2e2;
 }
+
+// AG Grid action button colors
+:global(.billing-btn) {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 0 2px;
+}

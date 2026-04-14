@@ -14,9 +14,11 @@ export class Auth {
 
   private _isAuthenticated = signal<boolean>(false);
   private _role = signal<UserRole>('');
+  private _employeeId = signal<number>(0);
 
   isAuthenticated = this._isAuthenticated.asReadonly();
   role = this._role.asReadonly();
+  employeeId = this._employeeId.asReadonly();
   isManager = computed(() => this._role() === 'manager');
 
   async login(email: string, password: string): Promise<void> {
@@ -77,6 +79,7 @@ export class Auth {
         )
       );
       this._role.set((resp.role as UserRole) || '');
+      this._employeeId.set(resp.employee_id || 0);
     } catch {
       this._role.set('');
     }
@@ -84,6 +87,10 @@ export class Auth {
 
   setAuthenticated(value: boolean) {
     this._isAuthenticated.set(value);
+  }
+
+  setEmployeeId(id: number) {
+    this._employeeId.set(id);
   }
 
   getCsrfToken(): string | null {
