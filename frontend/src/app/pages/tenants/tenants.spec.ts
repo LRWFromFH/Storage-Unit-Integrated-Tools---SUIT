@@ -57,9 +57,10 @@ describe('Tenants Component', () => {
     };
 
     unitsService = {
-      getUnits:   vi.fn().mockReturnValue(of([])),
-      assignUnit: vi.fn().mockReturnValue(of({}))
-    };
+  getUnits:    vi.fn().mockReturnValue(of([])),
+  getAllUnits: vi.fn().mockReturnValue(of([])),
+  assignUnit:  vi.fn().mockReturnValue(of({}))
+};
 
     await TestBed.configureTestingModule({
       imports: [Tenants],
@@ -220,7 +221,7 @@ describe('Tenants Component', () => {
       .mockReturnValue(of([mockUnit]));    // after assign
 
     const availableUnit = { ...mockUnit, CustomerID: null };
-    unitsService.getUnits.mockReturnValue(of([availableUnit]));
+    unitsService.getAllUnits.mockReturnValue(of([availableUnit]));
     unitsService.assignUnit.mockReturnValue(of({}));
 
     // Prime the cache

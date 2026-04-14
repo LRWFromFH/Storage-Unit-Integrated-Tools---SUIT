@@ -1,3 +1,65 @@
+<div class="search-section">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Search tenants or units…</mat-label>
+    <mat-icon matPrefix>search</mat-icon>
+    <input matInput [(ngModel)]="searchQuery" (ngModelChange)="onSearchInput($event)" placeholder="Name, email, phone, unit number…">
+    @if (searchQuery) {
+      <button matSuffix mat-icon-button (click)="clearSearch()">
+        <mat-icon>close</mat-icon>
+      </button>
+    }
+  </mat-form-field>
+
+  @if (searching) {
+    <div class="search-spinner"><mat-spinner diameter="28"></mat-spinner></div>
+  }
+
+  @if (noResults) {
+    <p class="search-empty">No matches found for "{{ searchQuery }}"</p>
+  }
+
+  @if (hasResults) {
+    <div class="search-results">
+
+      @if (searchResults!.customers.length > 0) {
+        <div class="results-group">
+          <div class="results-group-label">
+            <mat-icon>people</mat-icon> Tenants ({{ searchResults!.customers.length }})
+          </div>
+          @for (c of searchResults!.customers; track c.ID) {
+            <div class="result-row" (click)="goToTenant(c.ID)" tabindex="0">
+              <span class="result-name">{{ c.FirstName }} {{ c.LastName }}</span>
+              <span class="result-detail">{{ c.Email }}</span>
+              <span class="result-detail">{{ c.Phone }}</span>
+              <mat-icon class="result-arrow">chevron_right</mat-icon>
+            </div>
+          }
+        </div>
+      }
+
+      @if (searchResults!.units.length > 0) {
+        <div class="results-group">
+          <div class="results-group-label">
+            <mat-icon>warehouse</mat-icon> Units ({{ searchResults!.units.length }})
+          </div>
+          @for (u of searchResults!.units; track u.ID) {
+            <div class="result-row" (click)="goToUnit(u.UnitNumber)" tabindex="0">
+              <span class="result-name">Unit {{ u.UnitNumber }}</span>
+              <span class="result-detail">{{ u.SizeType }}</span>
+              <span class="result-badge" [class.badge-occupied]="u.CustomerID" [class.badge-available]="!u.CustomerID">
+                {{ u.CustomerID ? 'Occupied' : 'Available' }}
+              </span>
+              <span class="result-detail">${{ u.Price | number:'1.2-2' }}/mo</span>
+              <mat-icon class="result-arrow">chevron_right</mat-icon>
+            </div>
+          }
+        </div>
+      }
+
+    </div>
+  }
+</div>
+
 <div class="dashboard-container">
   <mat-card class="dashboard-card" appearance="outlined">
     <mat-card-header>

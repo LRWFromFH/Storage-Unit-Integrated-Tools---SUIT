@@ -1,3 +1,18 @@
+export interface InsuranceRecord {
+  ID: number;
+  CreatedAt: string;
+  UpdatedAt: string;
+  UnitID: number;
+  ProviderName: string;
+  PolicyNumber: string;
+  CoverageLimit: number;
+  ExpiryDate: string;
+}
+
+export interface InsuranceResponse {
+  insurance: InsuranceRecord;
+}
+
 export interface Unit {
   ID: number;
   CreatedAt: string;
@@ -11,7 +26,7 @@ export interface Unit {
   Price: number;
   CustomerID: number | null;
   Renter: any | null;
-  Insurance: any;
+  Insurance: InsuranceRecord | null;
   Combined: boolean;
   CombinedFrom: string;
 }

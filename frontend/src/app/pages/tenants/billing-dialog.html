@@ -1,0 +1,133 @@
+<h2 mat-dialog-title>Billing — {{ customer.FirstName }} {{ customer.LastName }}</h2>
+
+<mat-dialog-content>
+
+  <!-- Balance -->
+  <div class="balance-section">
+    <span class="balance-label">Current Balance</span>
+    @if (balanceLoading) {
+      <mat-spinner diameter="20"></mat-spinner>
+    } @else if (balanceError) {
+      <span class="balance-error">Failed to load</span>
+    } @else {
+      <span class="balance-amount" [class.balance-owed]="(balance ?? 0) < 0" [class.balance-clear]="(balance ?? 0) >= 0">
+        {{ (balance ?? 0) < 0 ? '−$' + (-(balance ?? 0) | number:'1.2-2') : '$' + ((balance ?? 0) | number:'1.2-2') }}
+      </span>
+      @if ((balance ?? 0) < 0) {
+        <span class="balance-note">Outstanding balance owed</span>
+      }
+    }
+  </div>
+
+  <!-- Transaction History -->
+  <div class="section-title">Transaction History</div>
+  @if (transactionsLoading) {
+    <div class="center-spinner"><mat-spinner diameter="28"></mat-spinner></div>
+  } @else if (transactionsError) {
+    <p class="error-text">Failed to load transactions.</p>
+  } @else if (transactions.length === 0) {
+    <p class="empty-text">No transactions on record.</p>
+  } @else {
+    <div class="transactions-table-wrapper">
+      <table class="transactions-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (txn of transactions; track txn.ID) {
+            <tr>
+              <td>{{ txn.CreatedAt | date:'shortDate' }}</td>
+              <td>
+                <span class="txn-type-badge" [class]="'txn-' + txn.Type">{{ txn.Type }}</span>
+              </td>
+              <td [class.amount-charge]="txn.Type === 'charge'" [class.amount-payment]="txn.Type === 'payment'">
+                {{ txn.Type === 'charge' ? '−' : '+' }}${{ txn.Amount | number:'1.2-2' }}
+              </td>
+              <td>{{ txn.Description || '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <!-- Create Charge -->
+  <div class="section-title">Create Charge</div>
+  @if (!hasUnits) {
+    <p class="empty-text">No units assigned to this customer. Assign a unit before creating a charge.</p>
+  } @else {
+    <form [formGroup]="chargeForm" class="billing-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Unit</mat-label>
+        <mat-select formControlName="unit_id" (selectionChange)="onChargeUnitChange($event.value)">
+          @for (unit of units; track unit.ID) {
+            <mat-option [value]="unit.ID">{{ unit.UnitNumber }} — {{ unit.SizeType }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Amount ($)</mat-label>
+        <input matInput type="number" min="0.01" step="0.01" formControlName="amount">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description</mat-label>
+        <input matInput formControlName="description">
+      </mat-form-field>
+
+      <button mat-raised-button color="accent"
+              (click)="submitCharge()"
+              [disabled]="chargeForm.invalid || chargingSubmitting">
+        {{ chargingSubmitting ? 'Submitting…' : 'Create Charge' }}
+      </button>
+    </form>
+  }
+
+  <!-- Post Payment -->
+  <div class="section-title">Post Payment</div>
+  @if (!hasUnits) {
+    <p class="empty-text">No units assigned to this customer. Assign a unit before posting a payment.</p>
+  } @else if (balanceLoading) {
+    <p class="empty-text">Loading balance…</p>
+  } @else if (!hasOutstandingBalance) {
+    <p class="empty-text">No outstanding balance. Create a charge before posting a payment.</p>
+  } @else {
+    <form [formGroup]="paymentForm" class="billing-form">
+      <mat-form-field appearance="outline">
+        <mat-label>Unit</mat-label>
+        <mat-select formControlName="unit_id">
+          @for (unit of units; track unit.ID) {
+            <mat-option [value]="unit.ID">{{ unit.UnitNumber }} — {{ unit.SizeType }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Amount ($)</mat-label>
+        <input matInput type="number" min="0.01" step="0.01" formControlName="amount">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Description (optional)</mat-label>
+        <input matInput formControlName="description">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary"
+              (click)="submitPayment()"
+              [disabled]="paymentForm.invalid || paymentSubmitting">
+        {{ paymentSubmitting ? 'Submitting…' : 'Submit Payment' }}
+      </button>
+    </form>
+  }
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

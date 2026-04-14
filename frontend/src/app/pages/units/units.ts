@@ -15,6 +15,7 @@ import { UnitsService } from './units.service';
 import { Unit } from './unit.model';
 import { UnitDialog } from './unit-dialog';
 import { CombineDialog } from './combine-dialog';
+import { InsuranceDialog } from './insurance-dialog';
 import { Auth } from '../../core/services/auth';
 import { ModuleRegistry } from 'ag-grid-community';
 import {
@@ -80,11 +81,15 @@ export class Units implements OnInit {
     },
     {
       headerName: 'Actions',
-      width: 180,
-      cellRenderer: (params: any) => `
-        <button class="action-btn edit-btn" data-unitnumber="${params.data.UnitNumber || ''}">Edit</button>
-        <button class="action-btn delete-btn" data-unitnumber="${params.data.UnitNumber || ''}">Delete</button>
-      `,
+      width: 260,
+      cellRenderer: (params: any) => {
+        const isManager = this.auth.isManager();
+        return `
+          <button class="action-btn edit-btn" data-unitnumber="${params.data.UnitNumber || ''}">Edit</button>
+          <button class="action-btn insurance-btn" data-unitnumber="${params.data.UnitNumber || ''}">Insurance</button>
+          ${isManager ? `<button class="action-btn delete-btn" data-unitnumber="${params.data.UnitNumber || ''}">Delete</button>` : ''}
+        `;
+      },
       onCellClicked: (params: any) => {
         if (!params.event?.target) return;
         const target = params.event.target as HTMLElement;
@@ -93,6 +98,9 @@ export class Units implements OnInit {
         if (target.classList.contains('edit-btn') && unitNumber) {
           const unit = this.units.find(u => u.UnitNumber === unitNumber);
           if (unit) this.openDialog(unit);
+        } else if (target.classList.contains('insurance-btn') && unitNumber) {
+          const unit = this.units.find(u => u.UnitNumber === unitNumber);
+          if (unit) this.openInsuranceDialog(unit);
         } else if (target.classList.contains('delete-btn') && unitNumber) {
           if (confirm(`Delete unit ${unitNumber}?`)) {
             this.deleteUnit(unitNumber);
@@ -118,11 +126,7 @@ export class Units implements OnInit {
 
   loadUnits() {
     this.loading = true;
-    const fetch$ = this.auth.isManager()
-      ? this.unitsService.getAllUnits()
-      : this.unitsService.getUnits();
-
-    fetch$.subscribe({
+    this.unitsService.getAllUnits().subscribe({
       next: (data) => {
         this.units = data;
         this.filteredUnits = [...data];
@@ -213,6 +217,13 @@ export class Units implements OnInit {
           this.snackBar.open('Failed to combine units', 'Close', { duration: 5000 });
         }
       });
+    });
+  }
+
+  openInsuranceDialog(unit: Unit) {
+    this.dialog.open(InsuranceDialog, {
+      width: '480px',
+      data: { unit }
     });
   }
 

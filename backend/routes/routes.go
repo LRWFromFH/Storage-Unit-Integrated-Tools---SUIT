@@ -28,7 +28,6 @@ func SetupRoutes(r *gin.Engine) {
 		managerOnly.DELETE("/customers/:id", controllers.DeleteCustomer)
 		managerOnly.DELETE("/units/:unit_number", controllers.DeleteUnit)
 		managerOnly.GET("/employees", controllers.GetAllEmployees)
-		managerOnly.GET("/AllUnits", controllers.GetAllUnits)
 	}
 
 	protected := r.Group("/api")
@@ -71,6 +70,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		//Unit crud routes.
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
+		protected.GET("/AllUnits", controllers.GetAllUnits)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
@@ -82,7 +82,15 @@ func SetupRoutes(r *gin.Engine) {
 
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+		protected.POST("/PostCharge", controllers.PostCharge)
 		protected.POST("/PostPayment", controllers.PostCustomerPayment)
+
+		protected.GET("/customers/:id/notes", controllers.GetNotes)
+		protected.POST("/customers/:id/notes", controllers.PostNote)
+		protected.DELETE("/customers/:id/notes/:note_id", controllers.DeleteNote)
+
+		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
+		protected.POST("/units/:unit_number/insurance", controllers.PostInsurance)
 
 	}
 

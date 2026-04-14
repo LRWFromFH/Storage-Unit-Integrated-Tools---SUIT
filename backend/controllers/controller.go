@@ -715,7 +715,10 @@ func CombineUnits(c *gin.Context) {
 	combinedUnit.CombinedFrom = strings.Join(unitNumbers, ",")
 	combinedUnit.SizeType = strconv.Itoa(length) + "x" + strconv.Itoa(width)
 	combinedUnit.Price = combineRequest.Price
-	database.DB.Create(&combinedUnit)
+	if err := database.DB.Create(&combinedUnit).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create combined unit: " + err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, combinedUnit)
 }
@@ -768,6 +771,40 @@ func GetTransactions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"transactions": transactions})
 }
 
+func PostCharge(c *gin.Context) {
+	type ChargeRequest struct {
+		CustomerID  uint    `json:"customer_id" binding:"required"`
+		UnitID      uint    `json:"unit_id" binding:"required"`
+		Amount      float64 `json:"amount" binding:"required"`
+		Description string  `json:"description"`
+	}
+
+	var req ChargeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var customer models.Customer
+	if err := database.DB.First(&customer, req.CustomerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Customer not found"})
+		return
+	}
+
+	var unit models.Unit
+	if err := database.DB.First(&unit, req.UnitID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	if err := services.CreateCharge(customer.ID, unit.ID, req.Amount, req.Description); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Charge created successfully"})
+}
+
 func PostCustomerPayment(c *gin.Context) {
 
 	type PaymentRequest struct {
@@ -801,4 +838,175 @@ func PostCustomerPayment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Payment accepted."})
+}
+
+// Notes Controllers
+
+func GetNotes(c *gin.Context) {
+	id := c.Param("id")
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	var notes []models.Note
+	if err := database.DB.Where("customer_id = ?", customerID).Find(&notes).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"notes": notes})
+}
+
+func PostNote(c *gin.Context) {
+	id := c.Param("id")
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	employeeIDVal, exists := c.Get("employee_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	employeeID := employeeIDVal.(uint)
+
+	var req struct {
+		Content string `json:"content" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	note := models.Note{
+		CustomerID: uint(customerID),
+		Content:    req.Content,
+		AuthorID:   employeeID,
+	}
+	if err := database.DB.Create(&note).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create note"})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"note": note})
+}
+
+func DeleteNote(c *gin.Context) {
+	id := c.Param("id")
+	customerID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+		return
+	}
+
+	noteIDStr := c.Param("note_id")
+	noteID, err := strconv.ParseUint(noteIDStr, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
+		return
+	}
+
+	employeeIDVal, exists := c.Get("employee_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	employeeID := employeeIDVal.(uint)
+
+	roleVal, _ := c.Get("role")
+	role, _ := roleVal.(string)
+
+	var note models.Note
+	if err := database.DB.Where("id = ? AND customer_id = ?", noteID, customerID).First(&note).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
+		return
+	}
+
+	if note.AuthorID != employeeID && role != "manager" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "You can only delete your own notes"})
+		return
+	}
+
+	if err := database.DB.Delete(&note).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete note"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Note deleted"})
+}
+
+// Insurance Controllers
+
+func GetInsurance(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	if err := database.DB.Where("unit_number = ?", unitNumber).First(&unit).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	var insurance models.Insurance
+	if err := database.DB.Where("unit_id = ?", unit.ID).First(&insurance).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "No insurance on file"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
+}
+
+func PostInsurance(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	if err := database.DB.Where("unit_number = ?", unitNumber).First(&unit).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+		return
+	}
+
+	var req struct {
+		ProviderName  string  `json:"provider_name" binding:"required"`
+		PolicyNumber  string  `json:"policy_number" binding:"required"`
+		CoverageLimit float64 `json:"coverage_limit" binding:"required"`
+		ExpiryDate    string  `json:"expiry_date" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	expiryDate, err := time.Parse(time.RFC3339, req.ExpiryDate)
+	if err != nil {
+		// Try date-only format as fallback
+		expiryDate, err = time.Parse("2006-01-02", req.ExpiryDate)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid expiry_date format. Use ISO 8601."})
+			return
+		}
+	}
+
+	var insurance models.Insurance
+	result := database.DB.Where("unit_id = ?", unit.ID).First(&insurance)
+
+	insurance.UnitID = unit.ID
+	insurance.ProviderName = req.ProviderName
+	insurance.PolicyNumber = req.PolicyNumber
+	insurance.CoverageLimit = req.CoverageLimit
+	insurance.ExpiryDate = expiryDate
+
+	if result.Error != nil {
+		// No existing record — create
+		if err := database.DB.Create(&insurance).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save insurance"})
+			return
+		}
+	} else {
+		// Existing record — update
+		if err := database.DB.Save(&insurance).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update insurance"})
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
 }

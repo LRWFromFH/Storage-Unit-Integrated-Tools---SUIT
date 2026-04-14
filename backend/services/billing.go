@@ -3,6 +3,7 @@ package services
 import (
 	"backend/database"
 	"backend/models"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -10,29 +11,30 @@ import (
 func CreateCharge(customerID uint, unitID uint, amount float64, desc string) error {
 	return database.DB.Transaction(func(tx *gorm.DB) error {
 		// 1. Create Invoice
-		inv := models.Invoice{CustomerID: customerID,
+		inv := models.Invoice{
+			CustomerID:  customerID,
 			UnitID:      unitID,
 			Amount:      amount,
-			Description: desc}
+			Description: desc,
+		}
 		if err := tx.Create(&inv).Error; err != nil {
 			return err
 		}
 
-		// 2. Create Ledger Entry (Charge is negative/debit)
-		var type_string string
+		var typeStr string
 		if amount < 0 {
-			type_string = "credit"
+			typeStr = "credit"
 		} else {
-			type_string = "charge"
+			typeStr = "charge"
 		}
 
+		// 2. Create Ledger Entry linked by InvoiceID only (no association struct — avoids GORM upsert)
 		entry := models.LedgerEntry{
 			CustomerID:  customerID,
 			UnitID:      &unitID,
-			InvoiceID:   inv.ID, // Link to the invoice we just created
-			Invoice:     &inv,
-			Amount:      -amount, // Charges decrease the balance
-			Type:        type_string,
+			InvoiceID:   inv.ID,
+			Amount:      -amount, // Charges reduce the balance
+			Type:        typeStr,
 			Description: desc,
 		}
 		return tx.Create(&entry).Error
@@ -59,26 +61,28 @@ func GetUnitBalance(customerID uint, unitID uint) (float64, error) {
 
 func RecordPayment(customerID uint, unitID uint, amount float64, desc string) error {
 	return database.DB.Transaction(func(tx *gorm.DB) error {
-		// Create the Ledger Entry
-		// if unitID is 0, we treat it as a general account payment (null)
-		// Old debt or something.
 		var uID *uint
 		if unitID != 0 {
 			uID = &unitID
 		}
 
-		// "Pay off" the oldest unpaid invoice for this unit
+		// Find the oldest unpaid invoice for this customer+unit
 		var unpaidInvoice models.Invoice
-		err := tx.Where("customer_id = ? AND unit_id = ? AND (status != ? AND status != ?)", customerID, unitID, "paid", "credit").
-			Order("created_at asc").
-			First(&unpaidInvoice).Error
+		err := tx.Where(
+			"customer_id = ? AND unit_id = ? AND status != ? AND status != ?",
+			customerID, unitID, "paid", "credit",
+		).Order("created_at asc").First(&unpaidInvoice).Error
 
-		//Associate a payment with an invoice.
+		if err != nil {
+			// No unpaid invoice found — payment cannot be applied
+			return fmt.Errorf("no unpaid invoice found for unit %d: create a charge first", unitID)
+		}
+
+		// Create ledger entry linked by InvoiceID only (no association struct — avoids GORM upsert)
 		entry := models.LedgerEntry{
 			CustomerID:  customerID,
 			UnitID:      uID,
 			InvoiceID:   unpaidInvoice.ID,
-			Invoice:     &unpaidInvoice,
 			Amount:      amount,
 			Type:        "payment",
 			Description: desc,
@@ -87,29 +91,11 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 			return err
 		}
 
-		if err == nil {
-			// Logic: Simple check if payment covers the invoice
-			if amount >= unpaidInvoice.Amount {
-				tx.Model(&unpaidInvoice).Update("status", "paid")
-				//If greater than amound we need to create a credit.
-				// if (amount - unpaidInvoice.Amount) > 0 {
-				// 	err := CreateCharge(customerID, unitID, unpaidInvoice.Amount-amount, desc)
-				// 	if err != nil {
-				// 		return err
-				// 	}
-				// }
-			} else if amount > 0 && amount < unpaidInvoice.Amount {
-				// Partial payment logic
-				// We should make status as partial and create a new invoice with the
-				// remaining amount to be paid by the customer.
-				tx.Model(&unpaidInvoice).Update("status", "partial")
-				// err := CreateCharge(customerID, unitID, unpaidInvoice.Amount-amount, desc)
-				// if err != nil {
-				// 	return err
-				// }
-			}
-		} else {
-			return err
+		// Update invoice status
+		if amount >= unpaidInvoice.Amount {
+			tx.Model(&unpaidInvoice).Update("status", "paid")
+		} else if amount > 0 {
+			tx.Model(&unpaidInvoice).Update("status", "partial")
 		}
 
 		return nil

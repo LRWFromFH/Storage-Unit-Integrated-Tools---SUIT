@@ -49,7 +49,10 @@
           </div>
           <div class="unit-actions">
             <button mat-button color="primary" (click)="openDialog(unit)">Edit</button>
-            <button mat-button color="warn" (click)="deleteUnit(unit.UnitNumber)">Delete</button>
+            <button mat-button (click)="openInsuranceDialog(unit)">Insurance</button>
+            @if (auth.isManager()) {
+              <button mat-button color="warn" (click)="deleteUnit(unit.UnitNumber)">Delete</button>
+            }
           </div>
         </div>
       }

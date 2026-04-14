@@ -1,0 +1,54 @@
+<h2 mat-dialog-title>Notes — {{ customer.FirstName }} {{ customer.LastName }}</h2>
+
+<mat-dialog-content>
+
+  <!-- Notes list -->
+  @if (loading) {
+    <div class="center-spinner"><mat-spinner diameter="28"></mat-spinner></div>
+  } @else if (loadError) {
+    <p class="error-text">Failed to load notes.</p>
+  } @else if (notes.length === 0) {
+    <p class="empty-text">No notes yet.</p>
+  } @else {
+    <div class="notes-list">
+      @for (note of notes; track note.ID) {
+        <div class="note-item">
+          <div class="note-content">{{ note.Content }}</div>
+          <div class="note-meta">
+            <span class="note-date">{{ note.CreatedAt | date:'short' }}</span>
+            <span class="note-author">Employee #{{ note.AuthorID }}</span>
+          </div>
+          @if (canDelete(note)) {
+            <button mat-icon-button color="warn" class="note-delete-btn"
+                    [disabled]="deletingId === note.ID"
+                    (click)="deleteNote(note)"
+                    title="Delete note">
+              <mat-icon>delete</mat-icon>
+            </button>
+          }
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add note form -->
+  <div class="add-note-section">
+    <div class="section-title">Add Note</div>
+    <form [formGroup]="form" class="note-form">
+      <mat-form-field appearance="outline" class="note-field">
+        <mat-label>Note content</mat-label>
+        <textarea matInput formControlName="content" rows="3" placeholder="Enter note…"></textarea>
+      </mat-form-field>
+      <button mat-raised-button color="primary"
+              (click)="addNote()"
+              [disabled]="form.invalid || submitting">
+        {{ submitting ? 'Saving…' : 'Add Note' }}
+      </button>
+    </form>
+  </div>
+
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

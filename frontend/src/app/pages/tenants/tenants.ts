@@ -1,8 +1,9 @@
 // src/app/pages/tenants/tenants.ts
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { RouterLink } from '@angular/router';
+import { map } from 'rxjs';
 
 import { AgGridModule } from 'ag-grid-angular';
 import { ColDef } from 'ag-grid-community';
@@ -27,8 +28,11 @@ import { TenantsService } from './tenants.service';
 import { Customer } from './tenants.model';
 import { TenantDialog } from './tenant-dialog';
 import { AssignUnitDialog } from './assign-unit-dialog';
+import { BillingDialog } from './billing-dialog';
+import { NotesDialog } from './notes-dialog';
 import { UnitsService } from '../units/units.service';
 import { Unit } from '../units/unit.model';
+import { Auth } from '../../core/services/auth';
 
 ModuleRegistry.registerModules([
   ClientSideRowModelModule, PaginationModule, TextFilterModule,
@@ -46,6 +50,8 @@ ModuleRegistry.registerModules([
   styleUrl: './tenants.scss',
 })
 export class Tenants implements OnInit {
+
+  auth = inject(Auth);
 
   public theme = themeQuartz;
   customers: Customer[] = [];
@@ -67,11 +73,16 @@ export class Tenants implements OnInit {
     { field: 'Address', headerName: 'Address', sortable: true, flex: 1 },
     {
       headerName: 'Actions',
-      width: 180,
-      cellRenderer: (params: any) => `
-        <button class="action-btn edit-btn" data-id="${params.data.ID}">Edit</button>
-        <button class="action-btn delete-btn" data-id="${params.data.ID}">Delete</button>
-      `,
+      width: 310,
+      cellRenderer: (params: any) => {
+        const isManager = this.auth.isManager();
+        return `
+          <button class="action-btn edit-btn" data-id="${params.data.ID}">Edit</button>
+          <button class="action-btn billing-btn" data-id="${params.data.ID}">Billing</button>
+          <button class="action-btn notes-btn" data-id="${params.data.ID}">Notes</button>
+          ${isManager ? `<button class="action-btn delete-btn" data-id="${params.data.ID}">Delete</button>` : ''}
+        `;
+      },
       onCellClicked: (params: any) => {
         if (!params.event?.target) return;
         const target = params.event.target as HTMLElement;
@@ -80,6 +91,12 @@ export class Tenants implements OnInit {
         if (target.classList.contains('edit-btn') && id > 0) {
           const customer = this.customers.find(c => c.ID === id);
           if (customer) this.openDialog(customer);
+        } else if (target.classList.contains('billing-btn') && id > 0) {
+          const customer = this.customers.find(c => c.ID === id);
+          if (customer) this.openBillingDialog(customer);
+        } else if (target.classList.contains('notes-btn') && id > 0) {
+          const customer = this.customers.find(c => c.ID === id);
+          if (customer) this.openNotesDialog(customer);
         } else if (target.classList.contains('delete-btn') && id > 0) {
           if (confirm(`Delete customer ${params.data.FirstName} ${params.data.LastName}?`)) {
             this.deleteCustomer(id);
@@ -183,8 +200,30 @@ export class Tenants implements OnInit {
     }
   }
 
+  openBillingDialog(customer: Customer) {
+    this.tenantsService.getCustomerUnits(customer.ID).subscribe({
+      next: (units) => {
+        this.dialog.open(BillingDialog, {
+          width: '640px',
+          data: { customer, units }
+        });
+      },
+      error: () => this.snackBar.open('Failed to load customer units', 'Close', { duration: 5000 })
+    });
+  }
+
+  openNotesDialog(customer: Customer) {
+    this.dialog.open(NotesDialog, {
+      width: '560px',
+      data: { customer }
+    });
+  }
+
   openAssignUnitDialog(customer: Customer) {
-    this.unitsService.getUnits().subscribe({
+    // getAllUnits is now accessible to all employees; filter to unoccupied units only
+    const units$ = this.unitsService.getAllUnits().pipe(map(units => units.filter(u => !u.CustomerID)));
+
+    units$.subscribe({
       next: (availableUnits) => {
         const dialogRef = this.dialog.open(AssignUnitDialog, {
           width: '520px',
