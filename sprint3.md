@@ -224,3 +224,6 @@ https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4
 ### Backend - Billing unit tests video:
 https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g
 
+### Backend - Notes unit tests video:
+https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQBJQ8ivVHRgSJd_aVTwVAOKAUoIt-2-LjLcFsrmdtvFKNQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=LcdvND
+
