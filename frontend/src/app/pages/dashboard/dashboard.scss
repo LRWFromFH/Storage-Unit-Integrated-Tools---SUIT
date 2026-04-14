@@ -1,103 +1,90 @@
-/* dashboard.scss — add / update these rules */
+/* dashboard.scss */
 
 :host {
   display: block;
   min-height: 100vh;
-  background: var(--suit-bg);
+  background: transparent;
 }
 
-mat-toolbar {
-  background: var(--suit-primary);
-  color: #ffffff;
+.dashboard-wrapper {
+  padding: 16px 0;
+}
 
+.dashboard-header-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  
+  .date-picker-field {
+    width: 260px;
+  }
+}
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 20px;
+  margin-bottom: 48px;
+}
+
+.stat-card {
   display: flex;
   align-items: center;
-
-  padding: 0 32px;
-  min-height: 72px;
-
-  box-shadow: var(--suit-shadow-sm);
-
-  // Title
-  .app-title {
-    font-size: 1.5rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-  }
-
-  // Subtitle
-  .app-subtitle {
-    margin-left: 8px;
-    font-size: 1.1rem;
-    font-weight: 400;
-    opacity: 0.9;
-  }
-
-  // Push logout button to right
-  .spacer {
-    flex: 1 1 auto;
-  }
-
-  // Logout button
-  button[mat-icon-button] {
-    margin-left: 16px;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    width: 48px;
-    height: 48px;
-
-    border-radius: 50%;
-    color: #ffffff;
-
-    transition: background 0.2s ease, transform 0.15s ease;
-
-    mat-icon {
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      line-height: 24px;
-    }
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-  }
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--suit-surface);
+  border: 1px solid var(--suit-border);
+  border-radius: var(--suit-radius-md);
+  box-shadow: var(--suit-shadow-md);
+  transition: transform 0.3s ease;
 }
 
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.04);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--suit-text);
+
+  &.occupied { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+  &.available { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  &.tenants { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+  &.rate { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+}
+
+[data-theme='dark'] .stat-icon {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.stat-content {
+  .stat-value { font-size: 1.8rem; font-weight: 800; letter-spacing: -1px; }
+  .stat-label { font-size: 0.8rem; color: var(--suit-text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+}
 
 .dashboard-container {
-  padding: 48px 32px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 32px;
-  max-width: 1280px;
-  margin: 0 auto;
 }
 
 .dashboard-card {
+  padding: 16px;
+  background: var(--suit-surface);
+  border: 1px solid var(--suit-border);
   border-radius: var(--suit-radius-lg);
   box-shadow: var(--suit-shadow-md);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--suit-shadow-lg);
-  }
 
   mat-card-header {
-    padding: 32px 32px 16px;
+    padding: 16px 16px 8px;
   }
 
   [mat-card-avatar] {
     background: transparent;
-    color: var(--suit-primary);
+    color: var(--suit-accent);
     font-size: 40px;
     width: 40px;
     height: 40px;
@@ -105,9 +92,9 @@ mat-toolbar {
   }
 
   mat-card-title {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 600;
-    color: var(--suit-secondary);
+    color: var(--suit-text);
   }
 
   mat-card-subtitle {
@@ -117,20 +104,20 @@ mat-toolbar {
   }
 
   mat-card-content {
-    padding: 0 32px 24px;
+    padding: 0 16px 24px;
     color: var(--suit-text-muted);
     font-size: 0.95rem;
   }
 
   mat-card-actions {
-    padding: 0 32px 32px;
+    padding: 0 16px 16px;
     justify-content: flex-end;
   }
 
   button[mat-raised-button] {
-    min-width: 160px;
-    height: 48px;
-    border-radius: var(--suit-radius-md);
+    min-width: 140px;
+    height: 44px;
+    border-radius: var(--suit-radius-sm);
     font-weight: 500;
   }
 }

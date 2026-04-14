@@ -1,0 +1,45 @@
+<div class="employees-page">
+  <div class="page-header" data-aos="fade-down">
+    <h1>Employee Management</h1>
+    <p class="page-subtitle">Manage staff roles and permissions</p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Loading employees...</p>
+  </div>
+
+  <div *ngIf="!isLoading" class="employee-grid" data-aos="fade-up" data-aos-delay="100">
+    <mat-card class="employee-card" *ngFor="let emp of employees" appearance="raised">
+      <mat-card-header>
+        <div class="avatar-circle" mat-card-avatar [style.background]="getRoleColor(emp.Role)">
+          <mat-icon>{{ emp.Role === 'manager' ? 'manage_accounts' : 'person' }}</mat-icon>
+        </div>
+        <mat-card-title>{{ emp.SMID }}</mat-card-title>
+        <mat-card-subtitle>{{ emp.Email }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content class="role-controls">
+        <mat-form-field appearance="outline" class="role-select">
+          <mat-label>Role</mat-label>
+          <mat-select [(ngModel)]="emp.Role">
+            <mat-option value="employee">Employee</mat-option>
+            <mat-option value="manager">Manager</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-flat-button color="primary" (click)="updateRole(emp)" [disabled]="updatingId === emp.ID">
+          <mat-spinner *ngIf="updatingId === emp.ID" diameter="20"></mat-spinner>
+          <span *ngIf="updatingId !== emp.ID">Save Role</span>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <div class="empty-state" *ngIf="employees.length === 0">
+      <mat-icon>group_off</mat-icon>
+      <p>No employees found</p>
+    </div>
+  </div>
+</div>

@@ -1,15 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
 import { AgGridModule } from 'ag-grid-angular';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ModuleRegistry, ClientSideRowModelModule, PaginationModule, TextFilterModule } from 'ag-grid-community';
 
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 
 import { themeQuartz } from 'ag-grid-community';
 
-import { Tenant } from './tenants.model';
+import { ApiService } from '../../core/services/api.service';
+
+ModuleRegistry.registerModules([ClientSideRowModelModule, PaginationModule, TextFilterModule]);
 
 @Component({
   selector: 'app-tenants',
@@ -18,6 +21,7 @@ import { Tenant } from './tenants.model';
     CommonModule,
     RouterLink,
     MatButtonModule,
+    MatCardModule,
     AgGridModule
   ],
   templateUrl: './tenants.html',
@@ -25,71 +29,43 @@ import { Tenant } from './tenants.model';
 })
 export class Tenants implements OnInit {
 
+  private apiService = inject(ApiService);
   public theme = themeQuartz;
 
-  tenants: Tenant[] = [];
-  filteredTenants: Tenant[] = [];
+  tenants: any[] = [];
+  filteredTenants: any[] = [];
 
   viewMode: 'table' | 'grid' = 'table';
+  hoveredTenant: string | null = null;
 
-  columnDefs: ColDef[] = [
-    { field: 'name', headerName: 'Name', sortable: true, filter: true },
-    { field: 'email', headerName: 'Email', sortable: true },
-    { field: 'phone', headerName: 'Phone' },
-    { field: 'unitNumber', headerName: 'Unit #' },
-    {
-      field: 'moveInDate',
-      headerName: 'Move In',
-      valueFormatter: p => new Date(p.value).toLocaleDateString()
-    },
-    {
-      field: 'insurance',
-      headerName: 'Insurance',
-      valueFormatter: p => p.value ? 'Yes' : 'No'
-    },
-    { field: 'status', headerName: 'Status' }
-  ];
-
-  ngOnInit(): void {
-    this.loadMockTenants();
+  setHoverTenant(id: string | null) {
+    this.hoveredTenant = id;
   }
 
-  loadMockTenants() {
+  columnDefs: ColDef[] = [
+    { field: 'ID', headerName: 'ID', sortable: true, filter: true },
+    { field: 'FirstName', headerName: 'First Name', sortable: true, filter: true },
+    { field: 'LastName', headerName: 'Last Name', sortable: true, filter: true },
+    { field: 'Email', headerName: 'Email', sortable: true },
+    { field: 'Phone', headerName: 'Phone' },
+    { field: 'Address', headerName: 'Address' },
+    { field: 'CreatedAt', headerName: 'Joined', valueFormatter: p => new Date(p.value).toLocaleDateString() }
+  ];
 
-    this.tenants = [
-      {
-        id: '1',
-        name: 'Alice Johnson',
-        email: 'alice@example.com',
-        phone: '352-111-2222',
-        unitNumber: 'A101',
-        moveInDate: new Date('2025-10-01'),
-        insurance: true,
-        status: 'Active'
-      },
-      {
-        id: '2',
-        name: 'Michael Smith',
-        email: 'michael@example.com',
-        phone: '352-333-4444',
-        unitNumber: 'B204',
-        moveInDate: new Date('2025-09-15'),
-        insurance: false,
-        status: 'Pending'
-      },
-      {
-        id: '3',
-        name: 'Sarah Williams',
-        email: 'sarah@example.com',
-        phone: '352-555-7777',
-        unitNumber: 'C305',
-        moveInDate: new Date('2025-07-22'),
-        insurance: true,
-        status: 'Active'
-      }
-    ];
+  async ngOnInit() {
+    await this.loadTenants();
+  }
 
-    this.filteredTenants = [...this.tenants];
+  async loadTenants() {
+    try {
+      this.tenants = await this.apiService.getCustomersList();
+      // Transform map if needed or use direct struct fields. 
+      // The Go backend sends JSON fields capitalized if they aren't struct tagged to lower, 
+      // e.g. ID, FirstName, LastName, Email, Phone, Address, CreatedAt
+      this.filteredTenants = [...this.tenants];
+    } catch (e) {
+      console.error('Failed to load tenants from backend', e);
+    }
   }
 
   toggleView(mode: 'table' | 'grid') {

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Auth } from '../../core/services/auth';
@@ -30,6 +30,7 @@ export class Register {
   private auth = inject(Auth);
   private router = inject(Router);
   private fb = inject(FormBuilder);
+  private cdr = inject(ChangeDetectorRef);
 
   isLoading = false;
   errorMessage = '';
@@ -37,7 +38,7 @@ export class Register {
   form = this.fb.group({
     username: ['', [Validators.required, Validators.minLength(3)]],
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+    password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
   constructor() {
@@ -62,6 +63,7 @@ export class Register {
       this.errorMessage = 'Registration failed. Try again.';
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 

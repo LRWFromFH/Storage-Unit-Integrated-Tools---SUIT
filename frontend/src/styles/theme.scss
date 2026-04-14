@@ -1,38 +1,62 @@
 // src/styles/theme.scss
 
 :root {
-  // Core palette (60-30-10 inspired)
-  --suit-primary:    #1976d2;     // Main brand blue – buttons, links, headers
-  --suit-accent:     #f57c00;     // Energetic orange – CTAs, highlights, warnings
-  --suit-secondary:  #455a64;     // Slate gray-blue – subtitles, borders, icons
-  --suit-bg:         #f5f7fa;     // ~60% neutral light background
-  --suit-surface:    #ffffff;     // Cards, panels
-  --suit-text:       #1a202c;     // Primary text
-  --suit-text-muted: #6b7280;     // Secondary / placeholder text
-  --suit-border:     #e2e8f0;     // Subtle borders
-  --suit-divider:    rgba(0, 0, 0, 0.08);
+  // Minimalist Light Frame (muBasic/Apple)
+  --suit-primary: #111827; // Charcoal Text Black
+  --suit-accent: #2563eb; // Crisp blue accent for light mode
+  --suit-accent-hover: #1d4ed8;
+  --suit-secondary: #4b5563; // Soft gray
+  --suit-bg: #f8fafc; // Very soft slate-tinted off-white
+  --suit-surface: #ffffff; // Pure white cards
+  --suit-surface-hover: #f1f5f9; // Slight card hover in light mode
+  --suit-text: #0f172a; // Dark text
+  --suit-text-muted: #64748b; // Gray
+  --suit-border: #e2e8f0; // Very subtle border
+  
+  --suit-divider: rgba(0, 0, 0, 0.06);
 
   // Semantic / extended
-  --suit-success:    #10b981;
-  --suit-warn:       #ef4444;
-  --suit-error:      #dc2626;
-  --suit-info:       #3b82f6;
+  --suit-success: #10b981;
+  --suit-warn: #f59e0b;
+  --suit-error: #ef4444;
+  --suit-info: #3b82f6;
 
-  // Shadows (subtle Material-like)
-  --suit-shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
-  --suit-shadow-md:  0 4px 12px rgba(0,0,0,0.10);
-  --suit-shadow-lg:  0 10px 25px rgba(0,0,0,0.12);
+  // Ultra-Soft Minimalist Shadows
+  --suit-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --suit-shadow-md: 0 6px 16px rgba(0, 0, 0, 0.04);
+  --suit-shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.06);
+  --suit-shadow-glow: 0 0 15px rgba(37, 99, 235, 0.3);
 
-  // Border radius (modern soft corners)
-  --suit-radius-sm:  8px;
-  --suit-radius-md:  12px;
-  --suit-radius-lg:  16px;
+  // Border radius
+  --suit-radius-sm: 8px;
+  --suit-radius-md: 16px;
+  --suit-radius-lg: 24px;
 }
-
 
 body {
   background: var(--suit-bg);
   color: var(--suit-text);
   margin: 0;
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+[data-theme='dark'] {
+  --suit-primary: #f8fafc;
+  --suit-accent: #0ea5e9; // Sky blue accent
+  --suit-accent-hover: #38bdf8;
+  --suit-secondary: #8b5cf6;
+  --suit-bg: #030712; // deep gray almost black
+  --suit-surface: rgba(15, 23, 42, 0.6); // Glassmorphism surface
+  --suit-surface-hover: rgba(30, 41, 59, 0.8);
+  --suit-text: #f8fafc;
+  --suit-text-muted: #94a3b8;
+  --suit-border: rgba(255, 255, 255, 0.1);
+  --suit-divider: rgba(255, 255, 255, 0.08);
+
+  // Deeper shadows with subtle neon glow on large elements
+  --suit-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.8);
+  --suit-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.9), 0 0 10px rgba(14, 165, 233, 0.05);
+  --suit-shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.95), 0 0 30px rgba(139, 92, 246, 0.1);
+  --suit-shadow-glow: 0 0 20px rgba(14, 165, 233, 0.4);
 }

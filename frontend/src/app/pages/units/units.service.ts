@@ -1,64 +1,37 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { BehaviorSubject, Observable, from } from 'rxjs';
 import { Unit } from './unit.model';
+import { ApiService } from '../../core/services/api.service';
 
 @Injectable({ providedIn: 'root' })
 export class UnitsService {
 
-  private mockUnits: Unit[] = [
-    {
-      id: '1',
-      unitNumber: 'A101',
-      unitType: '5x5',
-      sizeSqFt: 25,
-      floor: 1,
-      climateControlled: true,
-      pricePerMonth: 75,
-      status: 'Available',
-      insuranceRequired: true,
-      lastUpdated: new Date()
-    },
-    {
-      id: '2',
-      unitNumber: 'B202',
-      unitType: '10x10',
-      sizeSqFt: 100,
-      floor: 2,
-      climateControlled: false,
-      pricePerMonth: 150,
-      status: 'Occupied',
-      tenantName: 'John Doe',
-      moveInDate: new Date(),
-      insuranceRequired: true,
-      lastUpdated: new Date()
-    }
-  ];
-
-  private unitsSubject = new BehaviorSubject<Unit[]>(this.mockUnits);
+  private apiService = inject(ApiService);
+  private unitsSubject = new BehaviorSubject<any[]>([]);
   units$ = this.unitsSubject.asObservable();
 
-  getUnits(): Observable<Unit[]> {
-    // return this.http.get<Unit[]>('/api/units');
+  getUnits(): Observable<any[]> {
+    from(this.apiService.getUnitsList()).subscribe(units => {
+      this.unitsSubject.next(units);
+    });
     return this.units$;
   }
 
-  addUnit(unit: Unit) {
-    // return this.http.post('/api/units', unit);
-    this.mockUnits = [...this.mockUnits, unit];
-    this.unitsSubject.next(this.mockUnits);
+  addUnit(unit: any) {
+    // Add logic here to call actual API when implemented
+    const current = this.unitsSubject.value;
+    this.unitsSubject.next([...current, unit]);
   }
 
-  updateUnit(updated: Unit) {
-    // return this.http.put(`/api/units/${updated.id}`, updated);
-    this.mockUnits = this.mockUnits.map(u =>
-      u.id === updated.id ? updated : u
-    );
-    this.unitsSubject.next(this.mockUnits);
+  updateUnit(updated: any) {
+    // Add logic here to call actual API when implemented
+    const current = this.unitsSubject.value;
+    this.unitsSubject.next(current.map(u => u.ID === updated.ID ? updated : u));
   }
 
   deleteUnit(id: string) {
-    // return this.http.delete(`/api/units/${id}`);
-    this.mockUnits = this.mockUnits.filter(u => u.id !== id);
-    this.unitsSubject.next(this.mockUnits);
+    // Add logic here to call actual API when implemented
+    const current = this.unitsSubject.value;
+    this.unitsSubject.next(current.filter(u => u.ID !== id));
   }
 }

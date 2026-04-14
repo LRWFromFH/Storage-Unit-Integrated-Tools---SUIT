@@ -1,0 +1,56 @@
+<div class="search-page">
+  <div class="search-header" data-aos="fade-down">
+    <h1>Search Results</h1>
+    <p class="query-label">Results for: <strong>"{{ query }}"</strong></p>
+  </div>
+
+  <div *ngIf="isLoading" class="loading-state">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Searching...</p>
+  </div>
+
+  <div *ngIf="!isLoading && !hasResults && query" class="empty-state" data-aos="fade-up">
+    <mat-icon>search_off</mat-icon>
+    <p>No results found for "{{ query }}"</p>
+  </div>
+
+  <!-- Tenants Results -->
+  <div *ngIf="!isLoading && customers.length > 0" data-aos="fade-up" data-aos-delay="100">
+    <h2 class="section-title"><mat-icon>people</mat-icon> Tenants ({{ customers.length }})</h2>
+    <div class="results-grid">
+      <mat-card class="result-card" *ngFor="let c of customers" appearance="raised">
+        <mat-card-header>
+          <div class="avatar-mini" mat-card-avatar>{{ c.FirstName?.[0] || '?' }}</div>
+          <mat-card-title>{{ c.FirstName }} {{ c.LastName }}</mat-card-title>
+          <mat-card-subtitle>{{ c.Email }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>📞 {{ c.Phone || 'N/A' }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button routerLink="/tenants">View Tenants</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Units Results -->
+  <div *ngIf="!isLoading && units.length > 0" data-aos="fade-up" data-aos-delay="200">
+    <h2 class="section-title"><mat-icon>warehouse</mat-icon> Units ({{ units.length }})</h2>
+    <div class="results-grid">
+      <mat-card class="result-card" *ngFor="let u of units" appearance="raised">
+        <mat-card-header>
+          <div class="avatar-mini unit" mat-card-avatar>{{ u.UnitNumber }}</div>
+          <mat-card-title>Unit {{ u.UnitNumber }}</mat-card-title>
+          <mat-card-subtitle>{{ u.Status }} • {{ u.SizeSqFt }} sq ft</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>💰 ${{ u.PricePerMonth }}/mo • Floor {{ u.Floor }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button routerLink="/units">View Units</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

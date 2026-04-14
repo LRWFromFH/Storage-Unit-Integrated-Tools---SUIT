@@ -1,8 +1,40 @@
-<mat-toolbar>
+<mat-toolbar class="glass-header">
+  <button mat-icon-button (click)="toggleSidebar()" class="menu-button">
+    <mat-icon>menu</mat-icon>
+  </button>
+
   <span class="app-title">SUIT</span>
-  <span class="app-subtitle">Storage-Unit-Integrated-Tools</span>
+  
+  <div class="breadcrumb" *ngIf="currentPath !== 'Dashboard'">
+    <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+    <span class="breadcrumb-current">{{ currentPath }}</span>
+  </div>
 
   <span class="spacer"></span>
+
+  <!-- Search Bar -->
+  <div class="search-area" [class.open]="showSearch">
+    <div class="search-shortcut-hint" *ngIf="!showSearch && !isDarkMode">Ctrl+K</div>
+    <div class="search-shortcut-hint dark" *ngIf="!showSearch && isDarkMode">Ctrl+K</div>
+    
+    <mat-form-field *ngIf="showSearch" appearance="outline" class="search-field">
+      <input matInput #searchInput [(ngModel)]="searchQuery" (keyup.enter)="onSearch()" placeholder="Search tenants, units..." [matAutocomplete]="auto">
+      <mat-icon matSuffix (click)="onSearch()" style="cursor:pointer">search</mat-icon>
+      <mat-autocomplete #auto="matAutocomplete" (optionSelected)="onSearch()">
+        <mat-option *ngFor="let option of filteredOptions" [value]="option">
+          {{ option }}
+        </mat-option>
+      </mat-autocomplete>
+    </mat-form-field>
+    
+    <button mat-icon-button (click)="toggleSearch()" matTooltip="Search (Ctrl + K)" aria-label="Search">
+      <mat-icon>{{ showSearch ? 'close' : 'search' }}</mat-icon>
+    </button>
+  </div>
+
+  <button mat-icon-button (click)="toggleTheme()" matTooltip="Toggle theme" matTooltipPosition="below" aria-label="Toggle Theme">
+    <mat-icon>{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</mat-icon>
+  </button>
 
   <button mat-icon-button
           (click)="logout()"
@@ -13,6 +45,31 @@
   </button>
 </mat-toolbar>
 
-<div class="layout-content">
-  <router-outlet></router-outlet>
-</div>
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav [opened]="!isSidebarCollapsed" mode="side" class="app-sidenav">
+    <mat-nav-list class="pt-0">
+      <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" class="sidenav-item">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <span matListItemTitle>Dashboard</span>
+      </a>
+      <a mat-list-item routerLink="/units" routerLinkActive="active-link" class="sidenav-item">
+        <mat-icon matListItemIcon>warehouse</mat-icon>
+        <span matListItemTitle>Units</span>
+      </a>
+      <a mat-list-item routerLink="/tenants" routerLinkActive="active-link" class="sidenav-item">
+        <mat-icon matListItemIcon>people</mat-icon>
+        <span matListItemTitle>Tenants</span>
+      </a>
+      <a mat-list-item routerLink="/employees" routerLinkActive="active-link" class="sidenav-item">
+        <mat-icon matListItemIcon>badge</mat-icon>
+        <span matListItemTitle>Employees</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="layout-content">
+    <div class="content-wrapper">
+      <router-outlet></router-outlet>
+    </div>
+  </mat-sidenav-content>
+</mat-sidenav-container>

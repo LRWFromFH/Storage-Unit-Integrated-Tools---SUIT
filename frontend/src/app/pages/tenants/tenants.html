@@ -1,4 +1,4 @@
-<div class="tenants-header">
+<div class="tenants-header" data-aos="fade-down" data-aos-delay="50">
 
   <h2>Tenant Management</h2>
 
@@ -12,7 +12,7 @@
 
 </div>
 
-<div class="view-toggle">
+<div class="view-toggle" data-aos="fade-in" data-aos-delay="150">
 
   <button
     mat-stroked-button
@@ -35,7 +35,7 @@
 
 <!-- TABLE VIEW -->
 
-<div *ngIf="viewMode === 'table'" class="suit-grid">
+<div *ngIf="viewMode === 'table'" class="suit-grid" data-aos="fade-up" data-aos-delay="250">
 
   <ag-grid-angular
     style="width: 100%; height: 500px;"
@@ -51,26 +51,37 @@
 
 <!-- GRID VIEW -->
 
-<div *ngIf="viewMode === 'grid'" class="tenant-card-grid">
+<div *ngIf="viewMode === 'grid'" class="tenant-card-grid" data-aos="fade-up" data-aos-delay="250">
 
-  <div class="tenant-card" *ngFor="let tenant of filteredTenants">
+  <mat-card class="tenant-card" *ngFor="let tenant of filteredTenants; let i = index"
+            [attr.data-aos-delay]="250 + (i * 50)"
+            appearance="raised"
+            (mouseenter)="setHoverTenant(tenant.id)"
+            (mouseleave)="setHoverTenant(null)"
+            [ngStyle]="{
+              'transform': hoveredTenant === tenant.id ? 'translateY(-6px)' : 'translateY(0)',
+              'transition': 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+              'box-shadow': hoveredTenant === tenant.id ? 'var(--suit-shadow-lg)' : 'var(--suit-shadow-md)',
+              'padding': '0',
+              'cursor': 'pointer'
+            }">
 
-    <div class="tenant-header">
-      {{ tenant.name }}
+    <mat-card-content>
+      <div class="tenant-header">
+      {{ tenant.FirstName }} {{ tenant.LastName }}
 
-      <span class="status-badge" [ngClass]="tenant.status.toLowerCase()">
-        {{ tenant.status }}
+      <span class="status-badge active">
+        Active
       </span>
     </div>
 
     <div class="tenant-body">
-      <div>Email: {{ tenant.email }}</div>
-      <div>Phone: {{ tenant.phone }}</div>
-      <div>Unit: {{ tenant.unitNumber }}</div>
-      <div>Move In: {{ tenant.moveInDate | date }}</div>
-      <div>Insurance: {{ tenant.insurance ? 'Yes' : 'No' }}</div>
+      <div>Email: {{ tenant.Email }}</div>
+      <div>Phone: {{ tenant.Phone }}</div>
+      <div>Address: {{ tenant.Address }}</div>
+      <div>Joined: {{ tenant.CreatedAt | date }}</div>
     </div>
-
-  </div>
+    </mat-card-content>
+  </mat-card>
 
 </div>

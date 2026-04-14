@@ -1,49 +1,110 @@
 <!-- dashboard.html -->
-<!-- <mat-toolbar color="primary">
-  <span class="app-title">SUIT</span>
-  <span class="app-subtitle">Dashboard</span>
+<div class="dashboard-wrapper">
 
-  <span class="spacer"></span>
+  <div class="dashboard-header-panel" data-aos="fade-in">
+    <div>
+      <h2 style="margin:0; font-size: 1.5rem; font-weight: 600;">Overview</h2>
+      <p style="margin: 4px 0 0; color: var(--suit-text-muted);">Real-time metrics for your storage facility.</p>
+    </div>
+    
+    <mat-form-field appearance="outline" class="date-picker-field">
+      <mat-label>Date Filter</mat-label>
+      <mat-date-range-input [rangePicker]="picker">
+        <input matStartDate placeholder="Start date">
+        <input matEndDate placeholder="End date">
+      </mat-date-range-input>
+      <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+      <mat-date-range-picker #picker></mat-date-range-picker>
+    </mat-form-field>
+  </div>
 
-  <button mat-icon-button
-          (click)="logout()"
-          matTooltip="Sign out"
-          matTooltipPosition="below"
-          aria-label="Sign out of SUIT">
-    <mat-icon>logout</mat-icon>
-  </button>
-</mat-toolbar> -->
+  <!-- KPI Stats Row -->
+  <div class="stats-row" *ngIf="stats">
+    <div class="stat-card interactive-card" data-aos="fade-up" data-aos-delay="50">
+      <div class="stat-icon"><mat-icon>warehouse</mat-icon></div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.totalUnits }}</div>
+        <div class="stat-label">Total Units</div>
+      </div>
+    </div>
+    <div class="stat-card interactive-card" data-aos="fade-up" data-aos-delay="100">
+      <div class="stat-icon occupied"><mat-icon>lock</mat-icon></div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.occupiedUnits }}</div>
+        <div class="stat-label">Occupied</div>
+      </div>
+    </div>
+    <div class="stat-card interactive-card" data-aos="fade-up" data-aos-delay="150">
+      <div class="stat-icon available"><mat-icon>check_circle</mat-icon></div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.availableUnits }}</div>
+        <div class="stat-label">Available</div>
+      </div>
+    </div>
+    <div class="stat-card interactive-card" data-aos="fade-up" data-aos-delay="200">
+      <div class="stat-icon tenants"><mat-icon>people</mat-icon></div>
+      <div class="stat-content">
+        <div class="stat-value">{{ stats.totalTenants }}</div>
+        <div class="stat-label">Tenants</div>
+      </div>
+    </div>
+    <div class="stat-card interactive-card" data-aos="fade-up" data-aos-delay="250">
+      <div class="stat-icon rate"><mat-icon>pie_chart</mat-icon></div>
+      <div class="stat-content">
+        <div class="stat-value">{{ occupancyRate }}%</div>
+        <div class="stat-label">Occupancy Rate</div>
+      </div>
+    </div>
+  </div>
 
-<div class="dashboard-container">
-  <mat-card class="dashboard-card" appearance="outlined">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>warehouse</mat-icon>
-      <mat-card-title>Units</mat-card-title>
-      <mat-card-subtitle>Manage storage units, availability & reservations</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <p>Real-time overview • Move-in/out • Occupancy tracking</p>
-    </mat-card-content>
-    <mat-card-actions align="end">
-      <button mat-raised-button color="primary" routerLink="/units">
-        Enter Units
-      </button>
-    </mat-card-actions>
-  </mat-card>
+  <!-- Navigation Cards Row -->
+  <div class="dashboard-container">
+    <mat-card class="dashboard-card interactive-card" data-aos="fade-up" data-aos-delay="100" appearance="raised">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>warehouse</mat-icon>
+        <mat-card-title>Units</mat-card-title>
+        <mat-card-subtitle>Manage storage units, availability &amp; reservations</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Real-time overview • Move-in/out • Occupancy tracking</p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="primary" routerLink="/units">
+          Enter Units
+        </button>
+      </mat-card-actions>
+    </mat-card>
 
-  <mat-card class="dashboard-card" appearance="outlined">
-    <mat-card-header>
-      <mat-icon mat-card-avatar>people</mat-icon>
-      <mat-card-title>Tenants</mat-card-title>
-      <mat-card-subtitle>Handle tenant lifecycle & billing</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <p>Contracts • Insurance status • Payment history</p>
-    </mat-card-content>
-    <mat-card-actions align="end">
-      <button mat-raised-button color="accent" routerLink="/tenants">
-        Enter Tenants
-      </button>
-    </mat-card-actions>
-  </mat-card>
+    <mat-card class="dashboard-card interactive-card" data-aos="fade-up" data-aos-delay="200" appearance="raised">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>people</mat-icon>
+        <mat-card-title>Tenants</mat-card-title>
+        <mat-card-subtitle>Handle tenant lifecycle &amp; billing</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Contracts • Insurance status • Payment history</p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button color="accent" routerLink="/tenants">
+          Enter Tenants
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <mat-card class="dashboard-card interactive-card" data-aos="fade-up" data-aos-delay="300" appearance="raised">
+      <mat-card-header>
+        <mat-icon mat-card-avatar>badge</mat-icon>
+        <mat-card-title>Employees</mat-card-title>
+        <mat-card-subtitle>Manage staff roles & permissions</mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p>Role management • Manager assignment • Staff directory</p>
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button mat-raised-button routerLink="/employees">
+          Manage Staff
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
 </div>

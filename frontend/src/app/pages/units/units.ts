@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { AgGridModule } from 'ag-grid-angular';
 import { RouterLink } from '@angular/router';
@@ -47,6 +48,7 @@ ModuleRegistry.registerModules([
     MatDialogModule,
     MatToolbarModule,
     MatIconModule,
+    MatCardModule,
     AgGridModule
   ]
 })
@@ -60,22 +62,23 @@ export class Units implements OnInit {
   typeFilter = 'All';
 
   columnDefs: ColDef[] = [
-    { field: 'unitNumber', headerName: 'Unit #', sortable: true, filter: true },
-    { field: 'unitType', headerName: 'Type', sortable: true },
-    { field: 'sizeSqFt', headerName: 'Sq Ft', sortable: true },
-    { field: 'floor', headerName: 'Floor', sortable: true },
+    { field: 'ID', headerName: 'ID', sortable: true, filter: true },
+    { field: 'UnitNumber', headerName: 'Unit #', sortable: true, filter: true },
+    { field: 'SizeType', headerName: 'Type', sortable: true },
+    { field: 'Length', headerName: 'Length', sortable: true },
+    { field: 'Width', headerName: 'Width', sortable: true },
+    { field: 'Height', headerName: 'Height', sortable: true },
     {
-      field: 'climateControlled',
-      headerName: 'Climate',
-      valueFormatter: p => p.value ? 'Yes' : 'No'
-    },
-    {
-      field: 'pricePerMonth',
-      headerName: 'Price',
+      field: 'Price',
+      headerName: 'Price /mo',
       valueFormatter: p => `$${p.value}`
     },
-    { field: 'status', headerName: 'Status', sortable: true },
-    { field: 'tenantName', headerName: 'Tenant' },
+    { 
+      field: 'CustomerID', 
+      headerName: 'Status', 
+      valueFormatter: p => p.value !== null ? 'Occupied' : 'Available',
+      sortable: true 
+    },
     {
       headerName: 'Actions',
       cellRenderer: (params: any) => {
@@ -100,17 +103,17 @@ export class Units implements OnInit {
   }
 
   applyFilters() {
-    this.filteredUnits = this.units.filter(unit => {
+    this.filteredUnits = this.units.filter((unit: any) => {
 
-      const matchesSearch =
-        unit.unitNumber.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (unit.tenantName?.toLowerCase().includes(this.searchTerm.toLowerCase()) ?? false);
+      const matchesSearch = this.searchTerm.trim() === '' || 
+        (unit.UnitNumber && unit.UnitNumber.toLowerCase().includes(this.searchTerm.toLowerCase()));
 
+      const computedStatus = (unit.CustomerID !== null && unit.CustomerID !== undefined && unit.CustomerID !== 0) ? 'Occupied' : 'Available';
       const matchesStatus =
-        this.statusFilter === 'All' || unit.status === this.statusFilter;
+        this.statusFilter === 'All' || computedStatus === this.statusFilter;
 
       const matchesType =
-        this.typeFilter === 'All' || unit.unitType === this.typeFilter;
+        this.typeFilter === 'All' || unit.SizeType === this.typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
     });
@@ -141,8 +144,13 @@ export class Units implements OnInit {
     this.unitsService.deleteUnit(id);
   }
   viewMode: 'table' | 'grid' = 'table';
+  hoveredUnit: string | null = null;
 
-toggleView(mode: 'table' | 'grid') {
-  this.viewMode = mode;
-}
+  toggleView(mode: 'table' | 'grid') {
+    this.viewMode = mode;
+  }
+
+  setHoverUnit(id: string | null) {
+    this.hoveredUnit = id;
+  }
 }

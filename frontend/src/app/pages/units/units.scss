@@ -16,17 +16,14 @@
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
-
 .unit-card {
-  background: var(--suit-surface);
-  border-radius: var(--suit-radius-md);
-  box-shadow: var(--suit-shadow-sm);
-  padding: 16px;
-  transition: 0.2s ease;
-}
-
-.unit-card:hover {
-  box-shadow: var(--suit-shadow-md);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: var(--suit-radius-lg);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .unit-header {

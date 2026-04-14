@@ -1,6 +1,6 @@
 <div class="units-container">
 
-    <div class="header">
+    <div class="header" data-aos="fade-down" data-aos-delay="50">
         <div class="units-header">
             <h2>Unit Management</h2>
             <div class="units-header-actions">
@@ -13,7 +13,7 @@
                 </button>
             </div>
         </div>
-        <div class="view-toggle">
+        <div class="view-toggle" data-aos="fade-in" data-aos-delay="150">
             <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">
                 Table View
             </button>
@@ -23,7 +23,7 @@
             </button>
         </div>
         <!-- TABLE VIEW -->
-        <div *ngIf="viewMode === 'table'" class="suit-grid">
+        <div *ngIf="viewMode === 'table'" class="suit-grid" data-aos="fade-up" data-aos-delay="250">
             <ag-grid-angular style="width: 100%; height: 500px;" [theme]="theme" [rowData]="filteredUnits"
                 [columnDefs]="columnDefs" [pagination]="true">
                 <!-- [paginationPageSize]="paginationPageSize"
@@ -32,28 +32,40 @@
         </div>
 
         <!-- CARD GRID VIEW -->
-        <div *ngIf="viewMode === 'grid'" class="unit-card-grid">
-            <div class="unit-card" *ngFor="let unit of filteredUnits">
+        <div *ngIf="viewMode === 'grid'" class="unit-card-grid" data-aos="fade-up" data-aos-delay="250">
+            <mat-card class="unit-card" *ngFor="let unit of filteredUnits; let i = index"
+                      [attr.data-aos-delay]="250 + (i * 50)"
+                      appearance="raised"
+                      (mouseenter)="setHoverUnit(unit.id)"
+                      (mouseleave)="setHoverUnit(null)"
+                      [ngStyle]="{
+                        'transform': hoveredUnit === unit.id ? 'translateY(-6px)' : 'translateY(0)',
+                        'transition': 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
+                        'box-shadow': hoveredUnit === unit.id ? 'var(--suit-shadow-lg)' : 'var(--suit-shadow-md)',
+                        'padding': '0',
+                        'cursor': 'pointer'
+                      }">
+                <mat-card-content>
                 <div class="unit-header">
-                    {{ unit.unitNumber }}
-                    <span class="status-badge" [ngClass]="unit.status.toLowerCase()">
-                        {{ unit.status }}
+                    {{ unit.UnitNumber }}
+                    <span class="status-badge" [ngClass]="unit.CustomerID ? 'occupied' : 'available'">
+                        {{ unit.CustomerID ? 'Occupied' : 'Available' }}
                     </span>
                 </div>
 
                 <div class="unit-body">
-                    <div>Type: {{ unit.unitType }}</div>
-                    <div>Size: {{ unit.sizeSqFt }} sq ft</div>
-                    <div>Floor: {{ unit.floor }}</div>
-                    <div>Price: ${{ unit.pricePerMonth }}</div>
-                    <div *ngIf="unit.tenantName">Tenant: {{ unit.tenantName }}</div>
+                    <div>Type: {{ unit.SizeType }}</div>
+                    <div>Dimensions: {{ unit.Length }} x {{ unit.Width }}</div>
+                    <div>Height: {{ unit.Height }} ft</div>
+                    <div>Price: ${{ unit.Price }}</div>
                 </div>
 
                 <div class="unit-actions">
                     <!-- <button mat-button color="primary" (click)="editUnit(unit)">Edit</button> -->
                     <button mat-button color="warn" (click)="deleteUnit(unit.id)">Delete</button>
                 </div>
-            </div>
+              </mat-card-content>
+            </mat-card>
         </div>
 
     </div>
