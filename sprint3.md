@@ -312,7 +312,7 @@ Frontend RBAC mirrors the backend permission model:
 
 
 ### Frontend Demo Video [ including unit tests ] 
-- https://drive.google.com/drive/folders/1HGIRUn2conUsAknq0TIcYpxYv2ud9Nx6?usp=drive_link
+- [Frontend video ](https://drive.google.com/drive/folders/1HGIRUn2conUsAknq0TIcYpxYv2ud9Nx6?usp=drive_link}
 
 
 ### Backend Demo Videos
