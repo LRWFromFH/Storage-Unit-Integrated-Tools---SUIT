@@ -213,11 +213,7 @@ All new handlers have test coverage in `controllers/CRUD_test.go` and `controlle
 
 ---
 
-### Backend Demo Videos
 
-- [Full backend walkthrough](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4kF4Q-JCSYbu-M8zIQvKAQgFW2Ow1sT0PjMAq1yNEZk?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=86WO8p)
-- [Billing unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g)
-- [Notes unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQBJQ8ivVHRgSJd_aVTwVAOKAUoIt-2-LjLcFsrmdtvFKNQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=LcdvND)
 
 ---
 
@@ -312,3 +308,15 @@ Frontend RBAC mirrors the backend permission model:
 - **Employee Management page** is manager-only: guarded at the routing level and hidden from the dashboard navigation for non-manager roles.
 - **Note deletion** buttons are only shown to the note's author or a manager.
 - Backend enforcement (`403 Forbidden` on `DELETE /customers/:id` and `DELETE /units/:unit_number` for non-manager roles) remains the authoritative check; the frontend restrictions are an additional UX layer.
+
+
+
+### Frontend Demo Video [ including unit tests ] 
+- https://drive.google.com/drive/folders/1HGIRUn2conUsAknq0TIcYpxYv2ud9Nx6?usp=drive_link
+
+
+### Backend Demo Videos
+
+- [Full backend walkthrough](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4kF4Q-JCSYbu-M8zIQvKAQgFW2Ow1sT0PjMAq1yNEZk?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=86WO8p)
+- [Billing unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g)
+- [Notes unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQBJQ8ivVHRgSJd_aVTwVAOKAUoIt-2-LjLcFsrmdtvFKNQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=LcdvND)
