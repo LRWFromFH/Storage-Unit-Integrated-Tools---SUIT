@@ -9,7 +9,10 @@
 
 ---
 
-## **Branch:** `backendv_latest`
+## Backend
+
+### Branch: `backendv_latest`
+
 ### 1. RBAC — Delete Restriction
 
 Restricted the delete endpoints so that only managers can remove customer or unit records. Regular employees now receive `403 Forbidden`.
@@ -25,7 +28,7 @@ Moved `DELETE /api/customers/:id` and `DELETE /api/units/:unit_number` from the 
 | `DELETE` | `/api/customers/:id` | Manager only | Delete a customer record |
 | `DELETE` | `/api/units/:unit_number` | Manager only | Delete a unit record |
 
-**Before this change:** any logged-in employee could delete.
+**Before this change:** any logged-in employee could delete.  
 **After:** returns `403 Forbidden` for employees, `200` for managers.
 
 ---
@@ -131,9 +134,53 @@ Insurance records attached to individual units. One insurance record per unit. T
 
 ---
 
-### Test coverage
+### 4. Billing & Ledger System
+
+This module handles financial transactions, balance tracking, and ledger management. Core logic is located in `services/billing.go`.
+
+#### API Endpoints
+
+All endpoints require active session validation and standard security headers.
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/customers/:id/balance` | `GET` | Returns a `float64`. A **negative** value indicates an outstanding balance (debt). |
+| `/customers/:id/transactions` | `GET` | Returns a list of transactions to populate the frontend ledger. |
+| `/PostPayment` | `POST` | Receives `PaymentRequest` from frontend to apply payment via billing's `RecordPayment`. |
+| `/PostCharge` | `POST` | Receives charge details from frontend to create a new charge via billing's `CreateCharge`. |
+
+```go
+type PaymentRequest struct {
+    CustomerID  uint    `json:"customer_id" binding:"required"`
+    Unit        uint    `json:"unit_id"`
+    Amount      float64 `json:"amount" binding:"required"`
+    Description string  `json:"description"`
+}
+```
+
+#### Core Logic (`billing.go`)
+
+```go
+func CreateCharge(customerID uint, unitID uint, amount float64, desc string) error
+
+func RecordPayment(customerID uint, unitID uint, amount float64, desc string) error
+```
+
+**`GetUnitBalance` / `GetCustomerBalance`:** Return a `float64` representing the current balance derived from the sum of all invoices and payments.
+
+#### Business Rules
+
+- Every charge and payment is automatically recorded as an entry in the ledger.
+- The system uses a **loose/naive association** between invoices and ledger entries. A payment must be linked to a charge; a charge can exist independently (awaiting payment).
+- Overpayments are accurately reflected in the total balance, though the specific invoice association may not be precise.
+
+---
+
+### Backend Test Coverage
 
 All new handlers have test coverage in `controllers/CRUD_test.go` and `controllers/auth_test.go`.
+
+**Notes & Insurance**
 
 | Test | What it verifies |
 |---|---|
@@ -146,84 +193,122 @@ All new handlers have test coverage in `controllers/CRUD_test.go` and `controlle
 | `TestCreateInsurance` | Creates insurance, verifies all fields |
 | `TestUpdateInsurance` | POST twice on same unit — second call updates, no duplicate created |
 
-
-# Billing & Ledger System
-
-This module handles financial transactions, balance tracking, and ledger management. Core logic is located in `services/billing.go`.
-
-### 📡 API Endpoints
-
-All endpoints require active session validation and standard security headers.
-
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/customers/:id/balance` | `GET` | Returns a `float64`. A **negative** value indicates an outstanding balance (debt). |
-| `/customers/:id/transactions` | `GET` | Returns a list of transactions to populate the frontend ledger. |
-| `/PostPayment` | `POST` | Receives PaymentRequest from frontend to apply payment via billing's RecordPayment. |
-
-```go
-type PaymentRequest struct {
-		CustomerID  uint    `json:"customer_id" binding:"required"`
-		Unit        uint    `json:"unit_id"`
-		Amount      float64 `json:"amount" binding:"required"`
-		Description string  `json:"description"`
-	}
-```
-
----
-
-### ⚙️ Core Logic (`billing.go`)
-
-The billing service manages the creation of charges and the recording of payments. 
-
-#### Function Headers
-```go
-func CreateCharge(customerID uint, unitID uint, amount float64, desc string) error
-
-func RecordPayment(customerID uint, unitID uint, amount float64, desc string) error
-```
-
-#### Balance Calculation
-* **`GetUnitBalance`** / **`GetCustomerBalance`**: These functions return a `float64` representing the current balance derived from the sum of all invoices and payments.
-
----
-
-### 📑 Business Rules & Logic
-
-* **Ledger Entries**: Every charge and payment is automatically recorded as an entry in the ledger.
-* **Associations**: The system uses a **loose/naive association** between invoices and ledger entries. 
-    * A **Payment** must be linked to a **Charge**.
-    * A **Charge** can exist independently (awaiting payment).
-* **Overpayment**: 
-    * The system accurately updates the total balance during an overpayment.
-    * However, the specific invoice association may not be precise. Overpayments are tracked as part of the overall balance logic.
-
----
-## 🧪 Test Suite Reference
-
-The following table outlines the validation logic implemented in the test suite to ensure financial data integrity.
+**Billing**
 
 | Test Function | Objective | Expected Outcome |
-| :--- | :--- | :--- |
-| `TestCreateCharge` | Verify charge initialization. | Creates "unpaid" invoice; appends negative entry to ledger. |
-| `TestRecordPaymentAndBalance` | Verify standard payment flow. | Invoice status becomes "paid"; customer balance returns to `0.0`. |
-| `TestOverpayment` | Verify credit handling. | Balance reflects a positive credit (e.g., `+400.0`) on the ledger. |
-| `TestUnderpayment` | Verify partial payment logic. | Balance reflects a remaining negative debt (e.g., `-50.0`). |
-| `TestTransactionRollback` | Verify DB atomicity. | If ledger entry fails, the entire transaction (including invoice creation) rolls back. |
+|---|---|---|
+| `TestCreateCharge` | Verify charge initialization | Creates "unpaid" invoice; appends negative entry to ledger |
+| `TestRecordPaymentAndBalance` | Verify standard payment flow | Invoice status becomes "paid"; customer balance returns to `0.0` |
+| `TestOverpayment` | Verify credit handling | Balance reflects a positive credit (e.g., `+400.0`) on the ledger |
+| `TestUnderpayment` | Verify partial payment logic | Balance reflects a remaining negative debt (e.g., `-50.0`) |
+| `TestTransactionRollback` | Verify DB atomicity | If ledger entry fails, the entire transaction (including invoice creation) rolls back |
+
 ---
 
-### 🛠 Roadmap
+### Backend Roadmap
 
-- [ ] **Payment Reversals**: Scheduled for the next sprint.
-- [ ] **On-Demand Invoicing**: Implementation of automated invoice generation for overpayment scenarios.
-- [ ] **Reporting**: Autogenerated financial reports (Initial implementation started).
+- [ ] Payment Reversals — scheduled for the next sprint
+- [ ] On-Demand Invoicing — automated invoice generation for overpayment scenarios
+- [ ] Reporting — autogenerated financial reports (initial implementation started)
+
 ---
-## Video Backend Team:
-https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4kF4Q-JCSYbu-M8zIQvKAQgFW2Ow1sT0PjMAq1yNEZk?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=86WO8p
 
-### Backend - Billing unit tests video:
-https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g
+### Backend Demo Videos
 
-### Backend - Notes unit tests video:
-https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQBJQ8ivVHRgSJd_aVTwVAOKAUoIt-2-LjLcFsrmdtvFKNQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=LcdvND
+- [Full backend walkthrough](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQCe4kF4Q-JCSYbu-M8zIQvKAQgFW2Ow1sT0PjMAq1yNEZk?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=86WO8p)
+- [Billing unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQB9M-0lJaRmT5nDWOS-Gm2ZAbApOE9ofcC6a6b23WSC2T0?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=3V6n9g)
+- [Notes unit tests](https://uflorida-my.sharepoint.com/:v:/g/personal/alexander_martin_ufl_edu/IQBJQ8ivVHRgSJd_aVTwVAOKAUoIt-2-LjLcFsrmdtvFKNQ?nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJPbmVEcml2ZUZvckJ1c2luZXNzIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXciLCJyZWZlcnJhbFZpZXciOiJNeUZpbGVzTGlua0NvcHkifX0&e=LcdvND)
 
+---
+
+## Frontend
+
+### 1. Billing Dialog
+
+A billing dialog accessible from the Tenants page surfaces financial information and actions for a selected customer.
+
+- **Balance display:** shows the customer's current balance. A positive value indicates a credit; a negative value indicates an outstanding debt.
+- **Create Charge section:** includes a unit selector (auto-fills the unit price), a description field (defaults to `"Monthly rent"`), and a submit button. This section is available whenever the customer has a unit assigned. Uses the new `POST /PostCharge` endpoint backed by the `PostCharge` controller.
+- **Post Payment section:** only shown when an outstanding balance exists. A charge must be on record before a payment can be applied.
+- **Transaction history table:** lists all ledger entries with columns for type, amount, description, and date.
+
+#### API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/customers/:id/balance` | Fetch current balance for the billing dialog header |
+| `GET` | `/customers/:id/transactions` | Populate the transaction history table |
+| `POST` | `/PostCharge` | Submit a new charge from the Create Charge form |
+| `POST` | `/PostPayment` | Submit a payment from the Post Payment form |
+
+---
+
+### 2. Notes (Tenant Notes)
+
+A notes dialog accessible from the Tenants page in both table view and card view.
+
+- Lists all notes for a customer, each showing the author ID and timestamp.
+- Any employee can add a note via the compose input.
+- Delete is restricted to the note's author or a manager — enforced on both the frontend (button visibility) and the backend (HTTP 403).
+
+#### API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/customers/:id/notes` | Fetch all notes for the notes dialog |
+| `POST` | `/customers/:id/notes` | Submit a new note |
+| `DELETE` | `/customers/:id/notes/:note_id` | Delete a note (author or manager only) |
+
+---
+
+### 3. Insurance (Unit Insurance)
+
+An insurance dialog accessible from the Units page in both table view and card view.
+
+- Displays current insurance details if a record exists for the unit.
+- Pre-fills the form fields when updating an existing record.
+- Add and update both submit to the same `POST /units/:unit_number/insurance` upsert endpoint — no separate create/edit flows.
+- A `GET` that returns `404` is treated as "no insurance on file" and shows an empty add form rather than an error state.
+
+#### API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/units/:unit_number/insurance` | Fetch insurance details (404 = none on file) |
+| `POST` | `/units/:unit_number/insurance` | Create or update insurance record |
+
+---
+
+### 4. Dashboard Search
+
+A global search bar on the dashboard backed by `POST /searchDB`.
+
+- Input is debounced at **300 ms** to avoid excessive requests while the user types.
+- Searches customers by name, email, or phone number, and units by unit number.
+- Results render inline below the search bar with status badges (**Occupied** / **Available**).
+- Clicking a result navigates to the relevant page (Tenants or Units).
+
+---
+
+### 5. Unit Management
+
+#### Combining Units
+
+Managers can merge two or more available units into a single combined unit. The operation produces a merged unit number, an aggregated size, and a custom price set at combine time.
+
+#### Assigning Units to Tenants
+
+Employees and managers can assign an available unit (including combined units) to a tenant directly from the Tenants page. The unit selector is populated by `GET /AllUnits` filtered to unoccupied units.
+
+`GET /AllUnits` has been moved to the protected route group so that all authenticated roles can access the full unit inventory (occupied, available, and combined units).
+
+---
+
+### 6. Role-Based Access Control (RBAC) — Frontend
+
+Frontend RBAC mirrors the backend permission model:
+
+- **Delete buttons** for customers and units are hidden from employees and visible only to managers. This is enforced in both the AG Grid table view and the card view.
+- **Employee Management page** is manager-only: guarded at the routing level and hidden from the dashboard navigation for non-manager roles.
+- **Note deletion** buttons are only shown to the note's author or a manager.
+- Backend enforcement (`403 Forbidden` on `DELETE /customers/:id` and `DELETE /units/:unit_number` for non-manager roles) remains the authoritative check; the frontend restrictions are an additional UX layer.
