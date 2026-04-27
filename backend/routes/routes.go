@@ -11,13 +11,15 @@ import (
 
 func SetupRoutes(r *gin.Engine) {
 
+	// सार्वजनिक (no auth)
 	api := r.Group("/api")
 	{
 		api.POST("/login", controllers.Login)
-		api.POST("/logout", controllers.Logout) //Added logout route to clear the session and CSRF cookies on the client side
+		api.POST("/logout", controllers.Logout)
 		api.GET("/session", controllers.Session)
 	}
 
+	// Manager-only routes
 	managerOnly := r.Group("/api")
 	managerOnly.Use(middleware.AuthRequired())
 	managerOnly.Use(middleware.CSRFRequired())
@@ -30,10 +32,12 @@ func SetupRoutes(r *gin.Engine) {
 		managerOnly.GET("/employees", controllers.GetAllEmployees)
 	}
 
+	// Protected routes (authenticated users)
 	protected := r.Group("/api")
 	protected.Use(middleware.AuthRequired())
 	protected.Use(middleware.CSRFRequired())
 	{
+		// Debug endpoints
 		protected.GET("/protected", func(c *gin.Context) {
 			employeeID, _ := c.Get("employee_id")
 			role, _ := c.Get("role")
@@ -43,19 +47,21 @@ func SetupRoutes(r *gin.Engine) {
 				"role":        role,
 			})
 		})
+
 		protected.GET("/dashboard", func(c *gin.Context) {
 			employeeID, _ := c.Get("employee_id")
 			role, _ := c.Get("role")
 			c.JSON(http.StatusOK, gin.H{
-				"message":     "You have access",
+				"message":     "Dashboard access",
 				"employee_id": employeeID,
 				"role":        role,
 			})
 		})
 
+		// Search
 		protected.POST("/searchDB", controllers.SearchDB)
 
-		//Customer crud routes.
+		// -------------------- Customers --------------------
 		protected.GET("/customers", controllers.GetAllCustomers)
 		protected.POST("/customers", controllers.CreateCustomer)
 		protected.GET("/customers/:id", controllers.GetCustomer)
@@ -63,12 +69,19 @@ func SetupRoutes(r *gin.Engine) {
 
 		protected.GET("/customers/:id/units", controllers.GetCustomerUnits)
 
-		//Note routes.
+		// Notes (FIXED: only one set)
 		protected.GET("/customers/:id/notes", controllers.GetNotes)
 		protected.POST("/customers/:id/notes", controllers.CreateNote)
 		protected.DELETE("/customers/:id/notes/:nid", controllers.DeleteNote)
 
-		//Unit crud routes.
+		// Balance + Transactions
+		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
+		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
+
+		protected.POST("/PostCharge", controllers.PostCharge)
+		protected.POST("/PostPayment", controllers.PostCustomerPayment)
+
+		// -------------------- Units --------------------
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AllUnits", controllers.GetAllUnits)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
@@ -76,26 +89,15 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
 
-		//Insurance routes.
+		// -------------------- Insurance (FIXED: no duplicates) --------------------
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
 		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
-
-		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
-		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
-		protected.POST("/PostCharge", controllers.PostCharge)
-		protected.POST("/PostPayment", controllers.PostCustomerPayment)
-
-		protected.GET("/customers/:id/notes", controllers.GetNotes)
-		protected.POST("/customers/:id/notes", controllers.PostNote)
-		protected.DELETE("/customers/:id/notes/:note_id", controllers.DeleteNote)
-
-		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
-		protected.POST("/units/:unit_number/insurance", controllers.PostInsurance)
-
 	}
 
+	// Static frontend
 	r.Static("/assets", "../frontend/dist/frontend/browser/")
 	r.StaticFile("/", "../frontend/dist/frontend/browser/index.html")
+
 	r.NoRoute(func(c *gin.Context) {
 		c.File("../frontend/dist/frontend/browser/index.html")
 	})
