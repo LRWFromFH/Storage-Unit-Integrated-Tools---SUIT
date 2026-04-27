@@ -525,23 +525,23 @@ func DeleteUnit(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Unit deleted successfully"})
 }
 
-func GetNotes(c *gin.Context) {
-	id := c.Param("id")
-	customerID, err := strconv.ParseUint(id, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
-		return
-	}
+// func GetNotes(c *gin.Context) {
+// 	id := c.Param("id")
+// 	customerID, err := strconv.ParseUint(id, 10, 64)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+// 		return
+// 	}
 
-	var notes []models.Note
-	result := database.DB.Where("customer_id = ?", customerID).Find(&notes)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
-		return
-	}
+// 	var notes []models.Note
+// 	result := database.DB.Where("customer_id = ?", customerID).Find(&notes)
+// 	if result.Error != nil {
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notes"})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, gin.H{"notes": notes})
-}
+// 	c.JSON(http.StatusOK, gin.H{"notes": notes})
+// }
 
 func CreateNote(c *gin.Context) {
 	id := c.Param("id")
@@ -574,62 +574,62 @@ func CreateNote(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"note": note})
 }
 
-func DeleteNote(c *gin.Context) {
-	id := c.Param("id")
-	nid := c.Param("nid")
+// func DeleteNote(c *gin.Context) {
+// 	id := c.Param("id")
+// 	nid := c.Param("nid")
 
-	customerID, err := strconv.ParseUint(id, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
-		return
-	}
+// 	customerID, err := strconv.ParseUint(id, 10, 64)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid customer ID"})
+// 		return
+// 	}
 
-	noteID, err := strconv.ParseUint(nid, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
-		return
-	}
+// 	noteID, err := strconv.ParseUint(nid, 10, 64)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})
+// 		return
+// 	}
 
-	var note models.Note
-	result := database.DB.Where("id = ? AND customer_id = ?", noteID, customerID).First(&note)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
-		return
-	}
+// 	var note models.Note
+// 	result := database.DB.Where("id = ? AND customer_id = ?", noteID, customerID).First(&note)
+// 	if result.Error != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "Note not found"})
+// 		return
+// 	}
 
-	callerID, _ := c.Get("employee_id")
-	callerRole, _ := c.Get("role")
+// 	callerID, _ := c.Get("employee_id")
+// 	callerRole, _ := c.Get("role")
 
-	if note.AuthorID != callerID.(uint) && callerRole.(string) != "manager" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
-		return
-	}
+// 	if note.AuthorID != callerID.(uint) && callerRole.(string) != "manager" {
+// 		c.JSON(http.StatusForbidden, gin.H{"error": "insufficient permissions"})
+// 		return
+// 	}
 
-	database.DB.Delete(&note)
-	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
-}
+// 	database.DB.Delete(&note)
+// 	c.JSON(http.StatusOK, gin.H{"message": "Note deleted successfully"})
+// }
 
 // Insurance handlers
 
-func GetInsurance(c *gin.Context) {
-	unitNumber := c.Param("unit_number")
+// func GetInsurance(c *gin.Context) {
+// 	unitNumber := c.Param("unit_number")
 
-	var unit models.Unit
-	result := database.DB.Where("unit_number = ?", unitNumber).First(&unit)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
-		return
-	}
+// 	var unit models.Unit
+// 	result := database.DB.Where("unit_number = ?", unitNumber).First(&unit)
+// 	if result.Error != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "Unit not found"})
+// 		return
+// 	}
 
-	var insurance models.Insurance
-	result = database.DB.Where("unit_id = ?", unit.ID).First(&insurance)
-	if result.Error != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "No insurance found for this unit"})
-		return
-	}
+// 	var insurance models.Insurance
+// 	result = database.DB.Where("unit_id = ?", unit.ID).First(&insurance)
+// 	if result.Error != nil {
+// 		c.JSON(http.StatusNotFound, gin.H{"error": "No insurance found for this unit"})
+// 		return
+// 	}
 
-	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
-}
+// 	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
+// }
 
 func UpsertInsurance(c *gin.Context) {
 	unitNumber := c.Param("unit_number")
