@@ -13,6 +13,9 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 
 import { themeQuartz } from 'ag-grid-community';
 import { ModuleRegistry } from 'ag-grid-community';
@@ -44,7 +47,8 @@ ModuleRegistry.registerModules([
   standalone: true,
   imports: [
     CommonModule, RouterLink, MatButtonModule, MatDialogModule,
-    MatSnackBarModule, MatToolbarModule, MatIconModule, AgGridModule
+    MatSnackBarModule, MatToolbarModule, MatIconModule, AgGridModule,
+    FormsModule, MatFormFieldModule, MatInputModule
   ],
   templateUrl: './tenants.html',
   styleUrl: './tenants.scss',
@@ -55,9 +59,12 @@ export class Tenants implements OnInit {
 
   public theme = themeQuartz;
   customers: Customer[] = [];
+  filteredCustomers: Customer[] = [];
   loading = false;
   viewMode: 'table' | 'grid' = 'table';
   private gridApi: any;
+  
+  filterQuery = '';
 
   // Tracks which customer's units are expanded (card view)
   expandedCustomerId: number | null = null;
@@ -127,8 +134,8 @@ export class Tenants implements OnInit {
     this.tenantsService.getCustomers().subscribe({
       next: (data) => {
         this.customers = data;
+        this.applyFilters();
         this.loading = false;
-        this.gridApi?.setGridOption('rowData', data);
       },
       error: (err: HttpErrorResponse) => {
         console.error('Error loading customers:', err);
@@ -254,5 +261,28 @@ export class Tenants implements OnInit {
 
   toggleView(mode: 'table' | 'grid') {
     this.viewMode = mode;
+  }
+
+  applyFilters() {
+    this.filteredCustomers = this.customers.filter(c => {
+      if (this.filterQuery) {
+        const q = this.filterQuery.toLowerCase();
+        const fullName = `${c.FirstName} ${c.LastName}`.toLowerCase();
+        return fullName.includes(q) || c.Email.toLowerCase().includes(q) || c.Phone.includes(q);
+      }
+      return true;
+    });
+    
+    if (this.gridApi) {
+      this.gridApi.setGridOption('rowData', this.filteredCustomers);
+    }
+  }
+
+  onFilterChange() {
+    this.applyFilters();
+  }
+
+  getInitials(customer: Customer): string {
+    return `${customer.FirstName?.[0] || ''}${customer.LastName?.[0] || ''}`.toUpperCase();
   }
 }

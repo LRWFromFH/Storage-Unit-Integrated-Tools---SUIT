@@ -5,10 +5,36 @@
   padding: 12px;
 }
 
-.view-toggle {
+.filter-bar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: var(--suit-radius-md);
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  .filter-inputs {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-field {
+    width: 180px;
+    margin-bottom: -1.25em; // Offset mat-form-field bottom margin
+
+    &.search-field {
+      width: 240px;
+    }
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .unit-card-grid {
@@ -18,15 +44,12 @@
 }
 
 .unit-card {
-  background: var(--suit-surface);
-  border-radius: var(--suit-radius-md);
-  box-shadow: var(--suit-shadow-sm);
-  padding: 16px;
-  transition: 0.2s ease;
-}
+  padding: 20px;
+  border-left: 4px solid var(--suit-success);
 
-.unit-card:hover {
-  box-shadow: var(--suit-shadow-md);
+  &.unit-occupied {
+    border-left-color: var(--suit-error);
+  }
 }
 
 .unit-header {
@@ -36,32 +59,7 @@
   margin-bottom: 10px;
 }
 
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  text-transform: capitalize;
-}
 
-.status-badge.available {
-  background: var(--suit-success);
-  color: white;
-}
-
-.status-badge.occupied {
-  background: var(--suit-error);
-  color: white;
-}
-
-.status-badge.reserved {
-  background: var(--suit-accent);
-  color: white;
-}
-
-.status-badge.maintenance {
-  background: var(--suit-secondary);
-  color: white;
-}
 
 .units-header {
   display: flex;

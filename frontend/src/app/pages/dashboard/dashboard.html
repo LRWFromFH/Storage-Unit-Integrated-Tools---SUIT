@@ -46,7 +46,7 @@
             <div class="result-row" (click)="goToUnit(u.UnitNumber)" tabindex="0">
               <span class="result-name">Unit {{ u.UnitNumber }}</span>
               <span class="result-detail">{{ u.SizeType }}</span>
-              <span class="result-badge" [class.badge-occupied]="u.CustomerID" [class.badge-available]="!u.CustomerID">
+              <span class="suit-badge" [class.badge-occupied]="u.CustomerID" [class.badge-success]="!u.CustomerID">
                 {{ u.CustomerID ? 'Occupied' : 'Available' }}
               </span>
               <span class="result-detail">${{ u.Price | number:'1.2-2' }}/mo</span>
@@ -60,29 +60,72 @@
   }
 </div>
 
+<div class="kpi-strip animate-fade-in-up">
+  <div class="kpi-card glass-panel">
+    <mat-icon class="kpi-icon text-primary">warehouse</mat-icon>
+    <div class="kpi-data">
+      <div class="kpi-label">Total Units</div>
+      <div class="kpi-value">
+        @if (statsLoading) { <div class="card-shimmer" style="height: 28px; width: 60px; border-radius: 4px;"></div> }
+        @else { {{ totalUnits }} }
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-card glass-panel">
+    <mat-icon class="kpi-icon text-success">analytics</mat-icon>
+    <div class="kpi-data">
+      <div class="kpi-label">Occupancy</div>
+      <div class="kpi-value">
+        @if (statsLoading) { <div class="card-shimmer" style="height: 28px; width: 60px; border-radius: 4px;"></div> }
+        @else { {{ totalUnits ? (occupiedUnits / totalUnits * 100 | number:'1.0-0') : 0 }}% }
+      </div>
+    </div>
+  </div>
+
+  <div class="kpi-card glass-panel">
+    <mat-icon class="kpi-icon text-accent">people</mat-icon>
+    <div class="kpi-data">
+      <div class="kpi-label">Active Tenants</div>
+      <div class="kpi-value">
+        @if (statsLoading) { <div class="card-shimmer" style="height: 28px; width: 60px; border-radius: 4px;"></div> }
+        @else { {{ totalTenants }} }
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="dashboard-container">
-  <mat-card class="dashboard-card" appearance="outlined">
+  <mat-card class="dashboard-card interactive-card animate-scale-in" appearance="outlined" style="--delay: 50ms">
     <mat-card-header>
       <mat-icon mat-card-avatar>warehouse</mat-icon>
       <mat-card-title>Units</mat-card-title>
       <mat-card-subtitle>Manage storage units, availability &amp; reservations</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <p>Real-time overview • Move-in/out • Occupancy tracking</p>
+      <ul class="card-feature-list">
+        <li><mat-icon>check_circle</mat-icon> Real-time unit availability</li>
+        <li><mat-icon>check_circle</mat-icon> Process move-ins and move-outs</li>
+        <li><mat-icon>check_circle</mat-icon> Track size and dimensions</li>
+      </ul>
     </mat-card-content>
     <mat-card-actions align="end">
       <button mat-raised-button color="primary" routerLink="/units">Enter Units</button>
     </mat-card-actions>
   </mat-card>
 
-  <mat-card class="dashboard-card" appearance="outlined">
+  <mat-card class="dashboard-card interactive-card animate-scale-in" appearance="outlined" style="--delay: 100ms">
     <mat-card-header>
       <mat-icon mat-card-avatar>people</mat-icon>
       <mat-card-title>Tenants</mat-card-title>
       <mat-card-subtitle>Handle tenant lifecycle &amp; billing</mat-card-subtitle>
     </mat-card-header>
     <mat-card-content>
-      <p>Contracts • Insurance status • Payment history</p>
+      <ul class="card-feature-list">
+        <li><mat-icon>check_circle</mat-icon> Manage contracts and billing</li>
+        <li><mat-icon>check_circle</mat-icon> Track insurance compliance</li>
+        <li><mat-icon>check_circle</mat-icon> View payment history</li>
+      </ul>
     </mat-card-content>
     <mat-card-actions align="end">
       <button mat-raised-button color="accent" routerLink="/tenants">Enter Tenants</button>
@@ -90,14 +133,18 @@
   </mat-card>
 
   @if (auth.isManager()) {
-    <mat-card class="dashboard-card manager-card" appearance="outlined">
+    <mat-card class="dashboard-card interactive-card animate-scale-in" appearance="outlined" style="--delay: 150ms">
       <mat-card-header>
         <mat-icon mat-card-avatar>admin_panel_settings</mat-icon>
         <mat-card-title>Employee Management</mat-card-title>
         <mat-card-subtitle>Manager-only • Register and manage employee accounts</mat-card-subtitle>
       </mat-card-header>
       <mat-card-content>
-        <p>Create new employee accounts • Assign roles • Manage access</p>
+        <ul class="card-feature-list">
+          <li><mat-icon>check_circle</mat-icon> Create new employee accounts</li>
+          <li><mat-icon>check_circle</mat-icon> Assign manager or staff roles</li>
+          <li><mat-icon>check_circle</mat-icon> Review system access</li>
+        </ul>
       </mat-card-content>
       <mat-card-actions align="end">
         <button mat-raised-button color="warn" routerLink="/register">Manage Employees</button>

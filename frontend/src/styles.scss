@@ -1,44 +1,173 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// ── Angular Material (must be first @use) ───────────────────────────────────
 @use '@angular/material' as mat;
+@use './styles/theme' as theme;
+
+// ── Angular Material ─────────────────────────────────────────────────────────
 
 html {
   height: 100%;
+  scroll-behavior: smooth;
   @include mat.theme((
     color: (
       primary: mat.$azure-palette,
       tertiary: mat.$blue-palette,
     ),
-    typography: Roboto,
+    typography: Inter,
     density: 0,
   ));
 }
 
 body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
+  // Default the application to a light color scheme.
   color-scheme: light;
 
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
+  // Angular Material system variables
+  background-color: var(--suit-bg);
+  color: var(--suit-text);
+  font-family: 'Inter', var(--mat-sys-body-medium), system-ui, sans-serif;
 
   // Reset the user agent margin.
   margin: 0;
   height: 100%;
+
+  transition: background-color var(--suit-transition-slow), color var(--suit-transition-slow);
 }
-/* You can add global styles to this file, and also import other style files */
+
+* {
+  box-sizing: border-box;
+}
+
+// ── SUIT Snackbar Utilities ───────────────────────────────────────────────────
 .suit-snackbar-error {
   background: var(--suit-error) !important;
   color: white !important;
   font-weight: 500;
   border-radius: var(--suit-radius-md);
+}
+
+.suit-snackbar-success {
+  background: var(--suit-success) !important;
+  color: white !important;
+  font-weight: 500;
+  border-radius: var(--suit-radius-md);
+}
+
+// ── Scrollbar Styling ─────────────────────────────────────────────────────────
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--suit-border);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--suit-text-muted);
+  }
+}
+
+// ── Micro-animation Keyframes ─────────────────────────────────────────────────
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.5; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+// ── Animation Utilities ───────────────────────────────────────────────────────
+.animate-fade-in-up {
+  animation: fadeInUp 0.35s var(--suit-transition-normal) both;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+// Stagger helper — set --delay CSS custom property on element
+[style*='--delay'] {
+  animation-delay: var(--delay, 0ms);
+}
+
+// ── Shimmer Loading Skeleton ──────────────────────────────────────────────────
+.card-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--suit-surface-alt) 25%,
+    var(--suit-border)       50%,
+    var(--suit-surface-alt) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: var(--suit-radius-md);
+}
+
+// ── AG-Grid Action Buttons (global, tokens-aware) ─────────────────────────────
+.action-btn {
+  padding: 4px 12px;
+  border-radius: var(--suit-radius-sm);
+  border: 1.5px solid var(--suit-border);
+  background: var(--suit-surface);
+  color: var(--suit-text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background var(--suit-transition-fast), color var(--suit-transition-fast),
+              border-color var(--suit-transition-fast), transform var(--suit-transition-fast);
+  margin-right: 4px;
+
+  &:hover {
+    background: var(--suit-surface-alt);
+    border-color: var(--suit-primary);
+    color: var(--suit-primary);
+    transform: translateY(-1px);
+  }
+
+  &.edit-btn:hover      { border-color: var(--suit-primary);  color: var(--suit-primary); }
+  &.insurance-btn:hover { border-color: var(--suit-accent);   color: var(--suit-accent);  }
+  &.billing-btn:hover   { border-color: var(--suit-accent);   color: var(--suit-accent);  }
+  &.notes-btn:hover     { border-color: var(--suit-info);     color: var(--suit-info);    }
+  &.delete-btn          { border-color: var(--suit-error-bg); color: var(--suit-error);   }
+  &.delete-btn:hover    { background: var(--suit-error-bg);   border-color: var(--suit-error); }
 }

@@ -1,68 +1,405 @@
+// ── Host ────────────────────────────────────────────────────────────────────
 :host {
   display: block;
-  min-height: 100vh;
+  height: 100%;
+}
+
+// ── Layout Container ─────────────────────────────────────────────────────────
+.layout-container {
+  height: 100vh;
   background: var(--suit-bg);
 }
 
-mat-toolbar {
-  background: var(--suit-primary);
-  color: #ffffff;
-
+// ── Sidebar ──────────────────────────────────────────────────────────────────
+.suit-sidenav {
+  width: var(--suit-sidenav-width, 260px);
+  background: var(--suit-surface);
+  border-right: 1px solid var(--suit-border);
   display: flex;
-  align-items: center;
-  padding: 0 32px;
-  min-height: 72px;
-  box-shadow: var(--suit-shadow-sm);
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: var(--suit-shadow-md);
+  transition: width var(--suit-transition-normal);
 
-  .app-title {
-    font-size: 1.5rem;
-    font-weight: 600;
+  &.collapsed {
+    width: var(--suit-sidenav-collapsed-width, 68px);
+
+    .logo-text, .nav-label, .user-details, .sidenav-footer mat-divider {
+      opacity: 0;
+      width: 0;
+      overflow: hidden;
+      display: none;
+    }
+
+    .nav-item {
+      justify-content: center;
+      padding: 10px;
+      
+      .nav-icon {
+        margin: 0;
+      }
+    }
+    
+    .sidenav-logo {
+      padding: 20px 0;
+      justify-content: center;
+      .logo-icon {
+        margin: 0;
+      }
+    }
+
+    .user-info {
+      padding: 10px 0;
+      justify-content: center;
+      
+      .user-avatar mat-icon {
+        margin: 0;
+      }
+    }
   }
 
-  .app-subtitle {
-    margin-left: 8px;
-    font-size: 1.1rem;
-    opacity: 0.9;
+  // ── Logo Block ────────────────────────────────────────────────────────────
+  .sidenav-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 20px 16px;
+
+    .logo-icon {
+      font-size: 36px;
+      width: 36px;
+      height: 36px;
+      color: var(--suit-primary);
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--suit-primary);
+      letter-spacing: 0.5px;
+      line-height: 1.2;
+    }
+
+    .logo-sub {
+      font-size: 0.7rem;
+      color: var(--suit-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
   }
 
-  .spacer {
-    flex: 1 1 auto;
+  // ── Navigation ────────────────────────────────────────────────────────────
+  .sidenav-nav {
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  .role-badge {
-    padding: 4px 12px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-right: 8px;
-  }
-
-  .manager-badge {
-    background: rgba(255, 255, 255, 0.25);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.5);
-  }
-
-  .employee-badge {
-    background: rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-  }
-
-  button[mat-icon-button] {
-    margin-left: 8px;
-    color: #ffffff;
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--suit-radius-md);
+    cursor: pointer;
+    text-decoration: none;
+    color: var(--suit-text-muted);
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: background var(--suit-transition-fast),
+                color     var(--suit-transition-fast),
+                transform var(--suit-transition-fast);
 
     &:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: hsl(211, 72%, 96%);
+      color: var(--suit-primary);
+      transform: translateX(4px);
+    }
+
+    &.active {
+      background: hsl(211, 72%, 92%);
+      color: var(--suit-primary);
+      font-weight: 600;
+      border-left: 3px solid var(--suit-primary);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .nav-label {
+      flex: 1;
+    }
+  }
+
+  // ── Spacer & Footer ───────────────────────────────────────────────────────
+  .sidenav-spacer {
+    flex: 1;
+  }
+
+  .sidenav-footer {
+    padding: 12px 10px;
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--suit-radius-md);
+
+      &:hover {
+        background: var(--suit-surface-alt);
+      }
+
+      .user-avatar mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: var(--suit-text-muted);
+      }
+
+      .user-details {
+        display: flex;
+        flex-direction: column;
+
+        .user-name {
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: var(--suit-text);
+        }
+
+        .user-role {
+          font-size: 0.72rem;
+          color: var(--suit-text-muted);
+        }
+      }
     }
   }
 }
 
+// ── Header / Toolbar ─────────────────────────────────────────────────────────
+.suit-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  min-height: 64px;
+  gap: 8px;
+  background: var(--suit-glass-bg) !important;
+  backdrop-filter: var(--suit-glass-blur);
+  -webkit-backdrop-filter: var(--suit-glass-blur);
+  border-bottom: 1px solid var(--suit-border);
+  color: var(--suit-text) !important;
+  box-shadow: var(--suit-shadow-sm);
+
+  // Sidebar toggle
+  button[mat-icon-button] {
+    color: var(--suit-text);
+
+    &:hover {
+      background: var(--suit-divider);
+    }
+  }
+}
+
+// ── Breadcrumbs ───────────────────────────────────────────────────────────────
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.85rem;
+
+  .breadcrumb-link {
+    color: var(--suit-primary);
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  .breadcrumb-sep {
+    font-size: 16px;
+    color: var(--suit-text-muted);
+    width: 16px;
+    height: 16px;
+  }
+
+  .breadcrumb-current {
+    color: var(--suit-text-muted);
+    font-weight: 400;
+  }
+}
+
+.header-spacer {
+  flex: 1 1 auto;
+}
+
+// ── Global Search ─────────────────────────────────────────────────────────────
+.search-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--suit-surface);
+  border: 1.5px solid var(--suit-border);
+  border-radius: var(--suit-radius-md);
+  padding: 0 12px;
+  height: 40px;
+  width: 240px;
+  transition: border-color var(--suit-transition-fast),
+              box-shadow    var(--suit-transition-fast),
+              width         var(--suit-transition-normal);
+
+  &.focused {
+    border-color: var(--suit-primary);
+    box-shadow:   0 0 0 3px rgba(25, 118, 210, 0.12);
+    width: 300px;
+  }
+
+  .search-icon {
+    font-size: 18px;
+    color: var(--suit-text-muted);
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--suit-text);
+    font-size: 0.88rem;
+    font-family: inherit;
+    width: 100%;
+
+    &::placeholder {
+      color: var(--suit-text-muted);
+    }
+  }
+}
+
+// ── Search Autocomplete Results ────────────────────────────────────────────────
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .search-result-icon {
+    font-size: 18px;
+    color: var(--suit-primary);
+  }
+
+  .search-result-text {
+    display: flex;
+    flex-direction: column;
+
+    .search-result-label {
+      font-size: 0.88rem;
+      font-weight: 500;
+    }
+
+    .search-result-cat {
+      font-size: 0.72rem;
+      color: var(--suit-text-muted);
+    }
+  }
+}
+
+// ── Role Badges ───────────────────────────────────────────────────────────────
+.role-badge {
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.manager-badge {
+  background: hsl(211, 72%, 92%);
+  color: var(--suit-primary-dark);
+  border: 1px solid hsl(211, 72%, 80%);
+}
+
+.employee-badge {
+  background: hsl(200, 18%, 92%);
+  color: var(--suit-secondary);
+  border: 1px solid hsl(200, 18%, 78%);
+}
+
+// ── Main Content ────────────────────────────────────────────────────────────
 .layout-content {
-  padding: 40px 32px;
-  max-width: 1280px;
+  display: flex;
+  flex-direction: column;
+  background: var(--suit-bg);
+  min-height: 100vh;
+}
+
+.page-content {
+  padding: 32px 36px;
+  max-width: 1400px;
   margin: 0 auto;
+  width: 100%;
+}
+
+// ── Dark Mode Adjustments ────────────────────────────────────────────────────
+.dark-mode {
+  .suit-sidenav {
+    background: var(--suit-surface);
+
+    .nav-item {
+      &:hover {
+        background: hsl(211, 30%, 20%);
+        color: var(--suit-primary-light);
+      }
+
+      &.active {
+        background: hsl(211, 30%, 17%);
+        color: var(--suit-primary-light);
+        border-left: 3px solid var(--suit-primary-light);
+      }
+    }
+  }
+
+  .manager-badge {
+    background: hsl(211, 30%, 18%);
+    color: var(--suit-primary-light);
+    border-color: hsl(211, 30%, 28%);
+  }
+
+  .employee-badge {
+    background: hsl(200, 18%, 18%);
+    color: hsl(200, 18%, 72%);
+    border-color: hsl(200, 18%, 28%);
+  }
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .search-wrapper {
+    width: 160px;
+
+    &.focused {
+      width: 200px;
+    }
+  }
+
+  .breadcrumb-nav {
+    display: none;
+  }
+
+  .page-content {
+    padding: 20px 16px;
+  }
 }

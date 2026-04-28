@@ -8,6 +8,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { AgGridModule } from 'ag-grid-angular';
 import { RouterLink } from '@angular/router';
 import { ColDef } from 'ag-grid-community';
@@ -40,7 +44,8 @@ ModuleRegistry.registerModules([
   imports: [
     RouterLink, CommonModule, MatButtonModule,
     MatDialogModule, MatToolbarModule, MatIconModule,
-    AgGridModule, MatSnackBarModule
+    AgGridModule, MatSnackBarModule,
+    FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule
   ]
 })
 export class Units implements OnInit {
@@ -52,6 +57,10 @@ export class Units implements OnInit {
   viewMode: 'table' | 'grid' = 'table';
   public theme = themeQuartz;
   loading = false;
+  
+  filterQuery = '';
+  filterSize = 'All';
+  filterBudget: number | null = null;
   defaultColDef: ColDef = { resizable: true, sortable: true, filter: true };
   private gridApi: any;
 
@@ -129,7 +138,7 @@ export class Units implements OnInit {
     this.unitsService.getAllUnits().subscribe({
       next: (data) => {
         this.units = data;
-        this.filteredUnits = [...data];
+        this.applyFilters();
         this.loading = false;
       },
       error: (err: HttpErrorResponse) => {
@@ -229,5 +238,31 @@ export class Units implements OnInit {
 
   toggleView(mode: 'table' | 'grid') {
     this.viewMode = mode;
+  }
+
+  applyFilters() {
+    this.filteredUnits = this.units.filter(u => {
+      // Text filter (UnitNumber)
+      if (this.filterQuery && !u.UnitNumber.toLowerCase().includes(this.filterQuery.toLowerCase())) {
+        return false;
+      }
+      // Size filter
+      if (this.filterSize !== 'All' && u.SizeType !== this.filterSize) {
+        return false;
+      }
+      // Budget filter
+      if (this.filterBudget !== null && u.Price > this.filterBudget) {
+        return false;
+      }
+      return true;
+    });
+    
+    if (this.gridApi) {
+      this.gridApi.setGridOption('rowData', this.filteredUnits);
+    }
+  }
+
+  onFilterChange() {
+    this.applyFilters();
   }
 }

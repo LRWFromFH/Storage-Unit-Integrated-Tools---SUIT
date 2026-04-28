@@ -1,24 +1,150 @@
-<mat-toolbar>
-  <span class="app-title">SUIT</span>
-  <span class="app-subtitle">Storage-Unit-Integrated-Tools</span>
+<mat-sidenav-container class="layout-container" [class.dark-mode]="isDarkMode()">
 
-  <span class="spacer"></span>
+  <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
+  <mat-sidenav
+    #sidenav
+    class="suit-sidenav"
+    [class.collapsed]="sidenavCollapsed()"
+    [mode]="sidenavMode()"
+    [opened]="sidenavOpen()"
+    (openedChange)="sidenavOpen.set($event)">
 
-  @if (auth.isManager()) {
-    <span class="role-badge manager-badge" matTooltip="Manager account">Manager</span>
-  } @else if (auth.role()) {
-    <span class="role-badge employee-badge" matTooltip="Employee account">Employee</span>
-  }
+    <!-- Logo -->
+    <div class="sidenav-logo">
+      <mat-icon class="logo-icon">inventory_2</mat-icon>
+      <div class="logo-text">
+        <span class="logo-title">SUIT</span>
+        <span class="logo-sub">Storage Tools</span>
+      </div>
+    </div>
 
-  <button mat-icon-button
-          (click)="logout()"
-          matTooltip="Sign out"
-          matTooltipPosition="below"
-          aria-label="Sign out">
-    <mat-icon>logout</mat-icon>
-  </button>
-</mat-toolbar>
+    <mat-divider></mat-divider>
 
-<div class="layout-content">
-  <router-outlet></router-outlet>
-</div>
+    <!-- Nav Links -->
+    <nav class="sidenav-nav">
+      @for (item of visibleNavItems(); track item.route) {
+        <a class="nav-item"
+           [class.active]="isActiveRoute(item.route)"
+           [routerLink]="item.route"
+           [matTooltip]="item.label"
+           matTooltipPosition="right">
+          <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidenav-spacer"></div>
+
+    <!-- User Info -->
+    <div class="sidenav-footer">
+      <mat-divider></mat-divider>
+      <div class="user-info">
+        <div class="user-avatar">
+          <mat-icon>account_circle</mat-icon>
+        </div>
+        <div class="user-details">
+          @if (auth.isManager()) {
+            <span class="user-name">Manager</span>
+          } @else if (auth.role()) {
+            <span class="user-name">Employee</span>
+          }
+          <span class="user-role">{{ auth.role() }}</span>
+        </div>
+      </div>
+    </div>
+  </mat-sidenav>
+
+  <!-- ── Main Content Area ──────────────────────────────────────────────── -->
+  <mat-sidenav-content class="layout-content">
+
+    <!-- Header / Toolbar -->
+    <mat-toolbar class="suit-header glass-panel">
+
+      <!-- Sidebar Toggle -->
+      <button mat-icon-button
+              id="sidebar-toggle-btn"
+              (click)="toggleSidenav()"
+              matTooltip="Toggle sidebar"
+              aria-label="Toggle sidebar">
+        <mat-icon>menu</mat-icon>
+      </button>
+
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumb-nav" aria-label="breadcrumb">
+        @for (crumb of breadcrumbs(); track crumb.route; let last = $last) {
+          @if (!last) {
+            <a class="breadcrumb-link" [routerLink]="crumb.route">{{ crumb.label }}</a>
+            <mat-icon class="breadcrumb-sep">chevron_right</mat-icon>
+          } @else {
+            <span class="breadcrumb-current">{{ crumb.label }}</span>
+          }
+        }
+      </nav>
+
+      <span class="header-spacer"></span>
+
+      <!-- Global Search (Ctrl+K) -->
+      <div class="search-wrapper" [class.focused]="searchFocused()">
+        <mat-icon class="search-icon">search</mat-icon>
+        <input
+          id="global-search-input"
+          class="search-input"
+          type="text"
+          placeholder="Search… (Ctrl+K)"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchInput($event)"
+          (focus)="searchFocused.set(true)"
+          (blur)="searchFocused.set(false)"
+          autocomplete="off"
+          aria-label="Global search"
+          [matAutocomplete]="auto" />
+        <mat-autocomplete #auto="matAutocomplete" class="suit-autocomplete">
+          @for (result of filteredResults(); track result.route) {
+            <mat-option [value]="result.label" (click)="navigateTo(result.route)">
+              <div class="search-result-item">
+                <mat-icon class="search-result-icon">{{ result.icon }}</mat-icon>
+                <div class="search-result-text">
+                  <span class="search-result-label">{{ result.label }}</span>
+                  <span class="search-result-cat">{{ result.category }}</span>
+                </div>
+              </div>
+            </mat-option>
+          }
+        </mat-autocomplete>
+      </div>
+
+      <!-- Theme Toggle -->
+      <button mat-icon-button
+              id="theme-toggle-btn"
+              (click)="toggleTheme()"
+              [matTooltip]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+              aria-label="Toggle dark mode">
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+
+      <!-- Role Badge -->
+      @if (auth.isManager()) {
+        <span class="role-badge manager-badge" matTooltip="Manager account">Manager</span>
+      } @else if (auth.role()) {
+        <span class="role-badge employee-badge" matTooltip="Employee account">Employee</span>
+      }
+
+      <!-- Logout -->
+      <button mat-icon-button
+              id="logout-btn"
+              (click)="logout()"
+              matTooltip="Sign out"
+              matTooltipPosition="below"
+              aria-label="Sign out">
+        <mat-icon>logout</mat-icon>
+      </button>
+    </mat-toolbar>
+
+    <!-- Page Content -->
+    <main class="page-content animate-fade-in-up">
+      <router-outlet></router-outlet>
+    </main>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

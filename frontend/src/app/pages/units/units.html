@@ -8,9 +8,39 @@
     </div>
   </div>
 
-  <div class="view-toggle">
-    <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">Table View</button>
-    <button mat-stroked-button [color]="viewMode === 'grid' ? 'primary' : ''" (click)="toggleView('grid')">Grid View</button>
+  <div class="filter-bar glass-panel">
+    <div class="filter-inputs">
+      <mat-form-field appearance="outline" class="filter-field search-field">
+        <mat-label>Search Unit</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="filterQuery" (ngModelChange)="onFilterChange()" placeholder="e.g. A101">
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Size</mat-label>
+        <mat-select [(ngModel)]="filterSize" (ngModelChange)="onFilterChange()">
+          <mat-option value="All">All Sizes</mat-option>
+          <mat-option value="Small">Small</mat-option>
+          <mat-option value="Medium">Medium</mat-option>
+          <mat-option value="Large">Large</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Max Budget</mat-label>
+        <span matTextPrefix>$&nbsp;</span>
+        <input matInput type="number" [(ngModel)]="filterBudget" (ngModelChange)="onFilterChange()" placeholder="e.g. 100">
+      </mat-form-field>
+    </div>
+
+    <div class="view-toggle">
+      <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">
+        <mat-icon>table_rows</mat-icon> Table
+      </button>
+      <button mat-stroked-button [color]="viewMode === 'grid' ? 'primary' : ''" (click)="toggleView('grid')">
+        <mat-icon>grid_view</mat-icon> Grid
+      </button>
+    </div>
   </div>
 
   <!-- TABLE VIEW -->
@@ -31,11 +61,11 @@
   <!-- CARD GRID VIEW -->
   @if (viewMode === 'grid') {
     <div class="unit-card-grid">
-      @for (unit of filteredUnits; track unit.ID) {
-        <div class="unit-card">
+      @for (unit of filteredUnits; track unit.ID; let idx = $index) {
+        <div class="unit-card interactive-card animate-fade-in-up" [style.--delay]="(idx * 50) + 'ms'" [class.unit-occupied]="unit.CustomerID">
           <div class="unit-header">
             Unit {{ unit.UnitNumber || '(No Number)' }}
-            <span class="status-badge" [ngClass]="unit.CustomerID ? 'occupied' : 'available'">
+            <span class="suit-badge" [ngClass]="unit.CustomerID ? 'badge-error' : 'badge-success'">
               {{ unit.CustomerID ? 'Occupied' : 'Available' }}
             </span>
           </div>
