@@ -10,10 +10,36 @@
   gap: 16px;
 }
 
-.view-toggle {
+.filter-bar {
   display: flex;
-  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-radius: var(--suit-radius-md);
   margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+
+  .filter-inputs {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-field {
+    width: 200px;
+    margin-bottom: -1.25em; // Offset mat-form-field bottom margin
+
+    &.search-field {
+      width: 260px;
+    }
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 12px;
+  }
 }
 
 .suit-grid {
@@ -28,21 +54,50 @@
 }
 
 .tenant-card {
-  background: white;
-  padding: 20px;
+  background: var(--suit-surface);
+  padding: 24px;
   border-radius: var(--suit-radius-lg);
   box-shadow: var(--suit-shadow-md);
+  border-left: 4px solid var(--suit-primary);
 }
 
 .tenant-header {
-  font-weight: 600;
-  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  .tenant-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--suit-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .tenant-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--suit-text);
+  }
 }
 
 .tenant-body {
   margin-bottom: 12px;
   font-size: 0.9rem;
   line-height: 1.6;
+  color: var(--suit-text-muted);
+
+  strong {
+    color: var(--suit-text);
+  }
 }
 
 .tenant-actions {
@@ -54,7 +109,7 @@
 
 .tenant-units-section {
   margin-top: 12px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--suit-border);
   padding-top: 8px;
 }
 
@@ -72,10 +127,12 @@
 }
 
 .unit-chip {
-  background: #f0f4ff;
+  background: var(--suit-surface-alt);
   border-radius: 6px;
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: var(--suit-text);
+  border-left: 2px solid var(--suit-accent);
 }
 
 .no-units, .units-loading {
@@ -112,8 +169,8 @@
 
 // AG Grid action button colors
 :global(.billing-btn) {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: rgba(3, 105, 161, 0.1);
+  color: var(--suit-accent);
   border: none;
   border-radius: 4px;
   padding: 2px 8px;

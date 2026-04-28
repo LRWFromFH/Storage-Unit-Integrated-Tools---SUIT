@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -16,6 +16,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { Customer } from '../tenants/tenants.model';
 import { Unit } from '../units/unit.model';
+import { UnitsService } from '../units/units.service';
+import { TenantsService } from '../tenants/tenants.service';
 
 interface SearchResponse {
   customers: Customer[];
@@ -39,11 +41,13 @@ interface SearchResponse {
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
-export class Dashboard {
+export class Dashboard implements OnInit {
 
   auth = inject(Auth);
   private router = inject(Router);
   private http = inject(HttpClient);
+  private unitsService = inject(UnitsService);
+  private tenantsService = inject(TenantsService);
 
   private readonly API_URL = 'http://localhost:8080/api';
 
@@ -75,6 +79,42 @@ export class Dashboard {
         this.searching = false;
       }
     });
+  }
+
+  totalUnits = 0;
+  totalTenants = 0;
+  occupiedUnits = 0;
+  statsLoading = true;
+  private loadedCount = 0;
+
+  ngOnInit() {
+    this.loadStats();
+  }
+
+  loadStats() {
+    this.unitsService.getAllUnits().subscribe({
+      next: (units) => {
+        this.totalUnits = units.length;
+        this.occupiedUnits = units.filter(u => u.CustomerID !== null && u.CustomerID !== 0).length;
+        this.checkStatsLoaded();
+      },
+      error: () => this.checkStatsLoaded()
+    });
+
+    this.tenantsService.getCustomers().subscribe({
+      next: (tenants) => {
+        this.totalTenants = tenants.length;
+        this.checkStatsLoaded();
+      },
+      error: () => this.checkStatsLoaded()
+    });
+  }
+
+  private checkStatsLoaded() {
+    this.loadedCount++;
+    if (this.loadedCount >= 2) {
+      this.statsLoading = false;
+    }
   }
 
   onSearchInput(value: string) {
