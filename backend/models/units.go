@@ -1,6 +1,10 @@
 package models
 
-import "gorm.io/gorm"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // models/units.go
 type Unit struct {
@@ -16,6 +20,9 @@ type Unit struct {
 	Insurance    Insurance `gorm:"foreignKey:UnitID"`
 	Combined     bool      `gorm:"not null"` //Whether the unit has been conbined
 	CombinedFrom string    //Comma separated list of unit numbers that were combined to create this
+	Reserved     bool
+	Status       string     //This is if the unit needs cleaning, is damaged, or something else
+	NextDueDate  *time.Time `gorm:"type:date"` // Now nullable
 }
 
 type CreateUnitRequest struct {

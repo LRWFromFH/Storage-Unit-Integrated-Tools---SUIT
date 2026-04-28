@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -1009,4 +1011,48 @@ func PostInsurance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
+}
+
+func HandleUtilPDF(c *gin.Context) {
+	// Get dynamic data from DB via Service layer
+	rows, err := services.GenerateInventoryReport()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate report data: " + err.Error()})
+		return
+	}
+
+	// Generate the PDF bytes
+	pdfBytes, err := services.ExportInventoryPDF(rows)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate PDF: " + err.Error()})
+		return
+	}
+
+	timestamp := time.Now().Format("2006-01-02")
+	fileName := fmt.Sprintf("Daily Utility [%s].pdf", timestamp)
+	dirPath := "./forms/util"
+
+	// Save a copy to the local machine for inspection
+	// Ensure the directory exists (MkdirAll does nothing if it already exists)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		fmt.Printf("Warning: Could not create local directory: %v\n", err)
+	} else {
+		filePath := filepath.Join(dirPath, fileName)
+		err = os.WriteFile(filePath, pdfBytes, 0644)
+		if err != nil {
+			fmt.Printf("Warning: Could not save local copy: %v\n", err)
+		} else {
+			fmt.Printf("Local copy saved to: %s\n", filePath)
+		}
+	}
+
+	// Set Headers using Gin's context
+	// We use "attachment" to prompt a download, or "inline" to view in browser
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Length", fmt.Sprint(len(pdfBytes)))
+
+	// 5. Stream the data
+	// c.Data writes the status code, content type, and the byte slice directly to the response body
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
