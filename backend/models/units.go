@@ -6,6 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	UnitStatusNormal      = "Normal"
+	UnitStatusDeactivated = "Deactivated"
+	UnitStatusCleaning    = "Cleaning"
+	UnitStatusDamaged     = "Damaged"
+)
+
 // models/units.go
 type Unit struct {
 	gorm.Model
@@ -29,6 +36,10 @@ type CreateUnitRequest struct {
 	UnitNumber string  `json:"unit_number" binding:"required"`
 	SizeType   string  `json:"size_type" binding:"required"`
 	Price      float64 `json:"price" binding:"required"`
+}
+
+type AssignCustomerRequest struct {
+	CustomerID uint `json:"customer_id" binding:"required"`
 }
 
 type UnitCombineRequest struct {

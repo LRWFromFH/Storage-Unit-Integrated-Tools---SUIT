@@ -1013,6 +1013,41 @@ func PostInsurance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
 }
 
+func AssignCustomerToUnit(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	if err := database.DB.Where("unit_number = ?", unitNumber).First(&unit).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "unit not found"})
+		return
+	}
+
+	var req models.AssignCustomerRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var customer models.Customer
+	if err := database.DB.First(&customer, req.CustomerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "customer not found"})
+		return
+	}
+
+	dueDate := time.Now().AddDate(0, 0, 30)
+	updates := map[string]interface{}{
+		"customer_id":   &req.CustomerID,
+		"next_due_date": &dueDate,
+		"status":        models.UnitStatusNormal,
+	}
+	if err := database.DB.Model(&unit).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to assign customer"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"unit": unit})
+}
+
 func HandleUtilPDF(c *gin.Context) {
 	// Get dynamic data from DB via Service layer
 	rows, err := services.GenerateInventoryReport()
