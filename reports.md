@@ -1,6 +1,6 @@
 ## Automated Billing & Inventory Reporting System
 
-This update introduces a background billing engine and a dynamic inventory reporting system capable of generating professional PDF exports.
+This update introduces a background billing engine and a dynamic inventory reporting system capable of generating PDF exports.
 
 ---
 
@@ -42,7 +42,7 @@ The system utilizes the `gofpdf` library to generate landscape A4 reports native
 
 ### 4. API & Security
 * **Endpoint:** `GET /api/forms/util`
-* **Protection:** The route is protected by authentication and CSRF middleware.
+* **Protection:** Classified as a Protected endpoint.
 * **Delivery:** Returns the PDF as an `application/pdf` stream with a `Content-Disposition: attachment` header to trigger browser downloads.
 
 ---
