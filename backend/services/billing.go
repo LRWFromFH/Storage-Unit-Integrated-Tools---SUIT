@@ -103,6 +103,22 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 	})
 }
 
+func CheckAndDeactivateLateCustomers() {
+	cutoff := time.Now().AddDate(0, 0, -5)
+
+	var invoices []models.Invoice
+	database.DB.Where(
+		"(status = 'unpaid' OR status = 'partial') AND created_at <= ? AND description LIKE ?",
+		cutoff, "Monthly Rent%",
+	).Find(&invoices)
+
+	for _, inv := range invoices {
+		database.DB.Model(&models.Unit{}).
+			Where("id = ? AND status != ?", inv.UnitID, models.UnitStatusDeactivated).
+			Update("status", models.UnitStatusDeactivated)
+	}
+}
+
 func CheckAndProcessStorageBilling() {
 	var units []models.Unit
 	now := time.Now()
