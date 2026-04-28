@@ -92,6 +92,10 @@ func SetupRoutes(r *gin.Engine) {
 		// -------------------- Insurance (FIXED: no duplicates) --------------------
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
 		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
+
+		// -------------------- Forms --------------------
+		protected.GET("/forms/util", controllers.HandleUtilPDF)
+
 	}
 
 	// Static frontend

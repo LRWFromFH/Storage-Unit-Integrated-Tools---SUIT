@@ -4,6 +4,7 @@ import (
 	"backend/database"
 	"backend/models"
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -100,4 +101,32 @@ func RecordPayment(customerID uint, unitID uint, amount float64, desc string) er
 
 		return nil
 	})
+}
+
+func CheckAndProcessStorageBilling() {
+	var units []models.Unit
+	now := time.Now()
+
+	// Query only units that HAVE a due date and it has passed
+	// GORM handles the "IS NOT NULL" check automatically if you query correctly
+	err := database.DB.Where("customer_id IS NOT NULL AND next_due_date IS NOT NULL AND next_due_date <= ?", now).Find(&units).Error
+	if err != nil {
+		return
+	}
+
+	for _, unit := range units {
+		// Safety: Even with the SQL check, double-check the pointer before dereferencing
+		if unit.NextDueDate == nil {
+			continue
+		}
+
+		desc := fmt.Sprintf("Monthly Rent - Unit %s", unit.UnitNumber)
+		if err := CreateCharge(*unit.CustomerID, unit.ID, unit.Price, desc); err != nil {
+			continue
+		}
+
+		// Advance the date: Dereference (*), Add month, then take New Address (&)
+		newDate := unit.NextDueDate.AddDate(0, 1, 0)
+		database.DB.Model(&unit).Update("NextDueDate", &newDate)
+	}
 }
