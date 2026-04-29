@@ -7,9 +7,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+var BcryptCost = 14
+
 // HashPassword takes a plaintext password and returns the bcrypt hash of it
 func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), BcryptCost)
 	return string(bytes), err
 }
 

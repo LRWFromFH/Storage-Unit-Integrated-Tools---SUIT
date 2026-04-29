@@ -12,9 +12,7 @@ func Init() {
 }
 
 func DevInit(small int, medium int, large int, xlarge int, testing ...any) {
-	if len(testing) > 0 {
-		ConnectTest()
-	} else {
+	if len(testing) == 0 {
 		Connect()
 	}
 	var count int64

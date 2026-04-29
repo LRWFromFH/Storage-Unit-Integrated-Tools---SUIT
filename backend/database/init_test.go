@@ -11,6 +11,7 @@ func Test_Init(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 	var count int64
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 
 	database.DB.Model(&models.Unit{}).Where("size_type = ?", "5x5").Count(&count)
@@ -41,6 +42,7 @@ func Test_Init(t *testing.T) {
 func Test_Insert_Customers(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	database.InsertCustomers()
 

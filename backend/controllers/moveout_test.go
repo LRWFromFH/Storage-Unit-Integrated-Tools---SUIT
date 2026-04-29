@@ -11,7 +11,7 @@ import (
 )
 
 func TestMoveOut(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Eve", LastName: "Stone", Phone: "904-100-2000", Address: "5 River Rd", Email: "eve@test.com"}
 	database.DB.Create(&customer)
@@ -43,7 +43,7 @@ func TestMoveOut(t *testing.T) {
 }
 
 func TestMoveOut_NoRenter(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	unit := models.Unit{UnitNumber: "M2001", SizeType: "5x5", Price: 74.95, Length: 5, Width: 5, Height: 10, Combined: false, Status: models.UnitStatusNormal}
 	database.DB.Create(&unit)
@@ -57,7 +57,7 @@ func TestMoveOut_NoRenter(t *testing.T) {
 }
 
 func TestMoveOut_UnitNotFound(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 	login := loginUser(r, map[string]string{"email": "manager@suit.com", "password": "Manager123!"})
 	w := makeRequest(t, r, "POST", "/api/units/DOESNOTEXIST/moveout", nil, login)
 
@@ -67,7 +67,7 @@ func TestMoveOut_UnitNotFound(t *testing.T) {
 }
 
 func TestMoveOut_CancelsActiveReservation(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Frank", LastName: "Hill", Phone: "904-200-3000", Address: "6 Lake Dr", Email: "frank@test.com"}
 	database.DB.Create(&customer)

@@ -28,7 +28,7 @@ func makeRequest(t *testing.T, r interface{ ServeHTTP(http.ResponseWriter, *http
 }
 
 func TestCreateReservation(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Alice", LastName: "Brown", Phone: "904-111-2222", Address: "1 Main St", Email: "alice@test.com"}
 	database.DB.Create(&customer)
@@ -59,7 +59,7 @@ func TestCreateReservation(t *testing.T) {
 }
 
 func TestCreateReservation_MissingField(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 	login := loginUser(r, map[string]string{"email": "manager@suit.com", "password": "Manager123!"})
 
 	w := makeRequest(t, r, "POST", "/api/reservations", map[string]interface{}{
@@ -73,7 +73,7 @@ func TestCreateReservation_MissingField(t *testing.T) {
 }
 
 func TestCreateReservation_BadCustomer(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 	login := loginUser(r, map[string]string{"email": "manager@suit.com", "password": "Manager123!"})
 
 	w := makeRequest(t, r, "POST", "/api/reservations", map[string]interface{}{
@@ -88,7 +88,7 @@ func TestCreateReservation_BadCustomer(t *testing.T) {
 }
 
 func TestGetReservations(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Bob", LastName: "Green", Phone: "904-333-4444", Address: "2 Oak St", Email: "bob@test.com"}
 	database.DB.Create(&customer)
@@ -112,7 +112,7 @@ func TestGetReservations(t *testing.T) {
 }
 
 func TestCancelReservation(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Carol", LastName: "White", Phone: "904-555-6666", Address: "3 Pine St", Email: "carol@test.com"}
 	database.DB.Create(&customer)
@@ -140,7 +140,7 @@ func TestCancelReservation(t *testing.T) {
 }
 
 func TestCancelReservation_NotFound(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 	login := loginUser(r, map[string]string{"email": "manager@suit.com", "password": "Manager123!"})
 
 	w := makeRequest(t, r, "DELETE", "/api/reservations/99999", nil, login)
@@ -150,7 +150,7 @@ func TestCancelReservation_NotFound(t *testing.T) {
 }
 
 func TestAssignAutoFulfillsReservation(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Dan", LastName: "Black", Phone: "904-777-8888", Address: "4 Elm St", Email: "dan@test.com"}
 	database.DB.Create(&customer)

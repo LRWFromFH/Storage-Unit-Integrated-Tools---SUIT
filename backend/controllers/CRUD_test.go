@@ -56,7 +56,7 @@ func boilerplate(t *testing.T, input any, req_type string, api string, r *gin.En
 }
 
 func TestGetAllCustomers(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -95,7 +95,7 @@ func TestGetAllCustomers(t *testing.T) {
 }
 
 func TestGetCustomer(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -129,7 +129,7 @@ func TestGetCustomer(t *testing.T) {
 }
 
 func TestUpdateCustomer(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -169,7 +169,7 @@ func TestUpdateCustomer(t *testing.T) {
 }
 
 func TestCreateCustomer(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	updatePayload := gin.H{
 		"FirstName": "John",
@@ -195,7 +195,7 @@ func TestCreateCustomer(t *testing.T) {
 }
 
 func TestDeleteCustomer(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -210,7 +210,7 @@ func TestDeleteCustomer(t *testing.T) {
 }
 
 func TestGetCustomerUnits(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -256,7 +256,7 @@ func TestGetCustomerUnits(t *testing.T) {
 }
 
 func TestGetAllUnits(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -282,7 +282,7 @@ func TestGetAllUnits(t *testing.T) {
 	}
 
 	// 2. Access the first customer in the list
-	firstUnit, ok := units[1].(map[string]interface{})
+	firstUnit, ok := units[0].(map[string]interface{})
 	if !ok {
 		t.Fatal("Customer data is not in the expected format")
 	}
@@ -295,7 +295,7 @@ func TestGetAllUnits(t *testing.T) {
 }
 
 func TestGetUnit(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -329,7 +329,7 @@ func TestGetUnit(t *testing.T) {
 }
 
 func TestUpdateUnit(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -367,7 +367,7 @@ func TestUpdateUnit(t *testing.T) {
 }
 
 func TestCreateUnit(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	updatePayload := gin.H{
 		"UnitNumber": "A123",
@@ -392,7 +392,7 @@ func TestCreateUnit(t *testing.T) {
 }
 
 func TestDeleteUnit(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	unit := models.Unit{
 		UnitNumber: "A123",
@@ -406,7 +406,7 @@ func TestDeleteUnit(t *testing.T) {
 }
 
 func TestDeleteNote(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -452,7 +452,7 @@ func TestDeleteNote(t *testing.T) {
 }
 
 func TestDeleteNote_Forbidden(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -497,7 +497,7 @@ func TestDeleteNote_Forbidden(t *testing.T) {
 }
 
 func TestDeleteNote_Manager(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -537,7 +537,7 @@ func TestDeleteNote_Manager(t *testing.T) {
 }
 
 func TestCreateNote(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -563,7 +563,7 @@ func TestCreateNote(t *testing.T) {
 }
 
 func TestGetNotes(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{
 		FirstName: "John",
@@ -597,7 +597,7 @@ func TestGetNotes(t *testing.T) {
 }
 
 func TestGetInsurance(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	unit := models.Unit{
 		UnitNumber: "INS-TEST-001",
@@ -629,7 +629,7 @@ func TestGetInsurance(t *testing.T) {
 }
 
 func TestCreateInsurance(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	unit := models.Unit{
 		UnitNumber: "INS-CREATE-001",
@@ -660,7 +660,7 @@ func TestCreateInsurance(t *testing.T) {
 }
 
 func TestUpdateInsurance(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	unit := models.Unit{
 		UnitNumber: "INS-UPDATE-001",
@@ -703,7 +703,7 @@ func TestUpdateInsurance(t *testing.T) {
 }
 
 //func TestCombineUnits(t *testing.T) {
-//	r := setupTestRouter()
+//	r := setupTestRouter(t)
 //
 //	customer := models.Customer{
 //		FirstName: "John",

@@ -13,6 +13,7 @@ import (
 func TestCreateCharge(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 
 	// 1. Setup Mock Data
@@ -41,6 +42,7 @@ func TestCreateCharge(t *testing.T) {
 func TestRecordPaymentAndBalance(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	db := database.DB
 
@@ -70,6 +72,7 @@ func TestRecordPaymentAndBalance(t *testing.T) {
 func TestOverpayment(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	db := database.DB
 	cust := models.Customer{FirstName: "Rich", LastName: "Uncle"}
@@ -88,6 +91,7 @@ func TestOverpayment(t *testing.T) {
 func TestUnderpayment(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	db := database.DB
 	cust := models.Customer{FirstName: "Poor", LastName: "Timmy"}
@@ -106,6 +110,7 @@ func TestUnderpayment(t *testing.T) {
 func TestTransactionRollback(t *testing.T) {
 	small, medium, large, xlarge := 50, 35, 25, 15
 
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	db := database.DB
 
@@ -124,6 +129,7 @@ func TestTransactionRollback(t *testing.T) {
 func TestCheckAndProcessStorageBilling(t *testing.T) {
 	// 1. Setup - Using your DevInit sizes
 	small, medium, large, xlarge := 50, 35, 25, 15
+	database.ConnectTest(t.Name())
 	database.DevInit(small, medium, large, xlarge, true)
 	db := database.DB
 

@@ -12,17 +12,19 @@ import (
 	"backend/middleware"
 	"backend/models"
 	"backend/services"
+	"backend/utilities"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func setupTestRouter() *gin.Engine {
+func setupTestRouter(t *testing.T) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	database.ConnectTest()
+	utilities.BcryptCost = bcrypt.MinCost
+	database.ConnectTest(t.Name())
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), 14)
+	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), bcrypt.MinCost)
 	database.DB.Create(&models.Employee{
 		SMID:     "manager001",
 		Email:    "manager@suit.com",
@@ -141,7 +143,7 @@ func getCSRFToken(w *httptest.ResponseRecorder) string {
 
 // Vuln 1: Password must be bcrypt hashed in DB
 func TestRegister_PasswordIsHashed(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "hash_test",
@@ -164,7 +166,7 @@ func TestRegister_PasswordIsHashed(t *testing.T) {
 
 // Vuln 2: Login must return a JWT token in session_token cookie
 func TestLogin_ReturnsJWTToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "jwt_test",
@@ -198,7 +200,7 @@ func TestLogin_ReturnsJWTToken(t *testing.T) {
 
 // Vuln 2: Wrong password must return 401
 func TestLogin_WrongPassword_Returns401(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "wrong_pw",
@@ -218,7 +220,7 @@ func TestLogin_WrongPassword_Returns401(t *testing.T) {
 
 // Vuln 3: Protected route must reject requests without token
 func TestProtectedRoute_RejectsWithoutToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	req, _ := http.NewRequest("GET", "/api/protected", nil)
 	w := httptest.NewRecorder()
@@ -231,7 +233,7 @@ func TestProtectedRoute_RejectsWithoutToken(t *testing.T) {
 
 // Vuln 3: Protected route must accept valid session cookie
 func TestProtectedRoute_AcceptsValidToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "protected_test",
@@ -256,7 +258,7 @@ func TestProtectedRoute_AcceptsValidToken(t *testing.T) {
 
 // Vuln 4: Validation must reject invalid input
 func TestRegister_ValidationRejectsInvalidInput(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	tests := []struct {
 		name string
@@ -299,7 +301,7 @@ func TestRegister_ValidationRejectsInvalidInput(t *testing.T) {
 
 // Vuln 5: Password must not appear in JSON response
 func TestRegister_PasswordNotInResponse(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	w := registerUser(r, map[string]string{
 		"username": "no_pw_resp",
@@ -324,7 +326,7 @@ func TestRegister_PasswordNotInResponse(t *testing.T) {
 
 // Vuln 6: Duplicate email must return error
 func TestRegister_DuplicateEmail_ReturnsError(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "dup1",
@@ -345,7 +347,7 @@ func TestRegister_DuplicateEmail_ReturnsError(t *testing.T) {
 
 // Vuln 6: Nonexistent email must return 401
 func TestLogin_NonexistentEmail_Returns401(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	w := loginUser(r, map[string]string{
 		"email":    "nonexistent@test.com",
@@ -359,7 +361,7 @@ func TestLogin_NonexistentEmail_Returns401(t *testing.T) {
 
 // Vuln 7: Mass assignment must not allow setting role
 func TestRegister_MassAssignment_RoleIgnored(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	// Even if someone sends a "role" field, it should be ignored
 	body := map[string]string{
@@ -386,7 +388,7 @@ func TestRegister_MassAssignment_RoleIgnored(t *testing.T) {
 
 // Login must set session_token as HttpOnly cookie
 func TestLogin_SetsSessionCookie(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "session_test",
@@ -413,7 +415,7 @@ func TestLogin_SetsSessionCookie(t *testing.T) {
 
 // Login must set csrf_token as a non-HttpOnly cookie (JS readable)
 func TestLogin_SetsCSRFCookie(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "csrf_cookie_test",
@@ -442,7 +444,7 @@ func TestLogin_SetsCSRFCookie(t *testing.T) {
 
 // POST to protected route without X-CSRF-Token header must return 403
 func TestCSRF_BlocksPostWithoutToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "csrf_block_test",
@@ -468,7 +470,7 @@ func TestCSRF_BlocksPostWithoutToken(t *testing.T) {
 
 // GET to protected route should work without CSRF header (safe method)
 func TestCSRF_AllowsGetWithoutToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "csrf_get_test",
@@ -494,7 +496,7 @@ func TestCSRF_AllowsGetWithoutToken(t *testing.T) {
 
 // POST with valid X-CSRF-Token header must succeed
 func TestCSRF_AllowsPostWithValidToken(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "csrf_valid_test",
@@ -527,7 +529,7 @@ func TestCSRF_AllowsPostWithValidToken(t *testing.T) {
 
 // Logout must clear session and CSRF cookies
 func TestLogout_ClearsCookies(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "logout_test",
@@ -562,7 +564,7 @@ func TestLogout_ClearsCookies(t *testing.T) {
 
 // After logout, protected route must reject the request
 func TestLogout_ProtectedRouteFailsAfterLogout(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	registerUser(r, map[string]string{
 		"username": "logout_protect_test",
@@ -593,7 +595,7 @@ func TestLogout_ProtectedRouteFailsAfterLogout(t *testing.T) {
 }
 
 func TestSearchDB(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 	// Create test data
 	customer := models.Customer{
 		FirstName: "John",
@@ -664,7 +666,7 @@ func TestSearchDB(t *testing.T) {
 }
 
 func TestGetBalance(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	small, medium, large, xlarge := 50, 35, 25, 15
 
@@ -722,7 +724,7 @@ func TestGetBalance(t *testing.T) {
 }
 
 func TestGetTransactions(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	small, medium, large, xlarge := 50, 35, 25, 15
 
@@ -782,7 +784,7 @@ func TestGetTransactions(t *testing.T) {
 }
 
 func TestPortPayment(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	small, medium, large, xlarge := 50, 35, 25, 15
 
