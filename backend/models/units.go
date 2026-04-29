@@ -42,6 +42,18 @@ type AssignCustomerRequest struct {
 	CustomerID uint `json:"customer_id" binding:"required"`
 }
 
+type UpdateUnitRequest struct {
+	SizeType   string     `json:"size_type"`
+	Price      float64    `json:"price"`
+	Status     string     `json:"status"`
+	Length     int        `json:"length"`
+	Width      int        `json:"width"`
+	Height     int        `json:"height"`
+	Reserved   bool       `json:"reserved"`
+	CustomerID *uint      `json:"customer_id"`
+	NextDueDate *time.Time `json:"next_due_date"`
+}
+
 type UnitCombineRequest struct {
 	//Technically we don't need the customer information to
 	//combine units in the system.

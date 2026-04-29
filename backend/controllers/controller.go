@@ -495,20 +495,27 @@ func UpdateUnit(c *gin.Context) {
 		return
 	}
 
-	// Bind the updated data
-	var updateData models.Unit
-	if err := c.ShouldBindJSON(&updateData); err != nil {
+	var req models.UpdateUnitRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	unit.UnitNumber = updateData.UnitNumber
-	unit.SizeType = updateData.SizeType
-	unit.Price = updateData.Price
-	unit.CustomerID = updateData.CustomerID
-	unit.Renter = updateData.Renter
-	unit.Insurance = updateData.Insurance
-	database.DB.Save(&unit)
+	updates := map[string]interface{}{
+		"size_type":    req.SizeType,
+		"price":        req.Price,
+		"status":       req.Status,
+		"length":       req.Length,
+		"width":        req.Width,
+		"height":       req.Height,
+		"reserved":     req.Reserved,
+		"customer_id":  req.CustomerID,
+		"next_due_date": req.NextDueDate,
+	}
+	if err := database.DB.Model(&unit).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update unit"})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"unit": unit})
 }
 
