@@ -37,6 +37,7 @@ func main() {
 
 			// 1. Process Billing
 			services.CheckAndProcessStorageBilling()
+			services.CheckAndDeactivateLateCustomers()
 
 			// 2. Generate and Save Inventory PDF
 			rows, err := services.GenerateInventoryReport()

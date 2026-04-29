@@ -88,10 +88,16 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
+		protected.POST("/units/:unit_number/assign", controllers.AssignCustomerToUnit)
 
 		// -------------------- Insurance (FIXED: no duplicates) --------------------
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
 		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
+
+		// -------------------- Reservations --------------------
+		protected.POST("/reservations", controllers.CreateReservation)
+		protected.DELETE("/reservations/:id", controllers.CancelReservation)
+		protected.GET("/reservations", controllers.GetReservations)
 
 		// -------------------- Forms --------------------
 		protected.GET("/forms/util", controllers.HandleUtilPDF)
