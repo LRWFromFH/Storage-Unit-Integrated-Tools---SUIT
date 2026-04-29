@@ -85,10 +85,12 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AllUnits", controllers.GetAllUnits)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
+		protected.GET("/DeactivatedUnits", controllers.GetDeactivatedUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
 		protected.POST("/units/:unit_number/assign", controllers.AssignCustomerToUnit)
+		protected.POST("/units/:unit_number/moveout", controllers.MoveOut)
 
 		// -------------------- Insurance (FIXED: no duplicates) --------------------
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)

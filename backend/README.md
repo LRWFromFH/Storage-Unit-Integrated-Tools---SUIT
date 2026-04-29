@@ -134,25 +134,72 @@ Notes are free-text records attached to a customer. Any employee can read and wr
 | Method | URL | Access | Description |
 |---|---|---|---|
 | `GET` | `/api/AvailableUnits` | Protected | Get all units with no customer assigned. |
-| `GET` | `/api/AllUnits` | **Manager only** | Get all units (occupied and available). |
+| `GET` | `/api/AllUnits` | Protected | Get all units (occupied and available). |
+| `GET` | `/api/DeactivatedUnits` | Protected | Get all units currently locked out (status `Deactivated`), with renter preloaded. Use this to generate the physical lockout list. |
 | `GET` | `/api/units/:unit_number` | Protected | Get a single unit by its unit number. |
 | `POST` | `/api/units` | Protected | Create a new unit. |
-| `POST` | `/api/units/:unit_number` | Protected | Update a unit. |
+| `POST` | `/api/units/:unit_number` | Protected | Update a unit's fields. See payload below. |
 | `DELETE` | `/api/units/:unit_number` | **Manager only** | Delete a unit. |
 | `POST` | `/api/units/combine` | Protected | Combine multiple units into one. |
+| `POST` | `/api/units/:unit_number/assign` | Protected | Assign a customer to a unit. Sets the first due date to 30 days from today. |
+| `POST` | `/api/units/:unit_number/moveout` | Protected | Move a customer out. Clears the renter, wipes the due date, resets status to `Normal`, and cancels any active reservation the customer held for that unit size. No request body needed. |
 
-**Unit fields:**
+**Unit status values:**
+
+| Value | Meaning |
+|---|---|
+| `Normal` | Unit is in normal operating state |
+| `Deactivated` | Customer is 5+ days past due — physical lockout required |
+| `Cleaning` | Unit is being cleaned between tenants |
+| `Damaged` | Unit has a maintenance issue |
+
+**Update unit request body** — all fields are optional, only send what you want to change:
 ```json
 {
-  "unit_number": "A101",
   "size_type": "10x10",
+  "price": 149.95,
+  "status": "Cleaning",
   "length": 10,
   "width": 10,
   "height": 8,
-  "price": 149.95,
-  "customer_id": null
+  "reserved": false,
+  "customer_id": null,
+  "next_due_date": null
 }
 ```
+
+**Assign customer request body:**
+```json
+{ "customer_id": 42 }
+```
+
+**Assign response** — returns the updated unit object:
+```json
+{
+  "unit": {
+    "ID": 1,
+    "UnitNumber": "Unit 1001",
+    "SizeType": "5x5",
+    "CustomerID": 42,
+    "Status": "Normal",
+    "NextDueDate": "2026-05-28T00:00:00Z",
+    ...
+  }
+}
+```
+
+**Assign errors:**
+
+| Status | Meaning |
+|---|---|
+| `404` | Unit or customer not found |
+
+**Move-out errors:**
+
+| Status | Meaning |
+|---|---|
+| `400` | Unit has no current renter |
+| `404` | Unit not found |
 
 **Combine units request body:**
 ```json
@@ -206,11 +253,76 @@ A `404` on GET means the unit has no insurance yet — show a "no insurance on f
 
 ---
 
+### Reservations
+
+A reservation records that a customer wants a unit of a specific size — no specific unit is held. When the customer actually shows up, staff assigns them any available unit of that size using the assign endpoint, which automatically marks the reservation fulfilled.
+
+| Method | URL | Access | Description |
+|---|---|---|---|
+| `POST` | `/api/reservations` | Protected | Create a reservation. Always succeeds regardless of current availability. |
+| `GET` | `/api/reservations` | Protected | Get all active reservations. Returns customer details preloaded. Use this to see who is coming in and what size they need. |
+| `DELETE` | `/api/reservations/:id` | Protected | Cancel a reservation by ID. |
+
+**Create reservation request body (all fields required):**
+```json
+{
+  "customer_id": 42,
+  "size_type": "5x5",
+  "card_last_four": "4242"
+}
+```
+
+**Reservation object (in responses):**
+```json
+{
+  "ID": 1,
+  "CreatedAt": "2026-04-28T10:00:00Z",
+  "CustomerID": 42,
+  "Customer": {
+    "ID": 42,
+    "FirstName": "Jane",
+    "LastName": "Smith",
+    ...
+  },
+  "SizeType": "5x5",
+  "CardLastFour": "4242",
+  "Status": "active"
+}
+```
+
+**Reservation status values:**
+
+| Value | Meaning |
+|---|---|
+| `active` | Reservation is open |
+| `fulfilled` | Customer was assigned a unit — set automatically by `/assign` |
+| `cancelled` | Cancelled by staff, or cleared by move-out |
+
+`size_type` must match one of the unit size types in the system (`5x5`, `5x10`, `10x10`, `10x15`).
+
+**Create reservation errors:**
+
+| Status | Meaning |
+|---|---|
+| `400` | Missing required field |
+| `404` | Customer not found |
+
+**Cancel reservation errors:**
+
+| Status | Meaning |
+|---|---|
+| `404` | Reservation not found |
+
+---
+
 ### Billing
 
 | Method | URL | Access | Description |
 |---|---|---|---|
 | `POST` | `/api/PostPayment` | Protected | Record a payment for a customer against a unit. |
+| `POST` | `/api/PostCharge` | Protected | Manually post a charge to a customer's account. |
+
+Monthly rent is charged automatically every 30 days starting from the date the customer was assigned to a unit. If an invoice is unpaid for more than 5 days, the unit's status is automatically set to `Deactivated` by the daily background job.
 
 **Payment request body:**
 ```json
@@ -221,6 +333,18 @@ A `404` on GET means the unit has no insurance yet — show a "no insurance on f
   "description": "Monthly rent - April 2026"
 }
 ```
+
+---
+
+### Forms
+
+| Method | URL | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/forms/util` | Protected | Download today's daily utility report as a PDF. Also saves a copy to `backend/forms/util/` on the server. |
+
+The PDF is generated fresh on each request. Response headers:
+- `Content-Type: application/pdf`
+- `Content-Disposition: attachment; filename="Daily Utility [YYYY-MM-DD].pdf"`
 
 ---
 
@@ -277,4 +401,8 @@ All errors return the same shape:
 | Register new employees | No | Yes |
 | View all employees | No | Yes |
 | Update employee roles | No | Yes |
-| View all units (occupied + available) | No | Yes |
+| View all units (occupied + available) | Yes | Yes |
+| View deactivated / lockout list | Yes | Yes |
+| Assign customer to unit | Yes | Yes |
+| Move customer out | Yes | Yes |
+| Create / cancel reservations | Yes | Yes |
