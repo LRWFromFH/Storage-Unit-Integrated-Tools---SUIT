@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"backend/controllers"
 	"backend/database"
@@ -92,6 +94,9 @@ func setupTestRouter(t *testing.T) *gin.Engine {
 		protected.GET("/customers/:id/balance", controllers.GetCustomerBalance)
 		protected.GET("/customers/:id/transactions", controllers.GetTransactions)
 		protected.POST("/PostPayment", controllers.PostCustomerPayment)
+
+		protected.GET("/forms/util", controllers.HandleUtilPDF)
+		protected.GET("/forms/lockouts", controllers.GetLockoutReport)
 	}
 
 	return r
@@ -842,4 +847,151 @@ func TestPortPayment(t *testing.T) {
 	}
 
 	t.Logf("%s", message)
+}
+
+func TimePtr(t time.Time) *time.Time {
+	return &t
+}
+
+func TestUtilPDFDownload(t *testing.T) {
+	// 1. Setup Router and Mock Data
+	r := setupTestRouter(t) // Your Gin engine
+	database.DevInit(25, 25, 25, 25, true)
+	api := "forms/util"
+	req_type := "GET"
+
+	// Seed a unit to ensure the PDF generation logic has data to process
+	database.DB.Create(&models.Unit{
+		UnitNumber:  "A-101",
+		Price:       100.0,
+		NextDueDate: TimePtr(time.Now()),
+	})
+
+	// Authentication Flow (Manual Boilerplate Logic)
+	registerUser(r, map[string]string{
+		"username": "pdf_test_user",
+		"email":    "pdf_test@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "pdf_test@test.com",
+		"password": "securepassword123",
+	})
+
+	// 3. Construct Request
+	req, _ := http.NewRequest(req_type, "/api/"+api, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Security Headers
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+
+	// 4. Execute
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 5. Assertions on ResponseWriter (w)
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	// Verify PDF Headers
+	contentType := w.Header().Get("Content-Type")
+	if contentType != "application/pdf" {
+		t.Errorf("Expected Content-Type application/pdf, got %s", contentType)
+	}
+
+	disposition := w.Header().Get("Content-Disposition")
+	if !strings.Contains(disposition, "attachment") || !strings.Contains(disposition, ".pdf") {
+		t.Errorf("Expected PDF attachment header, got %s", disposition)
+	}
+
+	// Verify PDF Content
+	body := w.Body.Bytes()
+	if len(body) < 10 {
+		t.Fatal("PDF body is suspiciously small or empty")
+	}
+
+	// Check for PDF Magic Number (%PDF-)
+	if !bytes.HasPrefix(body, []byte("%PDF")) {
+		t.Error("Response body does not start with PDF signature")
+	}
+
+	t.Logf("Success: Received %d bytes of PDF data", len(body))
+}
+
+func TestLockoutPDFDownload(t *testing.T) {
+	// 1. Setup Router and Mock Data
+	r := setupTestRouter(t)
+	database.DevInit(1, 1, 1, 1, true) // Minimal seed
+	api := "forms/lockouts"
+	req_type := "GET"
+
+	// 2. Seed a unit that SHOULD be in the report
+	targetUnit := models.Unit{
+		UnitNumber:      "L-99",
+		Status:          models.UnitStatusDeactivated,
+		LockoutReported: false,
+		Price:           150.0,
+	}
+	database.DB.Create(&targetUnit)
+
+	// Authentication Flow (Using your existing helper logic)
+	registerUser(r, map[string]string{
+		"username": "lockout_test_user",
+		"email":    "lockout_test@test.com",
+		"password": "securepassword123",
+	})
+
+	loginResp := loginUser(r, map[string]string{
+		"email":    "lockout_test@test.com",
+		"password": "securepassword123",
+	})
+
+	// 3. Construct Request
+	req, _ := http.NewRequest(req_type, "/api/"+api, nil)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Security Headers
+	csrfToken := getCSRFToken(loginResp)
+	if csrfToken == "" {
+		t.Fatal("No csrf_token cookie in login response")
+	}
+	req.Header.Set("X-CSRF-TOKEN", csrfToken)
+	attachCookies(req, loginResp)
+
+	// 4. Execute
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, req)
+
+	// 5. Assertions
+	if w.Code != http.StatusOK {
+		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
+	}
+
+	// Verify PDF Headers & Magic Number
+	contentType := w.Header().Get("Content-Type")
+	if contentType != "application/pdf" {
+		t.Errorf("Expected Content-Type application/pdf, got %s", contentType)
+	}
+
+	body := w.Body.Bytes()
+	if !bytes.HasPrefix(body, []byte("%PDF")) {
+		t.Error("Response body does not start with PDF signature")
+	}
+
+	// 6. Verify SIDE EFFECT: The unit should now be marked as reported
+	var updatedUnit models.Unit
+	database.DB.Where("unit_number = ?", "L-99").First(&updatedUnit)
+
+	if !updatedUnit.LockoutReported {
+		t.Error("Expected unit LockoutReported to be true after report generation, but it was false")
+	}
+
+	t.Logf("Success: Received %d bytes. Unit L-99 successfully marked as reported.", len(body))
 }

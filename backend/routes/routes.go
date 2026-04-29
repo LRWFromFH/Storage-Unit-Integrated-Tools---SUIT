@@ -103,6 +103,7 @@ func SetupRoutes(r *gin.Engine) {
 
 		// -------------------- Forms --------------------
 		protected.GET("/forms/util", controllers.HandleUtilPDF)
+		protected.GET("/forms/lockouts", controllers.GetLockoutReport)
 
 	}
 
