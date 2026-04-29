@@ -80,6 +80,7 @@ func setupTestRouter() *gin.Engine {
 		protected.POST("/units/combine", controllers.CombineUnits)
 		protected.DELETE("/units/:unit_number", controllers.DeleteUnit)
 		protected.POST("/units/:unit_number/assign", controllers.AssignCustomerToUnit)
+		protected.POST("/units/:unit_number/moveout", controllers.MoveOut)
 
 		protected.POST("/reservations", controllers.CreateReservation)
 		protected.DELETE("/reservations/:id", controllers.CancelReservation)

@@ -1013,6 +1013,40 @@ func PostInsurance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"insurance": insurance})
 }
 
+func MoveOut(c *gin.Context) {
+	unitNumber := c.Param("unit_number")
+
+	var unit models.Unit
+	if err := database.DB.Where("unit_number = ?", unitNumber).First(&unit).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "unit not found"})
+		return
+	}
+
+	if unit.CustomerID == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "unit has no current renter"})
+		return
+	}
+
+	customerID := *unit.CustomerID
+	sizeType := unit.SizeType
+
+	updates := map[string]interface{}{
+		"customer_id":   nil,
+		"next_due_date": nil,
+		"status":        models.UnitStatusNormal,
+	}
+	if err := database.DB.Model(&unit).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to process move-out"})
+		return
+	}
+
+	database.DB.Model(&models.Reservation{}).
+		Where("customer_id = ? AND size_type = ? AND status = ?", customerID, sizeType, models.ReservationStatusActive).
+		Update("status", models.ReservationStatusCancelled)
+
+	c.JSON(http.StatusOK, gin.H{"message": "move-out complete", "unit": unit})
+}
+
 func AssignCustomerToUnit(c *gin.Context) {
 	unitNumber := c.Param("unit_number")
 
