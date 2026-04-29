@@ -910,7 +910,7 @@ func DeleteNote(c *gin.Context) {
 		return
 	}
 
-	noteIDStr := c.Param("note_id")
+	noteIDStr := c.Param("nid")
 	noteID, err := strconv.ParseUint(noteIDStr, 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid note ID"})

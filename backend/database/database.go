@@ -2,7 +2,9 @@ package database
 
 import (
 	"backend/models"
+	"fmt"
 	"log"
+	"strings"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -33,9 +35,16 @@ func Connect() {
 	//&models.LoginRequest{}, &models.CreateUnitRequest{})
 }
 
-func ConnectTest() {
+func ConnectTest(name string) {
+	if DB != nil {
+		if sqlDB, err := DB.DB(); err == nil {
+			sqlDB.Close()
+		}
+	}
 	var err error
-	DB, err = gorm.Open(sqlite.Open("file::memory:?cache=shared&_pragma=foreign_keys(1)"), &gorm.Config{})
+	safe := strings.NewReplacer("/", "_", " ", "_").Replace(name)
+	dsn := fmt.Sprintf("file:%s?mode=memory&cache=shared&_pragma=foreign_keys(1)", safe)
+	DB, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to test database:", err)
 	}

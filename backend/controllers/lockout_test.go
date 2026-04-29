@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetDeactivatedUnits(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	customer := models.Customer{FirstName: "Grace", LastName: "Lee", Phone: "904-400-5000", Address: "7 Bay Ave", Email: "grace@test.com"}
 	database.DB.Create(&customer)
@@ -43,7 +43,7 @@ func TestGetDeactivatedUnits(t *testing.T) {
 }
 
 func TestGetDeactivatedUnits_NormalNotIncluded(t *testing.T) {
-	r := setupTestRouter()
+	r := setupTestRouter(t)
 
 	database.DB.Create(&models.Unit{UnitNumber: "D2001", SizeType: "5x5", Price: 74.95, Length: 5, Width: 5, Height: 10, Combined: false, Status: models.UnitStatusNormal})
 

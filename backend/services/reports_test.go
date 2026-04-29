@@ -5,6 +5,7 @@ import (
 	"backend/database"
 	"backend/middleware"
 	"backend/models"
+	"backend/utilities"
 	"bytes"
 	"encoding/json"
 	"net/http"
@@ -17,11 +18,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func setupTestRouter() *gin.Engine {
+func setupTestRouter(t *testing.T) *gin.Engine {
 	gin.SetMode(gin.TestMode)
-	database.ConnectTest()
+	utilities.BcryptCost = bcrypt.MinCost
+	database.ConnectTest(t.Name())
 
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), 14)
+	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), bcrypt.MinCost)
 	database.DB.Create(&models.Employee{
 		SMID:     "manager001",
 		Email:    "manager@suit.com",
@@ -110,7 +112,7 @@ func TimePtr(t time.Time) *time.Time {
 
 func TestUtilPDFDownload(t *testing.T) {
 	// 1. Setup Router and Mock Data
-	r := setupTestRouter() // Your Gin engine
+	r := setupTestRouter(t) // Your Gin engine
 	database.DevInit(25, 25, 25, 25, true)
 	api := "forms/util"
 	req_type := "GET"
