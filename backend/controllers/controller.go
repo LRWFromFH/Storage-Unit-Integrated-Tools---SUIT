@@ -1045,7 +1045,61 @@ func AssignCustomerToUnit(c *gin.Context) {
 		return
 	}
 
+	database.DB.Model(&models.Reservation{}).
+		Where("customer_id = ? AND size_type = ? AND status = ?", req.CustomerID, unit.SizeType, models.ReservationStatusActive).
+		Update("status", models.ReservationStatusFulfilled)
+
 	c.JSON(http.StatusOK, gin.H{"unit": unit})
+}
+
+func CreateReservation(c *gin.Context) {
+	var req models.CreateReservationRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	var customer models.Customer
+	if err := database.DB.First(&customer, req.CustomerID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "customer not found"})
+		return
+	}
+
+	reservation := models.Reservation{
+		CustomerID:   req.CustomerID,
+		SizeType:     req.SizeType,
+		CardLastFour: req.CardLastFour,
+		Status:       models.ReservationStatusActive,
+	}
+	if err := database.DB.Create(&reservation).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create reservation"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"reservation": reservation})
+}
+
+func CancelReservation(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var reservation models.Reservation
+	if err := database.DB.First(&reservation, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "reservation not found"})
+		return
+	}
+
+	database.DB.Model(&reservation).Update("status", models.ReservationStatusCancelled)
+	c.JSON(http.StatusOK, gin.H{"message": "reservation cancelled"})
+}
+
+func GetReservations(c *gin.Context) {
+	var reservations []models.Reservation
+	database.DB.Where("status = ?", models.ReservationStatusActive).Preload("Customer").Find(&reservations)
+	c.JSON(http.StatusOK, gin.H{"reservations": reservations})
 }
 
 func HandleUtilPDF(c *gin.Context) {

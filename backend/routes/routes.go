@@ -94,6 +94,11 @@ func SetupRoutes(r *gin.Engine) {
 		protected.GET("/units/:unit_number/insurance", controllers.GetInsurance)
 		protected.POST("/units/:unit_number/insurance", controllers.UpsertInsurance)
 
+		// -------------------- Reservations --------------------
+		protected.POST("/reservations", controllers.CreateReservation)
+		protected.DELETE("/reservations/:id", controllers.CancelReservation)
+		protected.GET("/reservations", controllers.GetReservations)
+
 		// -------------------- Forms --------------------
 		protected.GET("/forms/util", controllers.HandleUtilPDF)
 
