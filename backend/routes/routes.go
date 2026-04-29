@@ -85,6 +85,7 @@ func SetupRoutes(r *gin.Engine) {
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AllUnits", controllers.GetAllUnits)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
+		protected.GET("/DeactivatedUnits", controllers.GetDeactivatedUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)

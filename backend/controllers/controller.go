@@ -1054,6 +1054,12 @@ func MoveOut(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "move-out complete", "unit": unit})
 }
 
+func GetDeactivatedUnits(c *gin.Context) {
+	var units []models.Unit
+	database.DB.Where("status = ?", models.UnitStatusDeactivated).Preload("Renter").Find(&units)
+	c.JSON(http.StatusOK, gin.H{"units": units})
+}
+
 func AssignCustomerToUnit(c *gin.Context) {
 	unitNumber := c.Param("unit_number")
 

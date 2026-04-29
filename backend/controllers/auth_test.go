@@ -75,6 +75,7 @@ func setupTestRouter() *gin.Engine {
 		//Unit crud routes.
 		protected.POST("/units/:unit_number", controllers.UpdateUnit)
 		protected.GET("/AvailableUnits", controllers.GetAvailableUnits)
+		protected.GET("/DeactivatedUnits", controllers.GetDeactivatedUnits)
 		protected.GET("/units/:unit_number", controllers.GetUnit)
 		protected.POST("/units", controllers.CreateUnit)
 		protected.POST("/units/combine", controllers.CombineUnits)
