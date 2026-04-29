@@ -67,6 +67,24 @@ func main() {
 					fmt.Printf("Success: Local copy saved to: %s\n", filePath)
 				}
 			}
+
+			pdfBytes, err = services.GenerateLockoutReport()
+			if err != nil {
+				fmt.Printf("Error exporting PDF: %v\n", err)
+				return
+			}
+			dirPath = "./forms/lockouts"
+			fileName = fmt.Sprintf("Daily Lockouts [%s].pdf", timestamp)
+			if err := os.MkdirAll(dirPath, 0755); err != nil {
+				fmt.Printf("Warning: Could not create directory: %v\n", err)
+			} else {
+				filePath := filepath.Join(dirPath, fileName)
+				if err := os.WriteFile(filePath, pdfBytes, 0644); err != nil {
+					fmt.Printf("Warning: Could not save local copy: %v\n", err)
+				} else {
+					fmt.Printf("Success: Local copy saved to: %s\n", filePath)
+				}
+			}
 		}
 
 		// Run ONCE immediately on startup

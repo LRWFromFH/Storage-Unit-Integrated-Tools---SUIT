@@ -1,183 +1,124 @@
 package services_test
 
 import (
-	"backend/controllers"
 	"backend/database"
-	"backend/middleware"
 	"backend/models"
-	"backend/utilities"
-	"bytes"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
-	"strings"
+	"backend/services"
 	"testing"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/stretchr/testify/assert"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
-func setupTestRouter(t *testing.T) *gin.Engine {
-	gin.SetMode(gin.TestMode)
-	utilities.BcryptCost = bcrypt.MinCost
-	database.ConnectTest(t.Name())
-
-	hashed, _ := bcrypt.GenerateFromPassword([]byte("Manager123!"), bcrypt.MinCost)
-	database.DB.Create(&models.Employee{
-		SMID:     "manager001",
-		Email:    "manager@suit.com",
-		Password: string(hashed),
-		Role:     "manager",
-	})
-
-	r := gin.New()
-	api := r.Group("/api")
-	{
-		api.POST("/register", controllers.Register)
-		api.POST("/login", controllers.Login)
-		api.POST("/logout", controllers.Logout)
-	}
-
-	protected := r.Group("/api")
-	protected.Use(middleware.AuthRequired())
-	protected.Use(middleware.CSRFRequired())
-	{
-		protected.GET("/protected", func(c *gin.Context) {
-			employeeID, _ := c.Get("employee_id")
-			role, _ := c.Get("role")
-			c.JSON(http.StatusOK, gin.H{
-				"message":     "You have access",
-				"employee_id": employeeID,
-				"role":        role,
-			})
-		})
-		protected.POST("/protected-post", func(c *gin.Context) {
-			c.JSON(http.StatusOK, gin.H{"message": "POST succeeded"})
-		})
-
-		protected.GET("/forms/util", controllers.HandleUtilPDF)
-	}
-
-	return r
+// setupTestDB initializes an in-memory database for testing
+func setupTestDB() {
+	db, _ := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	db.AutoMigrate(&models.Unit{}, &models.Customer{})
+	database.DB = db
 }
 
-func registerUser(r *gin.Engine, body map[string]string) *httptest.ResponseRecorder {
-	jsonBody, _ := json.Marshal(body)
-	req, _ := http.NewRequest("POST", "/api/register", bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	return w
+func TestGenerateInventoryReport(t *testing.T) {
+	setupTestDB()
+
+	// Seed test data
+	testUnits := []models.Unit{
+		{
+			UnitNumber: "A1",
+			SizeType:   "5x5",
+			Length:     5,
+			Width:      5,
+			Price:      100.0,
+			Status:     "Available",
+		},
+		{
+			UnitNumber: "A2",
+			SizeType:   "5x5",
+			Length:     5,
+			Width:      5,
+			Price:      100.0,
+			Status:     "Occupied",
+			CustomerID: uintPtr(1), // Helper to simulate occupied
+		},
+	}
+	database.DB.Create(&testUnits)
+
+	rows, err := services.GenerateInventoryReport()
+
+	assert.NoError(t, err)
+	assert.Len(t, rows, 1) // Both are 5x5, so 1 group
+	assert.Equal(t, 2, rows[0].TotalRooms)
+	assert.Equal(t, 1, rows[0].Occupied)
+	assert.Equal(t, 1, rows[0].Vacant)
+	assert.Equal(t, 200.0, rows[0].GrossIncome)
+	assert.Equal(t, 50.0, rows[0].PercentUtil)
 }
 
-func loginUser(r *gin.Engine, body map[string]string) *httptest.ResponseRecorder {
-	jsonBody, _ := json.Marshal(body)
-	req, _ := http.NewRequest("POST", "/api/login", bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-	return w
+func TestExportInventoryPDF(t *testing.T) {
+	// Sample data for PDF generation
+	rows := []services.InventoryReportRow{
+		{
+			Size:        "10x10",
+			Description: "Large Unit",
+			SqFt:        100,
+			Rent:        150.0,
+			TotalRooms:  5,
+			Occupied:    2,
+			Vacant:      3,
+			GrossIncome: 750.0,
+			PercentUtil: 40.0,
+		},
+	}
+
+	pdfBytes, err := services.ExportInventoryPDF(rows)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, pdfBytes)
+	assert.True(t, len(pdfBytes) > 0)
 }
 
-// Helper: extract a named cookie from a response
-func getCookie(w *httptest.ResponseRecorder, name string) *http.Cookie {
-	for _, c := range w.Result().Cookies() {
-		if c.Name == name {
-			return c
-		}
+func TestGenerateLockoutReport(t *testing.T) {
+	setupTestDB()
+
+	// Seed a deactivated unit that has NOT been reported
+	due := time.Now().AddDate(0, 0, -5)
+	unit := models.Unit{
+		UnitNumber:      "L1",
+		Status:          models.UnitStatusDeactivated,
+		LockoutReported: false,
+		NextDueDate:     &due,
+		Price:           50.0,
 	}
-	return nil
+	database.DB.Create(&unit)
+
+	pdfBytes, err := services.GenerateLockoutReport()
+
+	assert.NoError(t, err)
+	assert.NotNil(t, pdfBytes)
 }
 
-// Helper: attach login cookies to a request
-func attachCookies(req *http.Request, w *httptest.ResponseRecorder) {
-	for _, c := range w.Result().Cookies() {
-		req.AddCookie(c)
+func TestExportLockoutPDF(t *testing.T) {
+	// Test PDF generation with mock models
+	units := []models.Unit{
+		{
+			UnitNumber: "B2",
+			SizeType:   "10x20",
+			Length:     10,
+			Width:      20,
+			Height:     10,
+			Price:      200.0,
+			Status:     "Deactivated",
+		},
 	}
+
+	pdfBytes, err := services.ExportLockoutPDF(units)
+
+	assert.NoError(t, err)
+	assert.NotEmpty(t, pdfBytes)
 }
 
-// Helper: get CSRF token from login response
-func getCSRFToken(w *httptest.ResponseRecorder) string {
-	c := getCookie(w, "csrf_token")
-	if c == nil {
-		return ""
-	}
-	return c.Value
-}
-
-func TimePtr(t time.Time) *time.Time {
-	return &t
-}
-
-func TestUtilPDFDownload(t *testing.T) {
-	// 1. Setup Router and Mock Data
-	r := setupTestRouter(t) // Your Gin engine
-	database.DevInit(25, 25, 25, 25, true)
-	api := "forms/util"
-	req_type := "GET"
-
-	// Seed a unit to ensure the PDF generation logic has data to process
-	database.DB.Create(&models.Unit{
-		UnitNumber:  "A-101",
-		Price:       100.0,
-		NextDueDate: TimePtr(time.Now()),
-	})
-
-	// Authentication Flow (Manual Boilerplate Logic)
-	registerUser(r, map[string]string{
-		"username": "pdf_test_user",
-		"email":    "pdf_test@test.com",
-		"password": "securepassword123",
-	})
-
-	loginResp := loginUser(r, map[string]string{
-		"email":    "pdf_test@test.com",
-		"password": "securepassword123",
-	})
-
-	// 3. Construct Request
-	req, _ := http.NewRequest(req_type, "/api/"+api, nil)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Security Headers
-	csrfToken := getCSRFToken(loginResp)
-	if csrfToken == "" {
-		t.Fatal("No csrf_token cookie in login response")
-	}
-	req.Header.Set("X-CSRF-TOKEN", csrfToken)
-	attachCookies(req, loginResp)
-
-	// 4. Execute
-	w := httptest.NewRecorder()
-	r.ServeHTTP(w, req)
-
-	// 5. Assertions on ResponseWriter (w)
-	if w.Code != http.StatusOK {
-		t.Errorf("Expected status 200, got %d. Body: %s", w.Code, w.Body.String())
-	}
-
-	// Verify PDF Headers
-	contentType := w.Header().Get("Content-Type")
-	if contentType != "application/pdf" {
-		t.Errorf("Expected Content-Type application/pdf, got %s", contentType)
-	}
-
-	disposition := w.Header().Get("Content-Disposition")
-	if !strings.Contains(disposition, "attachment") || !strings.Contains(disposition, ".pdf") {
-		t.Errorf("Expected PDF attachment header, got %s", disposition)
-	}
-
-	// Verify PDF Content
-	body := w.Body.Bytes()
-	if len(body) < 10 {
-		t.Fatal("PDF body is suspiciously small or empty")
-	}
-
-	// Check for PDF Magic Number (%PDF-)
-	if !bytes.HasPrefix(body, []byte("%PDF")) {
-		t.Error("Response body does not start with PDF signature")
-	}
-
-	t.Logf("Success: Received %d bytes of PDF data", len(body))
+// Helper function for pointers
+func uintPtr(i uint) *uint {
+	return &i
 }

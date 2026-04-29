@@ -4,6 +4,7 @@ import (
 	"backend/database"
 	"backend/models"
 	"fmt"
+	"time"
 
 	"github.com/jung-kurt/gofpdf"
 
@@ -117,6 +118,106 @@ func ExportInventoryPDF(rows []InventoryReportRow) ([]byte, error) {
 	var buf bytes.Buffer
 	err := pdf.Output(&buf)
 	if err != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+// GenerateLockoutReport fetches deactivated units and returns a PDF byte buffer
+func GenerateLockoutReport() ([]byte, error) {
+	var units []models.Unit
+
+	// Query: Find deactivated units.
+	// Fetch units
+	err := database.DB.Preload("Renter").
+		Where("status = ? AND lockout_reported = ?", models.UnitStatusDeactivated, false).
+		Find(&units).Error
+
+	if err != nil || len(units) == 0 {
+		return nil, err
+	}
+
+	// Generate PDF (Only update if this succeeds!)
+	pdfBytes, err := ExportLockoutPDF(units)
+	if err != nil {
+		return nil, err
+	}
+
+	// Batch Update: Mark all fetched units as reported in one query
+	unitIDs := make([]uint, len(units))
+	for i, u := range units {
+		unitIDs[i] = u.ID
+	}
+
+	err = database.DB.Model(&models.Unit{}).
+		Where("id IN ?", unitIDs).
+		Update("lockout_reported", true).Error
+
+	if err != nil {
+		// The PDF was generated but the DB didn't update.
+		fmt.Printf("Warning: PDF generated but failed to update units: %v\n", err)
+	}
+
+	return pdfBytes, nil
+}
+
+func ExportLockoutPDF(units []models.Unit) ([]byte, error) {
+	// L = Landscape, mm = millimeters, A4 size
+	pdf := gofpdf.New("L", "mm", "A4", "")
+	pdf.AddPage()
+
+	// Title
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Cell(0, 10, fmt.Sprintf("Lockout Report - %s", time.Now().Format("Jan 02, 2006")))
+	pdf.Ln(12)
+
+	// Table Header Configuration
+	pdf.SetFont("Arial", "B", 9)
+	pdf.SetFillColor(220, 220, 220)
+
+	headers := []string{"Unit #", "Size", "Renter Name", "Dimensions", "Price", "Next Due", "Status"}
+	widths := []float64{25, 30, 60, 40, 25, 40, 40}
+
+	for i, str := range headers {
+		pdf.CellFormat(widths[i], 7, str, "1", 0, "C", true, 0, "")
+	}
+	pdf.Ln(-1)
+
+	// Table Body
+	pdf.SetFont("Arial", "", 9)
+	for _, unit := range units {
+		// Formatting data
+		renterName := "N/A"
+		if unit.Renter != nil {
+			renterName = unit.Renter.FirstName + " " + unit.Renter.LastName
+		}
+
+		dueDate := "N/A"
+		if unit.NextDueDate != nil {
+			dueDate = unit.NextDueDate.Format("2006-01-02")
+		}
+
+		dims := fmt.Sprintf("%dx%dx%d", unit.Length, unit.Width, unit.Height)
+
+		// Render Rows
+		pdf.CellFormat(widths[0], 6, unit.UnitNumber, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(widths[1], 6, unit.SizeType, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(widths[2], 6, renterName, "1", 0, "L", false, 0, "")
+		pdf.CellFormat(widths[3], 6, dims, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(widths[4], 6, fmt.Sprintf("$%.2f", unit.Price), "1", 0, "R", false, 0, "")
+		pdf.CellFormat(widths[5], 6, dueDate, "1", 0, "C", false, 0, "")
+		pdf.CellFormat(widths[6], 6, unit.Status, "1", 0, "L", false, 0, "")
+		pdf.Ln(-1)
+
+		// Simple Page Break logic
+		if pdf.GetY() > 180 {
+			pdf.AddPage()
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
 		return nil, err
 	}
 

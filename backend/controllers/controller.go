@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -502,14 +501,14 @@ func UpdateUnit(c *gin.Context) {
 	}
 
 	updates := map[string]interface{}{
-		"size_type":    req.SizeType,
-		"price":        req.Price,
-		"status":       req.Status,
-		"length":       req.Length,
-		"width":        req.Width,
-		"height":       req.Height,
-		"reserved":     req.Reserved,
-		"customer_id":  req.CustomerID,
+		"size_type":     req.SizeType,
+		"price":         req.Price,
+		"status":        req.Status,
+		"length":        req.Length,
+		"width":         req.Width,
+		"height":        req.Height,
+		"reserved":      req.Reserved,
+		"customer_id":   req.CustomerID,
 		"next_due_date": req.NextDueDate,
 	}
 	if err := database.DB.Model(&unit).Updates(updates).Error; err != nil {
@@ -1166,21 +1165,6 @@ func HandleUtilPDF(c *gin.Context) {
 
 	timestamp := time.Now().Format("2006-01-02")
 	fileName := fmt.Sprintf("Daily Utility [%s].pdf", timestamp)
-	dirPath := "./forms/util"
-
-	// Save a copy to the local machine for inspection
-	// Ensure the directory exists (MkdirAll does nothing if it already exists)
-	if err := os.MkdirAll(dirPath, 0755); err != nil {
-		fmt.Printf("Warning: Could not create local directory: %v\n", err)
-	} else {
-		filePath := filepath.Join(dirPath, fileName)
-		err = os.WriteFile(filePath, pdfBytes, 0644)
-		if err != nil {
-			fmt.Printf("Warning: Could not save local copy: %v\n", err)
-		} else {
-			fmt.Printf("Local copy saved to: %s\n", filePath)
-		}
-	}
 
 	// Set Headers using Gin's context
 	// We use "attachment" to prompt a download, or "inline" to view in browser
@@ -1190,5 +1174,35 @@ func HandleUtilPDF(c *gin.Context) {
 
 	// 5. Stream the data
 	// c.Data writes the status code, content type, and the byte slice directly to the response body
+	c.Data(http.StatusOK, "application/pdf", pdfBytes)
+}
+
+// GetLockoutReport handles the request to generate and download the lockout PDF
+func GetLockoutReport(c *gin.Context) {
+	// 1. Call the service to fetch data and generate PDF bytes
+	pdfBytes, err := services.GenerateLockoutReport()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": fmt.Sprintf("Failed to generate lockout report: %v", err),
+		})
+		return
+	}
+
+	// 2. Handle cases where no units are currently deactivated/pending report
+	if pdfBytes == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": "No new deactivated units found for lockout report.",
+		})
+		return
+	}
+
+	// 3. Set headers for file download
+	fileName := fmt.Sprintf("lockout_report_%s.pdf", time.Now().Format("2006-01-02"))
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+	c.Header("Content-Type", "application/pdf")
+	c.Header("Content-Length", fmt.Sprintf("%d", len(pdfBytes)))
+
+	// 4. Stream the bytes to the client
 	c.Data(http.StatusOK, "application/pdf", pdfBytes)
 }
