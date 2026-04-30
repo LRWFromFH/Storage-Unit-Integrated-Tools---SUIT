@@ -4,6 +4,5 @@
 /*.bat
 CHANGELOG.md
 RBAC_LOG.md
-controllers/rbac_test.go
 RBAC_SCRIPT.md
 _notes_handlers.md
