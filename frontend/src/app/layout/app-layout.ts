@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { Router, RouterOutlet, NavigationEnd, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { filter, map } from 'rxjs/operators';
 import { Auth } from '../core/services/auth';
 
@@ -18,9 +17,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSidenavModule, MatSidenav } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatChipsModule } from '@angular/material/chips';
@@ -32,13 +28,6 @@ interface NavItem {
   roles?: string[];
 }
 
-interface SearchResult {
-  label: string;
-  icon: string;
-  route: string;
-  category: string;
-}
-
 @Component({
   selector: 'app-layout',
   standalone: true,
@@ -46,16 +35,12 @@ interface SearchResult {
     CommonModule,
     RouterOutlet,
     RouterLink,
-    FormsModule,
     MatToolbarModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
     MatSidenavModule,
     MatListModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatAutocompleteModule,
     MatDividerModule,
     MatBadgeModule,
     MatChipsModule,
@@ -77,30 +62,16 @@ export class AppLayout implements OnInit {
   // ── Dark Mode ──────────────────────────────────────────────────────────────
   isDarkMode = signal(false);
 
-  // ── Global Search ──────────────────────────────────────────────────────────
-  searchQuery = signal('');
-  searchFocused = signal(false);
-
   // ── Breadcrumbs ────────────────────────────────────────────────────────────
   breadcrumbs = signal<{ label: string; route: string }[]>([]);
 
   // ── Nav Items ──────────────────────────────────────────────────────────────
   navItems: NavItem[] = [
-    { label: 'Dashboard', icon: 'dashboard',          route: '/'        },
-    { label: 'Units',     icon: 'warehouse',           route: '/units'   },
-    { label: 'Tenants',   icon: 'people',              route: '/tenants' },
+    { label: 'Dashboard', icon: 'dashboard',          route: '/dashboard' },
+    { label: 'Units',     icon: 'warehouse',           route: '/units'    },
+    { label: 'Tenants',   icon: 'people',              route: '/tenants'  },
     { label: 'Register',  icon: 'admin_panel_settings',route: '/register', roles: ['manager'] },
   ];
-
-  // ── Search Suggestions ─────────────────────────────────────────────────────
-  private allResults: SearchResult[] = [
-    { label: 'Dashboard',          icon: 'dashboard',           route: '/',        category: 'Pages'   },
-    { label: 'Units Overview',     icon: 'warehouse',           route: '/units',   category: 'Pages'   },
-    { label: 'Tenants List',       icon: 'people',              route: '/tenants', category: 'Pages'   },
-    { label: 'Employee Management',icon: 'admin_panel_settings',route: '/register',category: 'Manager' },
-  ];
-
-  filteredResults = signal<SearchResult[]>([]);
 
   ngOnInit() {
     // Load persisted theme and sidebar state
@@ -130,16 +101,6 @@ export class AppLayout implements OnInit {
     this.checkViewport();
   }
 
-  // ── Ctrl+K Keyboard Shortcut ───────────────────────────────────────────────
-  @HostListener('window:keydown', ['$event'])
-  handleKeydown(event: KeyboardEvent) {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
-      event.preventDefault();
-      const searchEl = document.getElementById('global-search-input');
-      if (searchEl) searchEl.focus();
-    }
-  }
-
   @HostListener('window:resize')
   checkViewport() {
     const mobile = window.innerWidth < 768;
@@ -150,28 +111,6 @@ export class AppLayout implements OnInit {
     } else {
       this.sidenavOpen.set(true);
     }
-  }
-
-  // ── Search ─────────────────────────────────────────────────────────────────
-  onSearchInput(query: string) {
-    this.searchQuery.set(query);
-    if (!query.trim()) {
-      this.filteredResults.set([]);
-      return;
-    }
-    const q = query.toLowerCase();
-    this.filteredResults.set(
-      this.allResults.filter(r =>
-        r.label.toLowerCase().includes(q) ||
-        r.category.toLowerCase().includes(q)
-      )
-    );
-  }
-
-  navigateTo(route: string) {
-    this.router.navigate([route]);
-    this.searchQuery.set('');
-    this.filteredResults.set([]);
   }
 
   // ── Theme Toggle ───────────────────────────────────────────────────────────
@@ -197,7 +136,6 @@ export class AppLayout implements OnInit {
   }
 
   isActiveRoute(route: string): boolean {
-    if (route === '/') return this.router.url === '/';
     return this.router.url.startsWith(route);
   }
 
@@ -211,17 +149,17 @@ export class AppLayout implements OnInit {
   // ── Breadcrumbs ────────────────────────────────────────────────────────────
   private updateBreadcrumbs(url: string) {
     const routeMap: Record<string, string> = {
-      '/':         'Dashboard',
-      '/units':    'Units',
-      '/tenants':  'Tenants',
-      '/register': 'Register Employee',
+      '/dashboard': 'Dashboard',
+      '/units':     'Units',
+      '/tenants':   'Tenants',
+      '/register':  'Register Employee',
     };
 
     const crumbs: { label: string; route: string }[] = [
-      { label: 'Home', route: '/' },
+      { label: 'Home', route: '/dashboard' },
     ];
 
-    if (url !== '/') {
+    if (url !== '/dashboard') {
       const label = routeMap[url] ?? url.replace('/', '').replace(/-/g, ' ');
       crumbs.push({ label, route: url });
     }

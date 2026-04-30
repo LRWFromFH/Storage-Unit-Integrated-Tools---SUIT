@@ -3,8 +3,8 @@ import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { Auth } from '../../core/services/auth';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { Customer } from '../tenants/tenants.model';
 import { Unit } from '../units/unit.model';
@@ -36,7 +37,8 @@ interface SearchResponse {
     MatIconModule,
     MatFormFieldModule,
     MatInputModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatSnackBarModule
   ],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
@@ -48,6 +50,7 @@ export class Dashboard implements OnInit {
   private http = inject(HttpClient);
   private unitsService = inject(UnitsService);
   private tenantsService = inject(TenantsService);
+  private snackBar = inject(MatSnackBar);
 
   private readonly API_URL = 'http://localhost:8080/api';
 
@@ -85,36 +88,22 @@ export class Dashboard implements OnInit {
   totalTenants = 0;
   occupiedUnits = 0;
   statsLoading = true;
-  private loadedCount = 0;
+  downloadingReport = false;
 
   ngOnInit() {
     this.loadStats();
   }
 
   loadStats() {
-    this.unitsService.getAllUnits().subscribe({
-      next: (units) => {
-        this.totalUnits = units.length;
-        this.occupiedUnits = units.filter(u => u.CustomerID !== null && u.CustomerID !== 0).length;
-        this.checkStatsLoaded();
-      },
-      error: () => this.checkStatsLoaded()
+    forkJoin({
+      units:   this.unitsService.getAllUnits().pipe(catchError(() => of([]))),
+      tenants: this.tenantsService.getCustomers().pipe(catchError(() => of([])))
+    }).subscribe(({ units, tenants }) => {
+      this.totalUnits    = units.length;
+      this.occupiedUnits = units.filter(u => u.CustomerID !== null && u.CustomerID !== 0).length;
+      this.totalTenants  = tenants.length;
+      this.statsLoading  = false;
     });
-
-    this.tenantsService.getCustomers().subscribe({
-      next: (tenants) => {
-        this.totalTenants = tenants.length;
-        this.checkStatsLoaded();
-      },
-      error: () => this.checkStatsLoaded()
-    });
-  }
-
-  private checkStatsLoaded() {
-    this.loadedCount++;
-    if (this.loadedCount >= 2) {
-      this.statsLoading = false;
-    }
   }
 
   onSearchInput(value: string) {
@@ -138,6 +127,28 @@ export class Dashboard implements OnInit {
 
   goToUnit(_unitNumber: string) {
     this.router.navigate(['/units']);
+  }
+
+  downloadReport() {
+    this.downloadingReport = true;
+    this.unitsService.downloadUtilReport().subscribe({
+      next: (blob) => {
+        const date = new Date().toISOString().split('T')[0];
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `Daily Utility [${date}].pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.downloadingReport = false;
+      },
+      error: () => {
+        this.snackBar.open('Failed to generate report', 'Close', { duration: 5000 });
+        this.downloadingReport = false;
+      }
+    });
   }
 
   get hasResults(): boolean {

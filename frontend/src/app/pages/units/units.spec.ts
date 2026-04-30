@@ -45,13 +45,15 @@ describe('Units Component', () => {
     };
 
     unitsService = {
-      getUnits: vi.fn(),
-      getAllUnits: vi.fn().mockReturnValue(of([])),
-      createUnit: vi.fn().mockReturnValue(of({})),
-      updateUnit: vi.fn().mockReturnValue(of({})),
-      deleteUnit: vi.fn().mockReturnValue(of({})),
-      combineUnits: vi.fn().mockReturnValue(of({})),
-      assignUnit: vi.fn().mockReturnValue(of({}))
+      getUnits:            vi.fn(),
+      getAllUnits:          vi.fn().mockReturnValue(of([])),
+      createUnit:          vi.fn().mockReturnValue(of({})),
+      updateUnit:          vi.fn().mockReturnValue(of({})),
+      deleteUnit:          vi.fn().mockReturnValue(of({})),
+      combineUnits:        vi.fn().mockReturnValue(of({})),
+      assignUnit:          vi.fn().mockReturnValue(of({})),
+      moveout:             vi.fn().mockReturnValue(of({})),
+      downloadUtilReport:  vi.fn().mockReturnValue(of(new Blob(['%PDF'], { type: 'application/pdf' })))
     };
 
     await TestBed.configureTestingModule({
@@ -145,7 +147,7 @@ describe('Units Component', () => {
   });
 
   it('should call createUnit when dialog returns data', () => {
-    const formResult = { UnitNumber: 'B2' };
+    const formResult = { unit_number: 'B2', size_type: 'Small', price: 75 };
     openDialogSpy.mockReturnValue({ afterClosed: () => of(formResult) });
 
     component.openDialog();
@@ -154,7 +156,7 @@ describe('Units Component', () => {
   });
 
   it('should call updateUnit when editing', () => {
-    const formResult = { UnitNumber: 'A1' };
+    const formResult = { unit_number: 'A1', size_type: 'Small', price: 75 };
     openDialogSpy.mockReturnValue({ afterClosed: () => of(formResult) });
 
     component.openDialog(mockUnit);
@@ -163,7 +165,7 @@ describe('Units Component', () => {
   });
 
   it('should show snackbar on create error', () => {
-    openDialogSpy.mockReturnValue({ afterClosed: () => of({ UnitNumber: 'X1' }) });
+    openDialogSpy.mockReturnValue({ afterClosed: () => of({ unit_number: 'X1', size_type: 'Small', price: 50 }) });
     unitsService.createUnit.mockReturnValue(throwError(() => ({ status: 409 })));
 
     component.openDialog();
@@ -262,5 +264,64 @@ describe('Units Component', () => {
 
     expect(passedData.units.length).toBe(2);
     expect(passedData.units.every((u: Unit) => !u.CustomerID)).toBe(true);
+  });
+
+  // ── applyFilters ─────────────────────────────────────────────────────────────
+
+  it('should filter units by query string', () => {
+    unitsService.getAllUnits.mockReturnValue(of([mockUnit, occupiedUnit]));
+    fixture.detectChanges();
+
+    component.filterQuery = 'A1';
+    component.onFilterChange();
+
+    expect(component.filteredUnits.length).toBe(1);
+    expect(component.filteredUnits[0].UnitNumber).toBe('A1');
+  });
+
+  it('should filter units by size type', () => {
+    const medUnit = makeUnit({ ID: 3, UnitNumber: 'C1', SizeType: 'Medium' });
+    unitsService.getAllUnits.mockReturnValue(of([mockUnit, medUnit]));
+    fixture.detectChanges();
+
+    component.filterSize = 'Medium';
+    component.onFilterChange();
+
+    expect(component.filteredUnits.length).toBe(1);
+    expect(component.filteredUnits[0].SizeType).toBe('Medium');
+  });
+
+  it('should filter units by max budget', () => {
+    const expUnit = makeUnit({ ID: 4, UnitNumber: 'D1', Price: 200 });
+    unitsService.getAllUnits.mockReturnValue(of([mockUnit, expUnit]));
+    fixture.detectChanges();
+
+    component.filterBudget = 100;
+    component.onFilterChange();
+
+    expect(component.filteredUnits.length).toBe(1);
+    expect(component.filteredUnits[0].Price).toBeLessThanOrEqual(100);
+  });
+
+  it('should show all units when filters are reset', () => {
+    const unit2 = makeUnit({ ID: 2, UnitNumber: 'A2' });
+    unitsService.getAllUnits.mockReturnValue(of([mockUnit, unit2]));
+    fixture.detectChanges();
+
+    component.filterQuery = '';
+    component.filterSize = 'All';
+    component.filterBudget = null;
+    component.onFilterChange();
+
+    expect(component.filteredUnits.length).toBe(2);
+  });
+
+  // ── openInsuranceDialog ───────────────────────────────────────────────────────
+
+  it('should open insurance dialog for a unit', () => {
+    component.openInsuranceDialog(mockUnit);
+    expect(openDialogSpy).toHaveBeenCalled();
+    const dialogData = openDialogSpy.mock.calls[0][1].data;
+    expect(dialogData.unit).toEqual(mockUnit);
   });
 });

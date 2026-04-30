@@ -29,6 +29,9 @@ export interface Unit {
   Insurance: InsuranceRecord | null;
   Combined: boolean;
   CombinedFrom: string;
+  Status?: string;
+  Reserved?: boolean;
+  NextDueDate?: string | null;
 }
 
 export interface UnitsResponse {
@@ -42,16 +45,6 @@ export interface CreateUnitRequest {
   Length?: number;
   Width?: number;
   Height?: number;
-}
-
-export interface AssignUnitRequest {
-  UnitNumber: string;
-  SizeType: string;
-  Price: number;
-  Length: number;
-  Width: number;
-  Height: number;
-  CustomerID: number | null;
 }
 
 export interface CombineUnitsRequest {
