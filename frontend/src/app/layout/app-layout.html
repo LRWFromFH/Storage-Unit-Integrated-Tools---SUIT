@@ -1,4 +1,4 @@
-<mat-sidenav-container class="layout-container" [class.dark-mode]="isDarkMode()">
+<mat-sidenav-container class="layout-container">
 
   <!-- ── Sidebar ────────────────────────────────────────────────────────── -->
   <mat-sidenav
@@ -83,36 +83,6 @@
       </nav>
 
       <span class="header-spacer"></span>
-
-      <!-- Global Search (Ctrl+K) -->
-      <div class="search-wrapper" [class.focused]="searchFocused()">
-        <mat-icon class="search-icon">search</mat-icon>
-        <input
-          id="global-search-input"
-          class="search-input"
-          type="text"
-          placeholder="Search… (Ctrl+K)"
-          [ngModel]="searchQuery()"
-          (ngModelChange)="onSearchInput($event)"
-          (focus)="searchFocused.set(true)"
-          (blur)="searchFocused.set(false)"
-          autocomplete="off"
-          aria-label="Global search"
-          [matAutocomplete]="auto" />
-        <mat-autocomplete #auto="matAutocomplete" class="suit-autocomplete">
-          @for (result of filteredResults(); track result.route) {
-            <mat-option [value]="result.label" (click)="navigateTo(result.route)">
-              <div class="search-result-item">
-                <mat-icon class="search-result-icon">{{ result.icon }}</mat-icon>
-                <div class="search-result-text">
-                  <span class="search-result-label">{{ result.label }}</span>
-                  <span class="search-result-cat">{{ result.category }}</span>
-                </div>
-              </div>
-            </mat-option>
-          }
-        </mat-autocomplete>
-      </div>
 
       <!-- Theme Toggle -->
       <button mat-icon-button

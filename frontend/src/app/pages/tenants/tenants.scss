@@ -129,10 +129,31 @@
 .unit-chip {
   background: var(--suit-surface-alt);
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 4px 4px 4px 12px;
   font-size: 0.85rem;
   color: var(--suit-text);
   border-left: 2px solid var(--suit-accent);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  .unit-chip-info {
+    flex: 1;
+    padding: 4px 0;
+  }
+
+  .deassign-btn {
+    width: 32px;
+    height: 32px;
+    line-height: 32px;
+    flex-shrink: 0;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 }
 
 .no-units, .units-loading {

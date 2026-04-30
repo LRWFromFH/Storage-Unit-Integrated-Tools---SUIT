@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-import { Unit, UnitsResponse, AssignUnitRequest, CombineUnitsRequest, InsuranceRecord, InsuranceResponse } from './unit.model';
+import { Unit, UnitsResponse, CombineUnitsRequest, InsuranceRecord, InsuranceResponse } from './unit.model';
 
 export interface InsurancePayload {
   provider_name: string;
@@ -37,18 +37,8 @@ export class UnitsService {
     return this.http.post(`${this.API_URL}/units/${encodeURIComponent(unitNumber)}`, payload);
   }
 
-  /** Assigns or unassigns a unit to/from a customer while preserving all other fields. */
-  assignUnit(unit: Unit, customerId: number | null): Observable<any> {
-    const payload: AssignUnitRequest = {
-      UnitNumber: unit.UnitNumber,
-      SizeType:   unit.SizeType,
-      Price:      unit.Price,
-      Length:     unit.Length,
-      Width:      unit.Width,
-      Height:     unit.Height,
-      CustomerID: customerId
-    };
-    return this.http.post(`${this.API_URL}/units/${encodeURIComponent(unit.UnitNumber)}`, payload);
+  assignUnit(unitNumber: string, customerId: number): Observable<any> {
+    return this.http.post(`${this.API_URL}/units/${encodeURIComponent(unitNumber)}/assign`, { customer_id: customerId });
   }
 
   combineUnits(payload: CombineUnitsRequest): Observable<any> {
@@ -69,5 +59,13 @@ export class UnitsService {
     return this.http.post<InsuranceResponse>(`${this.API_URL}/units/${encodeURIComponent(unitNumber)}/insurance`, payload).pipe(
       map(response => response.insurance)
     );
+  }
+
+  moveout(unitNumber: string): Observable<any> {
+    return this.http.post(`${this.API_URL}/units/${encodeURIComponent(unitNumber)}/moveout`, {});
+  }
+
+  downloadUtilReport(): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/forms/util`, { responseType: 'blob' });
   }
 }

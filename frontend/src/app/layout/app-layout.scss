@@ -117,13 +117,13 @@
                 transform var(--suit-transition-fast);
 
     &:hover {
-      background: hsl(211, 72%, 96%);
+      background: var(--suit-nav-hover-bg);
       color: var(--suit-primary);
       transform: translateX(4px);
     }
 
     &.active {
-      background: hsl(211, 72%, 92%);
+      background: var(--suit-nav-active-bg);
       color: var(--suit-primary);
       font-weight: 600;
       border-left: 3px solid var(--suit-primary);
@@ -246,75 +246,6 @@
   flex: 1 1 auto;
 }
 
-// ── Global Search ─────────────────────────────────────────────────────────────
-.search-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--suit-surface);
-  border: 1.5px solid var(--suit-border);
-  border-radius: var(--suit-radius-md);
-  padding: 0 12px;
-  height: 40px;
-  width: 240px;
-  transition: border-color var(--suit-transition-fast),
-              box-shadow    var(--suit-transition-fast),
-              width         var(--suit-transition-normal);
-
-  &.focused {
-    border-color: var(--suit-primary);
-    box-shadow:   0 0 0 3px rgba(25, 118, 210, 0.12);
-    width: 300px;
-  }
-
-  .search-icon {
-    font-size: 18px;
-    color: var(--suit-text-muted);
-    flex-shrink: 0;
-  }
-
-  .search-input {
-    border: none;
-    outline: none;
-    background: transparent;
-    color: var(--suit-text);
-    font-size: 0.88rem;
-    font-family: inherit;
-    width: 100%;
-
-    &::placeholder {
-      color: var(--suit-text-muted);
-    }
-  }
-}
-
-// ── Search Autocomplete Results ────────────────────────────────────────────────
-.search-result-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-
-  .search-result-icon {
-    font-size: 18px;
-    color: var(--suit-primary);
-  }
-
-  .search-result-text {
-    display: flex;
-    flex-direction: column;
-
-    .search-result-label {
-      font-size: 0.88rem;
-      font-weight: 500;
-    }
-
-    .search-result-cat {
-      font-size: 0.72rem;
-      color: var(--suit-text-muted);
-    }
-  }
-}
-
 // ── Role Badges ───────────────────────────────────────────────────────────────
 .role-badge {
   padding: 3px 10px;
@@ -327,15 +258,15 @@
 }
 
 .manager-badge {
-  background: hsl(211, 72%, 92%);
-  color: var(--suit-primary-dark);
-  border: 1px solid hsl(211, 72%, 80%);
+  background: var(--suit-badge-manager-bg);
+  color: var(--suit-badge-manager-color);
+  border: 1px solid var(--suit-badge-manager-border);
 }
 
 .employee-badge {
-  background: hsl(200, 18%, 92%);
-  color: var(--suit-secondary);
-  border: 1px solid hsl(200, 18%, 78%);
+  background: var(--suit-badge-employee-bg);
+  color: var(--suit-badge-employee-color);
+  border: 1px solid var(--suit-badge-employee-border);
 }
 
 // ── Main Content ────────────────────────────────────────────────────────────
@@ -353,48 +284,8 @@
   width: 100%;
 }
 
-// ── Dark Mode Adjustments ────────────────────────────────────────────────────
-.dark-mode {
-  .suit-sidenav {
-    background: var(--suit-surface);
-
-    .nav-item {
-      &:hover {
-        background: hsl(211, 30%, 20%);
-        color: var(--suit-primary-light);
-      }
-
-      &.active {
-        background: hsl(211, 30%, 17%);
-        color: var(--suit-primary-light);
-        border-left: 3px solid var(--suit-primary-light);
-      }
-    }
-  }
-
-  .manager-badge {
-    background: hsl(211, 30%, 18%);
-    color: var(--suit-primary-light);
-    border-color: hsl(211, 30%, 28%);
-  }
-
-  .employee-badge {
-    background: hsl(200, 18%, 18%);
-    color: hsl(200, 18%, 72%);
-    border-color: hsl(200, 18%, 28%);
-  }
-}
-
 // ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 768px) {
-  .search-wrapper {
-    width: 160px;
-
-    &.focused {
-      width: 200px;
-    }
-  }
-
   .breadcrumb-nav {
     display: none;
   }
