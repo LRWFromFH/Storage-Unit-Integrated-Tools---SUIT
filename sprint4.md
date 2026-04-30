@@ -286,3 +286,5 @@ All core reporting logic and unit lifecycle handlers have been validated via `se
 ---
 ## Backend Video
 https://drive.google.com/file/d/18z5ay39iePkiGnopJDdLk5TgYXsFa_tb/view?usp=sharing
+
+## Frontend Video
