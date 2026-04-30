@@ -1,6 +1,6 @@
 # Sprint 4
 
-## Overview
+## Frontend Overview
 
 Sprint 4 focused on three new frontend features, comprehensive test coverage (unit + Cypress), and UI polish across the SUIT application.
 
@@ -189,3 +189,97 @@ cd frontend && npx cypress open
 ```bash
 cd frontend && npx cypress run
 ```
+## Backend Overview
+Sprint 4 focused on automated tasks such as report generation, billing cycles, lockouts, and reservations.
+
+---
+
+### 1. Automated Billing Engine
+
+A background service that automates recurring monthly revenue by monitoring unit due dates. This replaces manual invoice generation for storage rentals and ensures consistent cash flow.
+
+#### What changed
+
+- `main.go` — Added a background goroutine and `time.Ticker` (24-hour interval).
+- `services/billing.go` — Implemented `CheckAndProcessStorageBilling` to scan for past-due units.
+- `models/unit.go` — Ensured `NextDueDate` is properly utilized for logic triggers.
+
+#### Business rules
+
+- **Scheduler:** Runs immediately on server start, then every 24 hours thereafter.
+- **Auto-Advance:** Upon a successful charge, the `NextDueDate` is automatically advanced by **one month**.
+- **Safety:** Skips units with `nil` due dates (vacant units) to prevent runtime panics.
+
+---
+
+### 2. Unit Management: Move-Outs & Deactivation
+
+Enhanced the lifecycle of a unit rental, specifically handling the end of a tenancy and the identification of delinquent accounts for physical lockout.
+
+#### Files changed
+
+- `controllers/controller.go` — `MoveOut`, `GetDeactivatedUnits` handlers.
+- `routes/routes.go` — Added move-out and deactivated list endpoints.
+- `models/unit.go` — Defined statuses for `Normal` vs `Deactivated`.
+
+#### API
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/DeactivatedUnits` | Protected | List all units with status `Deactivated` |
+| `POST` | `/api/units/:unit_number/moveout` | Protected | Process customer move-out and reset unit |
+
+#### Business rules
+
+- **Move-out Reset:** Clears `CustomerID` and `NextDueDate`, and resets status to `Normal`.
+- **Reservation Cleanup:** Moving a customer out automatically cancels any active reservations that customer held for that specific unit size.
+- **Lockout Identification:** `DeactivatedUnits` preloads the Renter data to assist staff in generating physical lockout lists.
+
+---
+
+### 3. Inventory & Lockout PDF Reporting
+
+A dynamic reporting pipeline utilizing the `gofpdf` library to generate administrative documents. Reports are both streamed to the client as downloads and archived locally on the server for record-keeping.
+
+#### Files changed
+
+- `services/reports.go` — Logic for `GenerateInventoryReport` and `GenerateLockoutReport`.
+- `controllers/controller.go` — `GetLockoutReport` and `GetInventoryReport` (Utility) handlers.
+- `models/unit.go` — Added `LockoutReported` (bool) field to track report state.
+
+#### API
+
+| Method | Endpoint | Access | Description |
+|---|---|---|---|
+| `GET` | `/api/forms/util` | Protected | Download Daily Inventory/Utility PDF |
+| `GET` | `/api/forms/lockouts` | Protected | Download Daily Lockout PDF |
+
+#### Business rules
+
+- **State Management:** When a Lockout PDF is generated, all included units are batch-updated to `LockoutReported = true` to prevent duplicate entries on subsequent reports.
+- **Local Archiving:** Reports are saved to `forms/util/` and `forms/lockouts/` using timestamped filenames. Directories are created programmatically via `os.MkdirAll`.
+- **Inventory Math:** Calculations include Occupancy %, Gross Potential Income, and Rent per Square Foot.
+
+---
+
+### Backend Test Coverage
+
+All core reporting logic and unit lifecycle handlers have been validated via `services_test.go` and `controllers/CRUD_test.go`.
+
+**Reporting & Billing Services**
+
+| Test Function | Objective | Expected Outcome |
+|---|---|---|
+| `TestGenerateInventoryReport` | Verify size grouping and math | Correctly aggregates units by SizeType; confirms utility % |
+| `TestGenerateLockoutReport` | Verify query filtering | Only fetches `Deactivated` units where `LockoutReported` is false |
+| `TestExportInventoryPDF` | Verify PDF buffer | Returns valid byte stream starting with `%PDF-` |
+| `TestCheckAndProcessBilling` | Verify scheduler logic | Charges units with past-due dates and advances `NextDueDate` |
+
+**Unit Lifecycle & Endpoints**
+
+| Test Function | Objective | Expected Outcome |
+|---|---|---|
+| `TestMoveOut` | Verify unit reset | `CustomerID` and `NextDueDate` become `nil` |
+| `TestMoveOut_CancelsActiveReservation` | Verify cleanup logic | Associated reservation status changes to `cancelled` |
+| `TestGetDeactivatedUnits` | Verify filtering | Normal units are excluded; Renter data is preloaded |
+| `TestLockoutPDFDownload` | Verify side-effects | Unit is marked `LockoutReported = true` after successful download |
