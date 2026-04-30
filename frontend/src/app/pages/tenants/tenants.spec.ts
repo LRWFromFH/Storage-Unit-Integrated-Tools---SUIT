@@ -3,7 +3,7 @@ import { Tenants } from './tenants';
 import { TenantsService } from './tenants.service';
 import { UnitsService } from '../units/units.service';
 import { of, throwError } from 'rxjs';
-import { vi } from 'vitest';
+import { vi, beforeAll, afterAll } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { provideNoopAnimations } from '@angular/platform-browser/animations';
 import { Customer } from './tenants.model';
@@ -46,6 +46,7 @@ describe('Tenants Component', () => {
   let unitsService: any;
   let openDialogSpy: ReturnType<typeof vi.fn>;
   let openSnackBarSpy: ReturnType<typeof vi.fn>;
+  let confirmSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(async () => {
     tenantsService = {
@@ -57,10 +58,11 @@ describe('Tenants Component', () => {
     };
 
     unitsService = {
-  getUnits:    vi.fn().mockReturnValue(of([])),
-  getAllUnits: vi.fn().mockReturnValue(of([])),
-  assignUnit:  vi.fn().mockReturnValue(of({}))
-};
+      getUnits:    vi.fn().mockReturnValue(of([])),
+      getAllUnits:  vi.fn().mockReturnValue(of([])),
+      assignUnit:  vi.fn().mockReturnValue(of({})),
+      moveout:     vi.fn().mockReturnValue(of({}))
+    };
 
     await TestBed.configureTestingModule({
       imports: [Tenants],
@@ -79,6 +81,8 @@ describe('Tenants Component', () => {
     openSnackBarSpy = vi.fn().mockReturnValue(null);
     (component as any).dialog   = { open: openDialogSpy };
     (component as any).snackBar = { open: openSnackBarSpy };
+
+    confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
   });
 
   // ── lifecycle ───────────────────────────────────────────────────────────────
@@ -213,6 +217,50 @@ describe('Tenants Component', () => {
     component.toggleCustomerUnits(1);
     expect(component.customerUnitsMap[1]).toEqual([]);
     expect(component.customerUnitsLoading[1]).toBe(false);
+  });
+
+  // ── deassignUnit ────────────────────────────────────────────────────────────
+
+  it('should call moveout with the correct unit number on deassign', () => {
+    component.deassignUnit('A1', 1);
+    expect(unitsService.moveout).toHaveBeenCalledWith('A1');
+  });
+
+  it('should show success snackbar after successful deassign', () => {
+    component.deassignUnit('A1', 1);
+    expect(openSnackBarSpy).toHaveBeenCalledWith(
+      'Unit A1 deassigned successfully', 'Close', { duration: 3000 }
+    );
+  });
+
+  it('should show error snackbar when deassign fails', () => {
+    unitsService.moveout.mockReturnValue(throwError(() => ({ status: 500 })));
+    component.deassignUnit('A1', 1);
+    expect(openSnackBarSpy).toHaveBeenCalledWith(
+      'Failed to deassign unit', 'Close', { duration: 5000 }
+    );
+  });
+
+  it('should not call moveout when confirm is cancelled', () => {
+    confirmSpy.mockReturnValue(false);
+    component.deassignUnit('A1', 1);
+    expect(unitsService.moveout).not.toHaveBeenCalled();
+  });
+
+  it('should clear unit cache and re-fetch after deassign', () => {
+    tenantsService.getCustomerUnits
+      .mockReturnValueOnce(of([mockUnit]))
+      .mockReturnValue(of([]));
+
+    // Prime the cache with mockUnit
+    component.toggleCustomerUnits(1);
+    expect(component.customerUnitsMap[1]).toEqual([mockUnit]);
+
+    component.deassignUnit('A1', 1);
+
+    // Cache was cleared and re-fetched — second call returns []
+    expect(tenantsService.getCustomerUnits).toHaveBeenCalledTimes(2);
+    expect(component.customerUnitsMap[1]).toEqual([]);
   });
 
   it('should clear cache and re-fetch after assigning a unit', () => {

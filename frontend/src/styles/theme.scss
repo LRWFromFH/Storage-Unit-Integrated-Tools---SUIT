@@ -61,6 +61,18 @@
   // ── Sidebar ──────────────────────────────────────────────────────────────────
   --suit-sidenav-width:           260px;
   --suit-sidenav-collapsed-width: 68px;
+
+  // ── Nav Item Colors ───────────────────────────────────────────────────────────
+  --suit-nav-hover-bg:  hsl(211, 72%, 96%);
+  --suit-nav-active-bg: hsl(211, 72%, 92%);
+
+  // ── Badge Colors ─────────────────────────────────────────────────────────────
+  --suit-badge-manager-bg:     hsl(211, 72%, 92%);
+  --suit-badge-manager-color:  var(--suit-primary-dark);
+  --suit-badge-manager-border: hsl(211, 72%, 80%);
+  --suit-badge-employee-bg:    hsl(200, 18%, 92%);
+  --suit-badge-employee-color: var(--suit-secondary);
+  --suit-badge-employee-border:hsl(200, 18%, 78%);
 }
 
 // ── Dark Mode Overrides ─────────────────────────────────────────────────────
@@ -92,6 +104,18 @@
 
   --suit-glass-bg:        rgba(18, 22, 36, 0.88);
   --suit-glass-border:    rgba(255, 255, 255, 0.08);
+
+  // ── Nav Item Colors (dark) ────────────────────────────────────────────────────
+  --suit-nav-hover-bg:  hsl(211, 30%, 20%);
+  --suit-nav-active-bg: hsl(211, 30%, 17%);
+
+  // ── Badge Colors (dark) ───────────────────────────────────────────────────────
+  --suit-badge-manager-bg:     hsl(211, 30%, 18%);
+  --suit-badge-manager-color:  var(--suit-primary-light);
+  --suit-badge-manager-border: hsl(211, 30%, 28%);
+  --suit-badge-employee-bg:    hsl(200, 18%, 18%);
+  --suit-badge-employee-color: hsl(200, 18%, 72%);
+  --suit-badge-employee-border:hsl(200, 18%, 28%);
 }
 
 // ── Base Resets ─────────────────────────────────────────────────────────────

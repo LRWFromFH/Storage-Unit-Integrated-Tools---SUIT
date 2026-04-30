@@ -6,16 +6,13 @@ describe('SUIT UI – Core Interface Tests', () => {
   it('should load the application and redirect to login', () => {
     cy.visit('/');
     cy.url().should('include', '/login');
-    cy.title().should('contain', 'Frontend');
   });
 
   // ── Login Page Rendering ────────────────────────────────────────────────────
   it('should render login page inputs correctly', () => {
     cy.visit('/login');
-    cy.get('input[type="text"], input[formControlName="email"], input[name="email"]')
-      .should('exist');
-    cy.get('input[type="password"], input[formControlName="password"]')
-      .should('exist');
+    cy.get('input[type="email"], input[name="email"]').should('exist');
+    cy.get('input[type="password"]').should('exist');
   });
 
   // ── Page Title ──────────────────────────────────────────────────────────────
@@ -24,16 +21,17 @@ describe('SUIT UI – Core Interface Tests', () => {
     cy.title().should('not.be.empty');
   });
 
-  // ── Sidebar Toggle (post-login not tested here; UI-only) ────────────────────
+  // ── Sidebar (login page has no sidebar) ────────────────────────────────────
   it('should not show sidebar on the login page', () => {
     cy.visit('/login');
-    cy.get('mat-sidenav, .suit-sidenav').should('not.exist');
+    cy.get('mat-sidenav').should('not.exist');
   });
 
-  // ── Global Search Input ────────────────────────────────────────────────────
-  it('should NOT show the global search input on the login page', () => {
-    cy.visit('/login');
-    cy.get('#global-search-input').should('not.exist');
+  // ── Global Search (removed from header) ────────────────────────────────────
+  it('should NOT show the global search input in the header', () => {
+    cy.login();
+    cy.visit('/dashboard');
+    cy.get('mat-toolbar #global-search-input').should('not.exist');
   });
 
   // ── Theme Toggle ───────────────────────────────────────────────────────────

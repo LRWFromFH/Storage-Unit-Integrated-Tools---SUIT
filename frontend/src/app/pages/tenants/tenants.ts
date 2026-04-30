@@ -13,6 +13,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -47,8 +48,8 @@ ModuleRegistry.registerModules([
   standalone: true,
   imports: [
     CommonModule, RouterLink, MatButtonModule, MatDialogModule,
-    MatSnackBarModule, MatToolbarModule, MatIconModule, AgGridModule,
-    FormsModule, MatFormFieldModule, MatInputModule
+    MatSnackBarModule, MatToolbarModule, MatIconModule, MatTooltipModule,
+    AgGridModule, FormsModule, MatFormFieldModule, MatInputModule
   ],
   templateUrl: './tenants.html',
   styleUrl: './tenants.scss',
@@ -226,6 +227,20 @@ export class Tenants implements OnInit {
     });
   }
 
+  deassignUnit(unitNumber: string, customerId: number) {
+    if (!confirm(`Remove unit ${unitNumber} from this tenant? The tenant will be moved out.`)) return;
+
+    this.unitsService.moveout(unitNumber).subscribe({
+      next: () => {
+        this.snackBar.open(`Unit ${unitNumber} deassigned successfully`, 'Close', { duration: 3000 });
+        delete this.customerUnitsMap[customerId];
+        this.expandedCustomerId = null;
+        this.toggleCustomerUnits(customerId);
+      },
+      error: () => this.snackBar.open('Failed to deassign unit', 'Close', { duration: 5000 })
+    });
+  }
+
   openAssignUnitDialog(customer: Customer) {
     // getAllUnits is now accessible to all employees; filter to unoccupied units only
     const units$ = this.unitsService.getAllUnits().pipe(map(units => units.filter(u => !u.CustomerID)));
@@ -242,7 +257,7 @@ export class Tenants implements OnInit {
           const unit = availableUnits.find(u => u.UnitNumber === selectedUnitNumber);
           if (!unit) return;
 
-          this.unitsService.assignUnit(unit, customer.ID).subscribe({
+          this.unitsService.assignUnit(unit.UnitNumber, customer.ID).subscribe({
             next: () => {
               this.snackBar.open('Unit assigned successfully', 'Close', { duration: 3000 });
               // Refresh the customer's units — clear cache then re-fetch

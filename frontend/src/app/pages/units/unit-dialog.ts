@@ -42,14 +42,13 @@ export class UnitDialog {
   save() {
     if (this.form.invalid) return;
     const v = this.form.value;
-    // Backend Unit model has no JSON tags — must send Pascal case field names
     this.dialogRef.close({
-      UnitNumber: v.unit_number,
-      SizeType:   v.size_type,
-      Price:      Number(v.price),
-      Length:     Number(v.length),
-      Width:      Number(v.width),
-      Height:     Number(v.height)
+      unit_number: v.unit_number,
+      size_type:   v.size_type,
+      price:       Number(v.price),
+      length:      Number(v.length),
+      width:       Number(v.width),
+      height:      Number(v.height)
     });
   }
 

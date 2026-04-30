@@ -151,4 +151,27 @@
       </mat-card-actions>
     </mat-card>
   }
+
+  <mat-card class="dashboard-card interactive-card animate-scale-in" appearance="outlined" style="--delay: 200ms">
+    <mat-card-header>
+      <mat-icon mat-card-avatar>description</mat-icon>
+      <mat-card-title>Reports</mat-card-title>
+      <mat-card-subtitle>Generate and download inventory &amp; revenue reports</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <ul class="card-feature-list">
+        <li><mat-icon>check_circle</mat-icon> Daily unit inventory summary</li>
+        <li><mat-icon>check_circle</mat-icon> Occupancy and vacancy breakdown</li>
+        <li><mat-icon>check_circle</mat-icon> Gross income &amp; utilization rate</li>
+      </ul>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary"
+              id="download-report-btn"
+              [disabled]="downloadingReport"
+              (click)="downloadReport()">
+        @if (downloadingReport) { Generating… } @else { Download Inventory Report }
+      </button>
+    </mat-card-actions>
+  </mat-card>
 </div>

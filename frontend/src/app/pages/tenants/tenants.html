@@ -17,10 +17,10 @@
 
   <div class="view-toggle">
     <button mat-stroked-button [color]="viewMode === 'table' ? 'primary' : ''" (click)="toggleView('table')">
-      <mat-icon>table_rows</mat-icon> Table
+      <mat-icon>table_rows</mat-icon> Table View
     </button>
     <button mat-stroked-button [color]="viewMode === 'grid' ? 'primary' : ''" (click)="toggleView('grid')">
-      <mat-icon>grid_view</mat-icon> Grid
+      <mat-icon>grid_view</mat-icon> Grid View
     </button>
   </div>
 </div>
@@ -70,7 +70,16 @@
               } @else {
                 @for (unit of customerUnitsMap[customer.ID]; track unit.ID) {
                   <div class="unit-chip">
-                    <strong>{{ unit.UnitNumber }}</strong> · {{ unit.SizeType }} · ${{ unit.Price }}/mo
+                    <div class="unit-chip-info">
+                      <strong>{{ unit.UnitNumber }}</strong> · {{ unit.SizeType }} · ${{ unit.Price }}/mo
+                    </div>
+                    @if (auth.isManager()) {
+                      <button mat-icon-button color="warn" class="deassign-btn"
+                              matTooltip="Deassign unit"
+                              (click)="deassignUnit(unit.UnitNumber, customer.ID)">
+                        <mat-icon>link_off</mat-icon>
+                      </button>
+                    }
                   </div>
                 }
               }
